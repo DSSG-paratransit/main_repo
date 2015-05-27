@@ -7,4 +7,4 @@ categories: jekyll blog
 
 The UW [escience institute][escience]: advancing data intensive discovery in all fields
 
-[escience]:    http://escience.washinton.edu
+[escience]:    http://escience.washington.edu
