@@ -1,9 +1,9 @@
 # Site settings
 title: Data Science for Social Good 2015
-email:
-description: ""
-baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://uwescience.github.io/DSSG2015" # the base hostname & protocol for your site
+email: arokem@gmail.com
+description: "Data Science for Social Good"
+baseurl: "http://uwescience.github.io/DSSG2015" 
+url: "http://uwescience.github.io/DSSG2015" 
 twitter_username: uwescience
 github_username:  uwescience
 
