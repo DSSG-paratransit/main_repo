@@ -1,8 +1,9 @@
 ---
-layout: default
+layout: home
 ---
 
 <div class="home">
+<div class="logo-bar">
 
   <h1 class="page-heading">Posts</h1>
 

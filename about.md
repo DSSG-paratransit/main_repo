@@ -8,9 +8,4 @@ The eScience Institute is pleased to announce a new summer program: Data Science
 
 This year, the theme for DSSG projects will be Urban Science. Projects will involve analysis, visualization and/or software engineering of data from urban environments such as crime data, government and NGO financials, housing data, cell phone GPS data, etc. Topic areas may include public health, sustainable urban planning, environmental protection, disaster response, crime prevention, education, transportation, governance, commerce, and social justice.
 
-DSSG teams will be composed of:
-
-4 students (see application link below) @ 5 days/week
-1 project lead, responsible for executing the research project (see proposal application below) @ 2 days/week
-1 public stakeholder, the organization or individual who provides the policy-relevant data and research question (see proposal application below) @ 1 hr/week
-1 eScience data scientist @ 2 days/week
+DSSG teams will be composed of 4 DSSG students which are working full time on this, a project lead, which guides the research aspects of the project, and provided the data and the questions, and eScience data scientist, which helps guide the teams towards the appropriate technical solutions. These teams are modeled after the eScience Institute's data science [incubator projects](http://data.washington.edu/incubator/).
