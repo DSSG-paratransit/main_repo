@@ -5,5 +5,7 @@
 # *.[oa]
 # *~
 
-.csv
-.DS_Store
+*.csv
+*.xlsx
+*.DS_Store
+*.json
