@@ -22,6 +22,8 @@ For [jekyll](http://jekyllrb.com) to generate the web-pages to be visible throug
    - `_posts`: Use the first post in this repo as a template for creating your own posts.
    
 1. **Commit everything**, push it and make your first pull request - you are off! 
+   
+   *Note*: When you make pull requests, don't forget that you will want to make pull requests against the `gh-pages` branch of your team repo, *not* the `master` branch. Github allows you to select the base repo, and the base branch from a dropdown menu that appears when you ask to make a pull request. 
 
 1. Use branches and pull requests to add more posts and more content to the blog. 
 
