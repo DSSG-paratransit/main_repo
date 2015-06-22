@@ -4,7 +4,7 @@ For [jekyll](http://jekyllrb.com) to generate the web-pages to be visible throug
 
 1. **Create a gh-pages branch**: To do this, enter the settings of your repo, launch the automatic page generator (under the "Github pages" heading), and click through to generate the default setting. 
 
-1. **Pull this branch to your local copy of the repo**. To do this you will need to launch a: 
+1. **Pull this branch to your local copy of the repo**. To do this you will need to issue the following on the terminal command line: 
 
         git pull upstream
     	git checkout gh-pages
