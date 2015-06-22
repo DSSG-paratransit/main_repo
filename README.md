@@ -6,9 +6,9 @@ For [jekyll](http://jekyllrb.com) to generate the web-pages to be visible throug
 
 1. **Pull this branch to your local copy of the repo**. To do this you will need to launch a: 
 
-    git pull upstream
-	git checkout gh-pages
-	git pull upstream gh-pages
+        git pull upstream
+    	git checkout gh-pages
+	    git pull upstream gh-pages
 
    at which point your directory should contain the auto-generated default content from 
    Github's automatic page generator. We'll soon get rid of that.
