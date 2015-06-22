@@ -2,7 +2,7 @@
 layout: post
 title:  "Welcome to DSSG 2015"
 date:   2015-06-10
-permalink /2015/06/welcome-to-dssg
+permalink /2015/06/welcome-to-dssg/
 categories: 
     - dssg 
 	- alva
