@@ -2,13 +2,6 @@
 layout: post
 title:  "Welcome to DSSG 2015"
 date:   2015-06-10
-permalink /2015/06/welcome-to-dssg/
-categories: 
-    - dssg 
-	- alva
-	- privacy 
-	- reproducibility 
-	- all-projects
 ---
 
 The UW [eScience Institute][escience] is happy to welcome the participants in our first Data Science for Social Good Summer Incubator. During this summer, four teams will make the WRF Data Science Studio on the 6th floor of the Physics/Astronomy building here on our beautiful Seattle campus their base of operations, as they work on four different projects. The goal of all these projects is to leverage the power Data Science towards the achievement of social good. The projects are diverse, covering a range of social issues, and the potential impact is significant. The teams are composed of several components: the core of the team are four students who will work on the project full-time for the duration of the summer. These students were selected from the pool of extraordinary applicants that responded to the [call for applications](http://escience.washington.edu/what-we-do/data-science-for-social-good) published earlier this year. The second facet of this team are project leads (PLs). These are researchers from a variety of backgrounds, disciplines and institutions at UW and from the surrounding community. The project leads are the domain experts, providing the motivating questions for each project, the specific goals for the summer, in terms of project deliverables, as well as access to the data-sets needed to achieve these deliverables. We will also introduce each of the PLs in later posts. From the eScience Institute, each team is also mentored by one of the eScience Data Scientists, which will provide guidance on the technical and algorithmic tools that we will use. In addition, each team will be joined by a high-school student or two from the [ALVA](http://depts.washington.edu/genomics/hsprog/hswrksps.shtml) internship program. These talented students are spending the summer on UW campus, learning programming and taking part in the DSSG program. Together, these multi-faceted teams will power through a set of rich and complex data-sets, producing answers to some compelling and important questions.
