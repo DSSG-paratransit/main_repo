@@ -3,14 +3,12 @@ library(dplyr)
 library(timeDate)
 library(RJSONIO)
 options(digits = 8)
-#source("Google_API_Integration.R")
 
-#delete pre-existing .json data file
+#delete pre-existing .csv data file
 files <- list.files()
-if("UW_Trip_QC.json" %in% files){file.remove("UW_Trip_QC.json")}
+if("UW_Trip_Data_QC.csv" %in% files){file.remove("UW_Trip_Data_QC.csv")}
+if (!("AD" %in% ls())){AD = read.csv("UW_Trip_Data.csv")}
 
-
-AD = read.csv("UW_Trip_Data.csv")
 AD_56 = AD[which(AD$ProviderId==5 | AD$ProviderId==6),]
 AD_56$Run <-as.character(AD_56$Run)
 AD_56 <- AD_56[which(!is.na(AD_56$Run)),]
@@ -22,7 +20,6 @@ while(activ != 4){
   activ = AD_56$Activity[ctr]
 }
 AD_56 = AD_56[-(1:(ctr-1)),]
-
 
 #Compute ECDF of distance per leg
 dates = unique(AD_56$ServiceDate)
@@ -77,13 +74,10 @@ for (ride in rides){ #iterate over every instance of a route
     
     Durs = numeric(nrow(this_ride)-1)
     Dists = numeric(nrow(this_ride)-1)
-    #Get distance/times of each leg of ride
     for (leg in 2:nrow(this_ride)){
       lat = c(this_ride$LAT[leg-1], this_ride$LAT[leg]); lon = c(this_ride$LON[leg-1], this_ride$LON[leg])
-      #dur_dist = distanceMatrix(lat, lon)
       Durs[leg-1] = this_ride$ETA[leg]-this_ride$ETA[leg-1]
       Dists[leg-1] = gcd.hf(lat, lon)
-      #Dists[leg-1] = dur_dist[2]
     }
     
     if(this_ride$Activity[1]!=4 | this_ride$Activity[nrow(this_ride)]!=3){
@@ -96,29 +90,29 @@ for (ride in rides){ #iterate over every instance of a route
     }
     
     if(flag == "OK"){
-      ETA_hist_vec = c(ETA_hist_vec, Durs)
-      Dists_hist_vec = c(Dists_hist_vec, Dists)
+      ETA_hist_vec <- c(ETA_hist_vec, Durs)
+      Dists_hist_vec <- c(Dists_hist_vec, Dists)
+      write.table(this_ride, file = "UW_Trip_Data_QC.csv", col.names = F, append = T, sep = ",")
     }
     
-    LATs = this_ride$LAT; LONs = this_ride$LON
-    SCHEDs = this_ride$SchedStatus
-    CLIENTIDs = this_ride$ClientId
-    ride_list = list(ROUTE = ride, DATE = as.character(temp_ride_days[k]), FLAG = flag, DURATIONS = Durs, EUCLID_DISTS = Dists,
-                     LAT = LATs, LON = LONs, SCHED_STAT = SCHEDs, CLIENTID = CLIENTIDs, PASSON = as.character(this_ride$PassOn),
-                     PASSOFF = as.character(this_ride$PassOff), ETA = this_ride$ETA, ACTIVITY = this_ride$Activity)
-    write(toJSON(ride_list), "UW_Trip_QC.json", append = T)
+#     LATs = this_ride$LAT; LONs = this_ride$LON
+#     SCHEDs = this_ride$SchedStatus
+#     CLIENTIDs = this_ride$ClientId
+#     ride_list = list(ROUTE = ride, DATE = as.character(temp_ride_days[k]), FLAG = flag, DURATIONS = Durs, EUCLID_DISTS = Dists,
+#                      LAT = LATs, LON = LONs, SCHED_STAT = SCHEDs, CLIENTID = CLIENTIDs, PASSON = as.character(this_ride$PassOn),
+#                      PASSOFF = as.character(this_ride$PassOff), ETA = this_ride$ETA, ACTIVITY = this_ride$Activity)
+#     write(toJSON(ride_list), "UW_Trip_QC.json", append = T)
   }
 }
 
-
-#Plot ATCF distances/time of legs
-plot(log(ETA_hist_vec), Dists_hist_vec,
-    xlab = "Time", ylab = "Euclidean Distance", main= "Time vs. Distance Scatterplot",
-    pch = 21, bg = "red")
-
-#Note outliers: time splits range from 0 to 304201. 99.5% quantile is 7824.4 seconds.
-plot(ecdf(ETA_hist_vec[which(ETA_hist_vec < quantile(ETA_hist_vec, .999))]/60),
-     xlab = "Minutes", ylab = "ECDF of Stop Splits", main = "ECDF of Travel Times between Stops")
+# #Plot ATCF distances/time of legs
+# plot(log(ETA_hist_vec), Dists_hist_vec,
+#     xlab = "Time", ylab = "Euclidean Distance", main= "Time vs. Distance Scatterplot",
+#     pch = 21, bg = "red")
+# 
+# #Note outliers: time splits range from 0 to 304201. 99.5% quantile is 7824.4 seconds.
+# plot(ecdf(ETA_hist_vec[which(ETA_hist_vec < quantile(ETA_hist_vec, .999))]/60),
+#      xlab = "Minutes", ylab = "ECDF of Stop Splits", main = "ECDF of Travel Times between Stops")
 
 
 
