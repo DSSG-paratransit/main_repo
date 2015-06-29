@@ -2,3 +2,5 @@
 *.json
 *.xlsx
 *.DS_store
+.Rproj.user
+*.pem
