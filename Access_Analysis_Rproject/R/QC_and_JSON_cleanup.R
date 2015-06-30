@@ -1,7 +1,18 @@
 library(timeDate)
-library(dplyr)
 options(digits = 8)
 
+# OVERVIEW:
+# (1) Clean up data by removing runs that have zero-ed out lat/lon data,
+# have lat/lon data outside of perimeter of WA state, don't finish running
+# or simply don't leave the garage
+# (2) Further clean data by fixing city names
+# (3) Further clean data by removing runs that take longer than 24hrs (there are ~10 of these)
+# then make and save a file full of meta data about the runs, for use with regression later on.
+
+# CAVEATS: (1) make sure your data files are in the correct WD: ./data/files. 
+# (2) there will be 2 files created, make sure you don't upload to Github.
+
+################### Initial cleaning step: remove obviously bad rides ############################
 #delete pre-existing .csv data file
 files <- list.files("./data/")
 if("UW_Trip_Data_QC.csv" %in% files){file.remove("./data/UW_Trip_Data_QC.csv")}
@@ -25,25 +36,9 @@ nOn <- rep(0, length=length(passon)); nOff = nOn
 nOn[passon!=""] <- 1; nOff[passoff!=""] <- 1
 AD_56$nOn <- nOn; AD_56$nOff <- nOff
 
-#Compute ECDF of distance per leg
+#Unique dates serviced, unique run numbers
 dates = unique(AD_56$ServiceDate)
 rides = unique(AD_56$Run)
-ETA_hist_vec = numeric(1)
-Dists_hist_vec = ETA_hist_vec
-
-#Haversine formula: "As the crow flies" distance
-deg2rad <- function(deg){return(deg*pi/180)}
-gcd.hf <- function(lat, lon){
-  long1 <- deg2rad(lon[1]); long2 <- deg2rad(lon[2])
-  lat1 <- deg2rad(lat[1]); lat2 <- deg2rad(lat[2])
-  R <- 6371 # Earth mean radius [km]
-  delta.long <- (long2 - long1)
-  delta.lat <- (lat2 - lat1)
-  a <- sin(delta.lat/2)^2 + cos(lat1) * cos(lat2) * sin(delta.long/2)^2
-  c <- 2 * asin(min(1,sqrt(a)))
-  d = R * c
-  return(d) # Distance in km
-}
 
 #Coordinate boundaries of King County, WA:
 upper_right <- c(49.020430, -116.998768)
@@ -76,8 +71,6 @@ for (ride in rides){ #iterate over every instance of a route
       flag = "NO_MOVEMENT"
     }
     
-    Durs = numeric(nrow(this_ride)-1)
-    Dists = numeric(nrow(this_ride)-1)
     for (leg in 2:nrow(this_ride)){
       lat = c(this_ride$LAT[leg-1], this_ride$LAT[leg]); lon = c(this_ride$LON[leg-1], this_ride$LON[leg])
       Durs[leg-1] = this_ride$ETA[leg]-this_ride$ETA[leg-1]
@@ -94,8 +87,6 @@ for (ride in rides){ #iterate over every instance of a route
     }
     
     if(flag == "OK"){
-      ETA_hist_vec <- c(ETA_hist_vec, Durs)
-      Dists_hist_vec <- c(Dists_hist_vec, Dists)
       #Add number of riders
       busCount <- numeric(length = nrow(this_ride))
       for (jj in 1:nrow(this_ride)){
@@ -112,4 +103,72 @@ for (ride in rides){ #iterate over every instance of a route
     }
   }
 }
+
+############ Second cleaning step: consolidate city names, remove runs in excess of 24hrs ####################
+if (!("data" %in% ls())){data = read.csv("./data/UW_Trip_Data_QC.csv", header = F)}
+headers = c("Rownum", "ServiceDate", "Run", "ProviderId", "EvOrder", 
+            "EvId", "Activity", "ETA", "DwellTime", "StreetNo", "OnStreet", "City",
+            "LON", "LAT", "BookingId", "SchedStatus", "SubtypeAbbr", "FundingsourceId1", "PassOn", "PassOff", "ClientID",
+            "NumOn", "NumOff", "TotalPass")
+colnames(data) <- headers
+
+data$ServiceDate <- as.timeDate(as.character(data$ServiceDate))
+data$Run <- as.character(data$Run)
+dates <- unique(data$ServiceDate)
+runs <- unique(data$Run)
+
+# fix city names. Takes a minute...
+data$City <- tolower(as.character(data$City))
+for(jj in 1:nrow(data)){
+  city_name = data$City[jj]
+  if(city_name == "federal waye" | city_name == "federal" | city_name == "fedral way"){
+    data$City[jj] <- "federal way"
+  }
+  if(city_name == "seatle"){ data$City[jj] <- "seattle"}
+  if(city_name == "remond"){data$City[jj] <- "redmond"}
+  if(city_name == "vashon"){data$City[jj] <- "vashon island"}
+  if(city_name == "des monies"){data$City[jj] <- "des moines"}
+  if(city_name == "eedmonds"){data$City[jj] <- "edmonds"}
+  if(city_name == "lynwood"){data$City[jj] <- "lynnwod"}
+  if(city_name == "aubuirn"){data$City[jj] <- "auburn"}
+  if(city_name == "bothell-"){data$City[jj] <- "bothell"}
+  if(city_name == "kikrland"){data$City[jj] <- "kirkland"}
+  if(city_name == "tulwila"){data$City[jj] <- "tukwila"}
+  if(city_name == "normandy pk"){data$City[jj] <- "normandy park"}
+  if(city_name == "mountlake  terra e"){data$City[jj] <- "mountlake terrace"}
+  if(city_name == "burien wa"){data$City[jj] <- "burien"}
+  if(city_name == "sea tac"){data$City[jj] <- "seatac"} 
+}
+
+#overwrite previously QC'ed data for better quality one.
+write.csv(data, file="./data/UW_Trip_Data_QC.csv", header = T)
+
+######################## Third step: get ride meta data ##############################
+## Get meta_data about each ride. Use for regression later.
+## saveme table has runID, date, total elapsed time, maximum number of passengers serviced,
+## and average dwell time.
+saveme <- matrix(0, nrow = length(dates)*length(runs), ncol = 5)
+saveme <- as.data.frame(saveme)
+colnames(saveme) <- c("run", "date", "elapsed_time", "max_num_pass", "avg_dwell_time")
+ctr = 1
+for(ii in 1:length(runs)){
+  temp <- data[which(data$Run == runs[ii]),]
+  temp_days <- unique(temp$ServiceDate)
+  for (kk in 1:length(temp_days)){
+    this_run <- temp[which(temp$ServiceDate==temp_days[kk]),]
+    elapsed <- this_run$ETA[nrow(this_run)] - this_run$ETA[1]
+    max_pass <- max(this_run$TotalPass)
+    avg_dwell <- mean(this_run$DwellTime)
+    saveme[ctr,] <- c(runs[ii], as.character(temp_days[kk]), elapsed, max_pass, avg_dwell)
+  }
+}
+
+saveme <- saveme[which(saveme$elapsed_time < 86400),]
+
+#Save file. Don't post on Github!!!!
+write.table(x = saveme, file = "./data/ride_meta_data.txt", sep = ",")
+
+
+
+
 
