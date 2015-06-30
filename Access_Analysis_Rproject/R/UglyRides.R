@@ -7,28 +7,52 @@
 #
 
 #Need to get data set to work with, probably want smaller to test on first
-dataSet <-
-  
+#Dataset needs to have the numPass and legTime columns added to it
+#if not, check out AddLegTimes and PassengerCounts scripts
+dataSet <- read.csv("UW_Trip_Data.csv")
+
 #Set the fixed bus cost per minute
 #Average weighted bus cost is $48.09 per hour, so $0.8015 per minute
 cost_per_minute <- .8015
 #Creates array of all the different service days
- ride_days = unique(dataSet$ServiceDate)
- #Creates array of all the different client IDs
- clients = unique(ride_days$ClientId)
- clientCost <- numeric(length = nrow(clients))
- for(k in 1:length(ride_days)){ 
-    today = AD_56[which(AD_56$ServiceDate==ride_days[k]),]
-    for(currentClient in 1:length(clients)){
-      clientRide <- AD_56[which(AD_56$ClientId == clients[currentClient])]
-      for (j in 1:length(clientRide)){
-        legCost <- (clientRide$legTime[j]/clientRide$numPass[j])*cost_per_minute
-        clientCost[currentClient] <- clientCost[currentClient] + legCost
-    
+ride_days = unique(dataSet$ServiceDate)
+#Creates array of all the different client IDs
+clients = unique(dataSet$ClientId)
+clientCost <- NA
+#Set up dataframe that I'll use
+#I'll need clientCost, clientID, Run, ServiceDate, LatStart, LonStart, LatEnd, LonEnd
+costDF <- data.frame(1:8)
+costDF <- t(costDF)
+colnames(costDF) <- c("ClientCost", "ClientId", "Run", "ServiceDate", "LatStart",
+                      "LonStart", "LatEnd", "LonEnd")
+
+
+
+#clientCost <- numeric(length = nrow(clients))
+for(k in 1:length(ride_days)){
+  today = dataSet[which(dataSet$ServiceDate==ride_days[k]),]
+  clients <- unique(today$ClientID)
+  for(currentClient in 1:length(clients)){
+    instances <- which(today$ClientId == clients[currentClient]) #gives rows of today that have clientID == currentClient
+    if(instances %% 2 == 0) {
+      for(i in 1:(length(instances)/2)){
+        instances[(i*2)-1] #currentClient gets on
+        clientRide = today[instances[(i*2)-1]:instances[i*2],]
+        rideCost = 0
+        for (j in 1:(length(clientRide)-1)){
+          rideCost = rideCost + (clientRide$legTime[j]/clientRide$numPass[j])*cost_per_minute
+        }
+        #Put all the information from this run on this day for this client in the data frame
+        costDF <- rbind(costDF, c(clientcost, clients[currentClient]), clientRide$Run[1],
+                        clientRide$ServiceDate[1], clientRide$LAT[1], clientRide$LON[1],
+                        clientRide$LAT[length(clientRide)], clientRide$LON[length(clientRide)])
+        
       }
+      
     }
- }
- 
- #Appends the client cost as new column to clients
- clients$clientCost <- clientCost
- #To find ugly rides we'll want to to look at clients df
+    
+  }
+}
+
+
+write.csv(costDF, 'CostDataFrame.csv')
