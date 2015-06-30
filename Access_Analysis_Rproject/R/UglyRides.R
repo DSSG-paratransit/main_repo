@@ -6,18 +6,28 @@
 # then add that to a running total for costOfClientID
 #
 
+#Need to get data set to work with, probably want smaller to test on first
 
+#Set the fixed bus cost per minute
+#Average weighted bus cost is $48.09 per hour, so $0.8015 per minute
+cost_per_minute <- .8015
+#Creates array of all the different service days
  ride_days = unique(AD_56$ServiceDate)
+ #Creates array of all the different client IDs
  clients = unique(ride_days$ClientId)
+ clientCost <- numeric(length = nrow(clients))
  for(k in 1:length(ride_days)){ 
     today = AD_56[which(AD_56$ServiceDate==ride_days[k]),]
-    AD_56[which(AD_56$ClientId)]
-    filter(AD_56, ServiceDay=)
-
+    for(currentClient in 1:length(clients)){
+      clientRide <- AD_56[which(AD_56$ClientId == clients[currentClient])]
+      for (j in 1:length(clientRide)){
+        legCost <- (clientRide$legTime[j]/clientRide$numPass[j])*cost_per_minute
+        clientCost[currentClient] <- clientCost[currentClient] + legCost
+    
+      }
+    }
  }
- for(day in ride_days){
-   for(client in clients){
-      filter(AD_56, ServiceDay=day, ClientId=client )
-   }
- }
- filter(AD_56, ServiceDay=)
+ 
+ #Appends the client cost as new column to clients
+ clients$clientCost <- clientCost
+ #To find ugly rides we'll want to to look at clients df
