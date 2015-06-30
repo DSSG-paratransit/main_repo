@@ -27,10 +27,12 @@ for(i in 1:nrow(dataFrame)) {
     passengerCount = passengerCount - 1
   }
   
+  print(i)
+  print(passengerCount)
   passengerCounts[i] = passengerCount
 }
 
 dataFrame$PassengersOnBoard = passengerCounts
 
-write.csv(dataFrame, 'UW_Trip_Data_PassengerC.csv')
+write.csv(dataFrame, 'data/UW_Trip_Data_PassengerC.csv')
 
