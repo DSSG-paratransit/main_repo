@@ -7,12 +7,13 @@
 #
 
 #Need to get data set to work with, probably want smaller to test on first
-
+dataSet <-
+  
 #Set the fixed bus cost per minute
 #Average weighted bus cost is $48.09 per hour, so $0.8015 per minute
 cost_per_minute <- .8015
 #Creates array of all the different service days
- ride_days = unique(AD_56$ServiceDate)
+ ride_days = unique(dataSet$ServiceDate)
  #Creates array of all the different client IDs
  clients = unique(ride_days$ClientId)
  clientCost <- numeric(length = nrow(clients))
