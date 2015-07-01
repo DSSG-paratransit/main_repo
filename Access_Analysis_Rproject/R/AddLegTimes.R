@@ -5,7 +5,7 @@ library(timeDate)
 library(RJSONIO)
 options(digits = 8)
 
-#Get data from the 18 month dataset with headers
+#Get data from the dataset with headers
 fullData <- read.csv("~/UW_Trip_Data_QC4Month.csv")
 
 #This is unncessarry if data is clean
