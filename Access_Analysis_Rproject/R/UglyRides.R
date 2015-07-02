@@ -15,17 +15,22 @@ cost_per_minute <- .8015
 #Creates array of all the different service days
  ride_days = unique(dataSet$ServiceDate)
  #Creates array of all the different client IDs
- clients = unique(ride_days$ClientId)
- clientCost <- numeric(length = nrow(clients))
+ clients = unique(dataSet$ClientId)
+ clientCost <- NA
+#clientCost <- numeric(length = nrow(clients))
  for(k in 1:length(ride_days)){ 
     today = AD_56[which(AD_56$ServiceDate==ride_days[k]),]
+    clients <- unique(today$ClientID)
     for(currentClient in 1:length(clients)){
-      clientRide <- AD_56[which(AD_56$ClientId == clients[currentClient])]
-      for (j in 1:length(clientRide)){
-        legCost <- (clientRide$legTime[j]/clientRide$numPass[j])*cost_per_minute
-        clientCost[currentClient] <- clientCost[currentClient] + legCost
-    
+      instances <- which(today$ClientId == currentClient) #gives rows of today that have clientID == currentClient
+      
+      instances[1] #currentClient gets on
+      clientRide = today[instances[1]:instances[2],]
+      rideCost = 0
+      for (j in 1:(length(clientRide)-1)){
+        rideCost = rideCost + (clientRide$legTime[j]/clientRide$numPass[j])*cost_per_minute
       }
+      clientCost <- c(clientCost, rideCost)
     }
  }
  
