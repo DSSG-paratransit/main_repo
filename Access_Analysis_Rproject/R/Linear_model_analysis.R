@@ -6,7 +6,7 @@
 ####################################################################################################
 meta_data <- read.csv("./data/ride_meta_data.txt", sep = ",")
 
-data <- read.csv("./data/UW_Trip_Data_QC.csv.csv")
+data <- read.csv("./data/UW_Trip_Data_QC.csv")
 
 # Make matrix of binary contrasts. Every column represents a city, 0 or 1 
 # indicates whether a route on a certain day hits a city.
