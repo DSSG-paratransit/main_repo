@@ -31,10 +31,11 @@ colnames(costDF) <- c("ClientCost", "ClientId", "Run", "ServiceDate", "LatStart"
 #clientCost <- numeric(length = nrow(clients))
 for(k in 1:length(ride_days)){
   today = dataSet[which(dataSet$ServiceDate==ride_days[k]),]
-  clients <- unique(today$ClientID)
+  clients <- unique(today$ClientId)
   for(currentClient in 1:length(clients)){
+    clients <- clients[which(!is.na(clients))]
     instances <- which(today$ClientId == clients[currentClient]) #gives rows of today that have clientID == currentClient
-    if(instances %% 2 == 0) {
+    if(length(instances) %% 2 == 0) {
       for(i in 1:(length(instances)/2)){
         instances[(i*2)-1] #currentClient gets on
         clientRide = today[instances[(i*2)-1]:instances[i*2],]
@@ -43,9 +44,9 @@ for(k in 1:length(ride_days)){
           rideCost = rideCost + (clientRide$legTime[j]/clientRide$numPass[j])*cost_per_minute
         }
         #Put all the information from this run on this day for this client in the data frame
-        costDF <- rbind(costDF, c(clientcost, clients[currentClient]), clientRide$Run[1],
+        costDF <- rbind(costDF, c(clientcost, clients[currentClient], clientRide$Run[1],
                         clientRide$ServiceDate[1], clientRide$LAT[1], clientRide$LON[1],
-                        clientRide$LAT[length(clientRide)], clientRide$LON[length(clientRide)])
+                        clientRide$LAT[length(clientRide)], clientRide$LON[length(clientRide)]))
         
       }
       
