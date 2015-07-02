@@ -58,6 +58,7 @@ for(k in 1:length(ride_days)){
 ###########
 # Open the cost analysis file and analyze CPB info
 cost_data <- read.csv("data/Cost_analysis.csv", header = T)
+cost_data$ServiceDate <- as.timeDate(as.character(cost_data$ServiceDate))
 upperCosts <- cost_data[which(cost_data$ClientCost != Inf & !is.na(cost_data$ClientCost)),]
 CPB_sub <- upperCosts$ClientCost
 hist(CPB_sub, breaks = seq(0, 500, 5)); abline(v = quantile(CPB_sub, 0.9), col = "red")
@@ -67,6 +68,6 @@ upperCosts <- upperCosts[which(upperCosts$ClientCost >quantile(CPB_sub, 0.9)), ]
 
 ##########
 # Match the ugly rides with data in overall 4 month file
-
+which((dataSet$ClientID == ugCli1$ClientId) & (dataSet$ServiceDate==ugCli1$ServiceDate) &  dataSet$LON==ugCli1$LonStart & dataSet$LAT==ugCli1$LatStart & dataSet$Run == ugCli1$Run)
 
 
