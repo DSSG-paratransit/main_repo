@@ -6,7 +6,8 @@
 library(dplyr)
 
 # in case the file hasn't already been read
-dfr = read.csv("data/UW_Trip_Data_PassengerC.csv")
+#dfr = read.csv("data/UW_Trip_Data_PassengerC.csv")
+
 
 # takes a dataframe with ETAs, ServiceDates, and Runs
 # returns a dataframe after adding LegTimes and PctTime
@@ -18,6 +19,7 @@ getDeadheadPct <- function(dfr) {
   ETA = dfr$ETA[1]
   timeTaken = vector(length=nrow(dfr))
   pctTimeTaken = vector(length=nrow(dfr))
+  totalPCT = vector(length=nrow(dfr))
   totalRouteTime = 0 #time that the current route has taken
   baseRow = 1 #the row number in which the current run left base
   
@@ -32,11 +34,15 @@ getDeadheadPct <- function(dfr) {
     # if row is when bus leaves base the 'previous' segment took 0s
     # calculates the pct time taken, adds to vector 
     if (previousDay != currentDay) {
-      pctTimeTaken[baseRow:(i-1)] = timeTaken[baseRow:(i-1)]/totalRouteTime      
+      pctTimeTaken[baseRow:(i-1)] = timeTaken[baseRow:(i-1)]/totalRouteTime
       totalRouteTime = 0
       time = 0
     } else if (previousRun != currentRun) {
-      pctTimeTaken[baseRow:(i-1)] = timeTaken[baseRow:(i-1)]/totalRouteTime      
+      pctTimeTaken[baseRow:(i-1)] = timeTaken[baseRow:(i-1)]/totalRouteTime
+      totalRouteTime = 0
+      time = 0
+    } else if (i==nrow(dfr)) { #for case where it is the last run in the dataset 
+      pctTimeTaken[baseRow:(i-1)] = timeTaken[baseRow:(i-1)]/totalRouteTime
       totalRouteTime = 0
       time = 0
     } else {
@@ -52,6 +58,7 @@ getDeadheadPct <- function(dfr) {
   return(dfr)
 }
 
+#dfr <- getDeadheadPct(dfr)
 
 
 
