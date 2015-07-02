@@ -9,7 +9,7 @@
 #Need to get data set to work with, probably want smaller to test on first
 #Dataset needs to have the numPass and legTime columns added to it
 #if not, check out AddLegTimes and PassengerCounts scripts
-dataSet <- read.csv("UW_Trip_Data.csv")
+dataSet <- read.csv("UW_Trip_Data_FullCols.csv")
 
 #Set the fixed bus cost per minute
 #Average weighted bus cost is $48.09 per hour, so $0.8015 per minute
@@ -31,21 +31,23 @@ colnames(costDF) <- c("ClientCost", "ClientId", "Run", "ServiceDate", "LatStart"
 #clientCost <- numeric(length = nrow(clients))
 for(k in 1:length(ride_days)){
   today = dataSet[which(dataSet$ServiceDate==ride_days[k]),]
-  clients <- unique(today$ClientID)
+  clients <- unique(today$ClientId)  
+  #Clean for NAs because will always start with a NA client
+  clients <- clients[which(!is.na(clients))]
   for(currentClient in 1:length(clients)){
     instances <- which(today$ClientId == clients[currentClient]) #gives rows of today that have clientID == currentClient
-    if(instances %% 2 == 0) {
+    if(length(instances) %% 2 == 0) {
       for(i in 1:(length(instances)/2)){
-        instances[(i*2)-1] #currentClient gets on
+        instances[(i*2)-1]  #currentClient gets on
         clientRide = today[instances[(i*2)-1]:instances[i*2],]
         rideCost = 0
         for (j in 1:(length(clientRide)-1)){
           rideCost = rideCost + (clientRide$legTime[j]/clientRide$numPass[j])*cost_per_minute
         }
         #Put all the information from this run on this day for this client in the data frame
-        costDF <- rbind(costDF, c(clientcost, clients[currentClient]), clientRide$Run[1],
+        costDF <- rbind(costDF, c(rideCost, clients[currentClient], clientRide$Run[1],
                         clientRide$ServiceDate[1], clientRide$LAT[1], clientRide$LON[1],
-                        clientRide$LAT[length(clientRide)], clientRide$LON[length(clientRide)])
+                        clientRide$LAT[length(clientRide)], clientRide$LON[length(clientRide)]))
         
       }
       

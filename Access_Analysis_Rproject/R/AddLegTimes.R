@@ -6,14 +6,14 @@ library(RJSONIO)
 options(digits = 8)
 
 #Get data from the dataset with headers
-fullData <- read.csv("~/UW_Trip_Data_QC4Month.csv")
+fullData <- read.csv("~/UW_Trip_Data_PassengerC.csv")
 
 #This is unncessarry if data is clean
-FD_56 = fullData[which(fullData$ProviderId==5 | fullData$ProviderId==6),] #take out 12s
-FD_56$Run <-as.character(FD_56$Run) #b/c runs have alpha chars
-FD_56 <- FD_56[which(!is.na(FD_56$Run)),] #must have run number
-FD_56$ServiceDate <- as.timeDate(as.character(FD_56$ServiceDate)) #make date readable
-
+#FD_56 = fullData[which(fullData$ProviderId==5 | fullData$ProviderId==6),] #take out 12s
+#FD_56$Run <-as.character(FD_56$Run) #b/c runs have alpha chars
+#FD_56 <- FD_56[which(!is.na(FD_56$Run)),] #must have run number
+#FD_56$ServiceDate <- as.timeDate(as.character(FD_56$ServiceDate)) #make date readable
+FD_56 <- fullData
 
 #Get smaller data to test on, just change FD_56 to SD_56 after next line 
 SD_56 <- FD_56[1:23,]
