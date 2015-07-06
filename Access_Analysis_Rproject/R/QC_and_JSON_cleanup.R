@@ -14,9 +14,11 @@ options(digits = 8)
 
 ################### Initial cleaning step: remove obviously bad rides ############################
 #delete pre-existing .csv data file
-files <- list.files("./data/")
-if("UW_Trip_Data_QC.csv" %in% files){file.remove("./data/UW_Trip_Data_QC.csv")}
-if (!("AD" %in% ls())){AD = read.csv("UW_Trip_Data.csv")}
+#files <- list.files("/home/kivan/Dropbox/Current Projects/DSSG/access")
+#if("UW_Trip_Data_QC.csv" %in% files){file.remove("/UW_Trip_Data_QC.csv")}
+#if (!("AD" %in% ls())){AD = read.csv("UW_Trip_Data.csv")}
+setwd('~/Dropbox/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data')
+AD = read.csv("UW_Trip_Data.csv")
 
 AD_56 = AD[which(AD$ProviderId==5 | AD$ProviderId==6),]
 AD_56$Run <-as.character(AD_56$Run)
@@ -105,7 +107,7 @@ for (ride in rides){ #iterate over every instance of a route
 }
 
 ############ Second cleaning step: consolidate city names, remove runs in excess of 24hrs ####################
-if (!("data" %in% ls())){data = read.csv("./data/UW_Trip_Data_QC.csv", header = F)}
+if (!("data" %in% ls())){data = read.csv("~/Dropbox/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data", header = F)}
 headers = c("Rownum", "ServiceDate", "Run", "ProviderId", "EvOrder", 
             "EvId", "Activity", "ETA", "DwellTime", "StreetNo", "OnStreet", "City",
             "LON", "LAT", "BookingId", "SchedStatus", "SubtypeAbbr", "FundingsourceId1", "PassOn", "PassOff", "ClientID",
@@ -141,7 +143,7 @@ for(jj in 1:nrow(data)){
 }
 
 #overwrite previously QC'ed data for better quality one.
-write.csv(data, file="./data/UW_Trip_Data_QC.csv", header = T)
+write.csv(data, file="~/Dropbox/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data/QC.csv", header = T)
 
 ######################## Third step: get ride meta data ##############################
 ## Get meta_data about each ride. Use for regression later.
@@ -166,7 +168,7 @@ for(ii in 1:length(runs)){
 saveme <- saveme[which(saveme$elapsed_time < 86400),]
 
 #Save file. Don't post on Github!!!!
-write.table(x = saveme, file = "./data/ride_meta_data.txt", sep = ",")
+write.table(x = saveme, file = "~/Dropbox/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data/ride_meta_data.txt", sep = ",")
 
 
 

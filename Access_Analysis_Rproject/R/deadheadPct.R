@@ -6,7 +6,7 @@
 library(dplyr)
 
 # in case the file hasn't already been read
-dfr = read.csv("data/UW_Trip_Data_PassengerC.csv")
+dfr = read.csv("/data/UW_Trip_Data_PassengerC.csv")
 
 # takes a dataframe with ETAs, ServiceDates, and Runs
 # returns a dataframe after adding LegTimes and PctTime
