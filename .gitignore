@@ -11,6 +11,7 @@
 *.xlsx
 *.DS_Store
 *.json
+*.RHistory
 =======
 *.csv
 *.json

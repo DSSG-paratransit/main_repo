@@ -1,9 +1,38 @@
-
 library(openxlsx)
 library(dplyr)
 library(timeDate)
 library(RJSONIO)
 options(digits = 8)
+
+# add leg times to any dataframe df
+# returns the modified dataframe
+legTimes <-function(df) {
+  currentDay = df$ServiceDate[1]
+  currentRun = df$Run[1]
+  ETA = df$ETA[1]
+  timeTaken = vector(length=nrow(df))
+  for(i in 1:nrow(df)) {
+    leftAt = ETA
+    ETA = df$ETA[i]
+    previousDay = currentDay
+    previousRun = currentRun
+    currentDay = df$ServiceDate[i]
+    currentRun = df$Run[i]
+    
+    # if row is signals when bus leaves base 
+    # the 'previous' segment took 0s
+    if (previousDay != currentDay) {
+      time = 0
+    } else if (previousRun != currentRun) {
+      time = 0
+    } else {
+      time = ETA - leftAt 
+    }
+    timeTaken[i] = time
+  }
+  df$LegTime <- timeTaken
+  return(df)
+}
 
 #Get data from the dataset with headers
 fullData <- read.csv("~/UW_Trip_Data_QC4Month.csv")
@@ -18,25 +47,5 @@ FD_56$ServiceDate <- as.timeDate(as.character(FD_56$ServiceDate)) #make date rea
 #Get smaller data to test on, just change FD_56 to SD_56 after next line 
 SD_56 <- FD_56[1:23,]
 
-#creates array of all the different runs
-rides = unique(FD_56$Run)
-#Keeps place in dataframe for updating
-place=0
-FD_56$legTime <- rep(0, dim(FD_56)[1])
-for (ride in rides){ #goes through all the routes
-  temp_ride = FD_56[which(FD_56$Run == ride),]
-  temp_ride_days = unique(temp_ride$ServiceDate)
-  #iterate over one route, different days
-  for(k in 1:length(temp_ride_days)){ 
-    
-      #specifies this_ride as run number from only this day
-      this_ride = temp_ride[which(temp_ride$ServiceDate==temp_ride_days[k]),] 
-      for (i in 1:length(this_ride)){
-        #Finds the legTime based on the next ETA-current ETA for legs in this ride
-        FD_56$legTime[place+i]<- this_ride$ETA[i+1]-this_ride$ETA[i]
-      }
-      
-      place=place+length(this_ride)
-      
-    }
-}
+# apply legTime funtion to dataFrame
+FD_56 <- legTime(FD_56)
