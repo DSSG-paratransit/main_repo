@@ -23,8 +23,8 @@ cost_per_second = .8015/60
 output.write("ClientCost,ClientId,Run,ServiceDate,LatStart,LonStart,LatEnd,LonEnd")
 
 uniqueClientOB = dict()
-currentDay = dataSet['ServiceDate'][1] 
-currentRun = dataSet['Run'][1]
+currentDay = dataSet['ServiceDate'][0] 
+currentRun = dataSet['Run'][0]
 for i in dataSet.index:
 
 	previousDay = currentDay
@@ -55,9 +55,7 @@ for i in dataSet.index:
   	  	timeOnBus = dataSet['ETA'][i] - startData[0]
    		cost = timeOnBus * cost_per_second
 
-		dataLine = "\n" + str(cost) + "," + str(clientID) + "," + str(currentRun) + "," +
-					str(currentDay) + "," + str(startData[1]) + "," + str(startData[2]) +
-					"," + str(dataSet['LAT'][i]) + "," + str(dataSet['LON'][i])
+		dataLine = "\n" + str(cost) + "," + str(clientID) + "," + str(currentRun) + "," + str(currentDay) + "," + str(startData[1]) + "," + str(startData[2]) + "," + str(dataSet['LAT'][i]) + "," + str(dataSet['LON'][i])
 		print(dataLine)
 		output.write(dataLine)
    		uniqueClientOB.pop(clientID, None)
