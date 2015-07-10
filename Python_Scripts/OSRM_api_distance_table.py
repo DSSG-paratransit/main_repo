@@ -11,10 +11,7 @@ def dist_table_url(lats, lons):
     for lat, lon in zip(lats, lons):
         url = url + "loc={" + str(lat) + "," + str(lon) + "}&"
     url = url + "instructions=false"
-    n = len(lats)
-    for ii in range(1,n):
-        url += "&loc=%s,%s" % (str(lats[ii]), lons[ii])
-    return(url)
+        return(url)
         
 def get_dist_table(url, n):
     #url of osrm api call, n is number of verticies
