@@ -3,7 +3,9 @@ def get_URIDs(data, broken_Run, resched_init_time):
         based on when we're allowed to first start rescheduling.
         resched_init_time is in seconds, marks the point in time we can begin considering reinserting new requests.
         broken_Run is number of run that breaks
-        data is today's scheduling data'''
+        data is today's scheduling data
+
+        RETURN: list of URIDs'''
     
     #all rides that exist past time we're allowed to begin rescheduling
     leftover = data[data["ETA"] >= resched_init_time]
@@ -25,15 +27,18 @@ def get_URIDs(data, broken_Run, resched_init_time):
     print("There are %s rides left to be scheduled" % unsched.shape[0])
 
     class URID:
-        def __init__(self, bookingId, run, pickUpCoords, dropOffCoords, windowPickUp, windowDropOff, spaceOn, mobAids):
-            self.bookingId= bookingId
-            self.run = run
+        def __init__(self, BookingId, Run, pickUpCoords, dropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids):
+            self.BookingId= BookingId
+            self.Run = Run
             self.pickUpCoords = pickUpCoords
             self.dropOffCoords = dropOffCoords
-            self.windowPickUp = windowPickUp
-            self.windowDropOff = windowDropOff
-            self.spaceOn = spaceOn
-            self.mobAids = mobAids
+            self.PickupStart = PickupStart
+            self.PickupEnd = PickupEnd
+            self.DropoffStart = DropoffStart
+            self.DropoffEnd = DropoffEnd
+            self.SpaceOn = SpaceOn
+            self.MobAids = MobAids
+
 
     diffIDs = unsched.BookingId.unique()
     saveme = []
@@ -41,12 +46,14 @@ def get_URIDs(data, broken_Run, resched_init_time):
     #save separate URID's in a list
     for ID in diffIDs:
         temp = URID(bookingId = ID, run = broken_Run,
-             pickUpCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[0,],
-             dropOffCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[1,],
-             windowPickUp = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["Pickupwin"]].iloc[0,],
-             windowDropOff = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["Dropoffwin"]].iloc[1,],
-             spaceOn = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["MobAids"]].iloc[0,],
-             mobAids = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["MobAids"]].iloc[0,])
+            pickUpCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[0,],
+            dropOffCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[1,],
+            PickupStart = float(unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupStart"]]),
+            PickupEnd = float(unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]]),
+            DropoffStart = float(unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]]),
+            DropoffEnd = float(unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]]),
+            spaceOn = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["SpaceOn"]].iloc[0,],
+            MobAids = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["MobAids"]].iloc[0,])
         saveme.append(temp)
 
     return saveme
