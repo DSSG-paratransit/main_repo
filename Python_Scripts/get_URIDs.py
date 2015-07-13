@@ -27,11 +27,11 @@ def get_URIDs(data, broken_Run, resched_init_time):
     print("There are %s rides left to be scheduled" % unsched.shape[0])
 
     class URID:
-        def __init__(self, BookingId, Run, pickUpCoords, dropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids):
+        def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids):
             self.BookingId= BookingId
             self.Run = Run
-            self.pickUpCoords = pickUpCoords
-            self.dropOffCoords = dropOffCoords
+            self.PickUpCoords = PickUpCoords
+            self.DropOffCoords = DropOffCoords
             self.PickupStart = PickupStart
             self.PickupEnd = PickupEnd
             self.DropoffStart = DropoffStart
@@ -45,14 +45,15 @@ def get_URIDs(data, broken_Run, resched_init_time):
 
     #save separate URID's in a list
     for ID in diffIDs:
-        temp = URID(bookingId = ID, run = broken_Run,
-            pickUpCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[0,],
-            dropOffCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[1,],
-            PickupStart = float(unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupStart"]]),
-            PickupEnd = float(unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]]),
-            DropoffStart = float(unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]]),
-            DropoffEnd = float(unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]]),
-            spaceOn = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["SpaceOn"]].iloc[0,],
+        temp = URID(BookingId = ID,
+            Run = broken_Run,
+            PickUpCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[0,],
+            DropOffCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[1,],
+            PickupStart = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupStart"]],
+            PickupEnd = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]],
+            DropoffStart = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]],
+            DropoffEnd = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]],
+            SpaceOn = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["SpaceOn"]].iloc[0,],
             MobAids = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["MobAids"]].iloc[0,])
         saveme.append(temp)
 
@@ -62,7 +63,7 @@ def get_URIDs(data, broken_Run, resched_init_time):
 #import pandas as pd
 #import numpy as np
 
-#data_filepath = "/Users/fineiskid/Desktop/Access_Analysis_Rproject_local/data/single_clean_day.csv"
+#data_filepath = "/Users/fineiskid/Desktop/Access_Analysis_Rproject_local/data/single_clean_day_TimeWindows.csv"
 #data_allday = pd.read_csv(data_filepath, header = True) #import one day's QC'ed data
 #broken_Run = 508 #RunID
 #resched_init_time = 800*60 #initial time IN SECONDS that we will begin rerouting buses. Idea is like 2hrs from breakdown time.
