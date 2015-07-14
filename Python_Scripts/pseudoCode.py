@@ -1,50 +1,57 @@
-#### Psuedo code file for Access rerouting #####
+#### Psuedo code for MAIN file for Access rerouting #####
 import pandas as pd
 import numpy as np
+import haversine from haversine
 
-broken_Run = #RunID
-resched_init_time = #initial time IN SECONDS that we will begin rerouting buses. Idea is like 2hrs from breakdown time.
-data_allday = pd.read_csv('./data/single_clean_day.csv', header = True) #import one day's QC'ed data
-windowsz = #Variable window size
+#Path to cleaned up data for the day:
+clean_data_path = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/single_clean_day.csv'
 
-def add_TimeWindows(data, windowsz):
-    '''calculate time windows (pickup and dropoff)
-        from SchTime and ETA. data is subsetted schedule data'''
-    etas = data["ETA"]
-    schtime =data["SchTime"]
-    schtime[schtime<0] = np.nan
-    data["Pickupwin"] = ""; data["Dropoffwin"] = "";
-    for x in range(0, len(etas)):
-        #dropoff window is [eta-.5*windowsize, eta+.5*windowsize]
-        data["Dropoffwin"].iloc[x] = np.array([etas.iloc[x]-(windowsz/2), etas.iloc[x]+(windowsz/2)])
-        data["Pickupwin"].iloc[x] = np.array([schtime.iloc[x], schtime.iloc[x]+(30*60)])
-    return data
+broken_Run = '680SEB' #RunID
+resched_init_time = 13*60 + 30 # 1:30 PM (in sec). Initial time IN SECONDS that we will begin rerouting buses.
+data = pd.read_csv(clean_data_path, header = True) #import one day's QC'ed data
+windowsz = 30*60#Variable window size
+
+dataTW = add_TimeWindows(data, windowsz)
+
+URIDS = get_URIDs(dataTW, broken_Run, resched_init_time)
+
+for URID in URIDS:
+    #CHECK PICK-UP INSERTIONS:
+    #list of nearby buses within URID's time frame:
+    close_buses = radius_Elimination(dataTW, URID, resched_init_time, pickUpDropOff = True)
+
+    for bus in close_buses:
+
+        #Non-broken bus is currently at:
+        bus_Run = get_busRuns(dataTW, bus, resched_init_time)
+        #pd.data.frame of overlapping time windows:
+        overlap_nodes = time_OL(bus_Run, URID, pickUpDropOff = True)
+
+        plugLats = []; plugLons = [];
+
+        #if there's a node before the first overlapping time window,
+        #potentially insert URID between prior node and first node with overlapping TW.
+        if overlap_nodes.index[0] != 0:
+            plugLats.append(bus_Run.loc[overlap_nodes.index[0]-1].LAT)
+            plugLons.append(bus_Run.loc[overlap_nodes.index[0]-1].LON)
+
+        for kk in range(len(overlap_nodes.index)):
+            plugLats.append(bus_Run.loc[overlap_nodes.index[0]].LAT)
+            plugLons.append(bus_Run.loc[overlap_nodes.index[0]].LON)
+
+        if overlap_nodes.index[len(overlap_nodes.index)] != 0:
+            plugLats.append(bus_Run.loc[overlap_nodes.index[0]-1].LAT)
+            plugLons.append(bus_Run.loc[overlap_nodes.index[0]-1].LON)
+
+        D_table = kivansFunction(plugLats, plugLons, URID.PickUpCoords.tolist())
+
+        #BEGIN TESTING POSSIBLE FITS OF URID ONTO BUS
 
 
-def get_URIDs(data, broken_Run, resched_init_time):
-    '''get unscheduled request id's from broken bus,
-        based on when we're allowed to first start rescheduling'''
-    
-    #all rides that exist past time we're allowed to begin rescheduling
-    leftover = data[data["ETA"] >= resched_init_time]
-    
-    #rides that were scheduled to be on broken bus past resched_init_time
-    pickmeup = leftover[leftover["Run"]==broken_Run]
-    clients = pickmeup["ClientId"].unique()
-    clients = clients[~(np.isnan(clients))]
-    rmClients = []
-    
-    #remove people who would were scheduled to be on bus before resched_init_time
-    for cli in clients:
-        onoff = pickmeup[pickmeup["ClientId"]==cli]
-        if onoff.shape[0] == 1:
-            rmClients.append(cli)
-    URIDs = pickmeup[~pickmeup["ClientId"].isin(rmClients)]
 
-    unschedBag = unschedBag[unschedBag["Activity"] != 6]
-    unschedBag = unschedBag[unschedBag["Activity"] != 16]
-    unschedBag = unschedBag[unschedBag["Activity"] != 3]
-    print("There are %s rides left to be scheduled" % pickmeup.shape[0])
 
-    return URIDs
+
+
+
+
 

@@ -19,7 +19,7 @@ def radius_Elimination(data, URID, radius, pickUpDropOff):
 	data = data[data.Run != URID.Run]
 
 	#get pd.Data.Frame of nodes that have overlap with URID's pickup or dropoff window
-	overlap_data = time_insertions(data, URID, pickUpDropOff)
+	overlap_data = time_overlap(data, URID, pickUpDropOff)
 
 	if pickUpDropOff:
 		URID_loc = ([URID.PickUpCoords["LAT"], URID.PickUpCoords["LON"]])
@@ -37,7 +37,7 @@ def radius_Elimination(data, URID, radius, pickUpDropOff):
     	if(dist < radius):
     		okBuses.append(overlap_data.Run.iloc[k])
 
-    okBuses = set(okBuses)
+    return set(okBuses)
 
 
 

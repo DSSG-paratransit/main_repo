@@ -1,4 +1,4 @@
-def time_insertions(Run_Schedule, URID, pickUpDropOff = True):
+def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
 	'''URID: of class URID, has bookingId, pickUpLocation, dropOffLocation, etc.
 		Run_Schedule: Schedule (pd.Data.Frame) of the run on which we're trying to insert the URID
 
@@ -72,4 +72,4 @@ return Run_Schedule.loc[crossover]
 #testBusData = get_busRuns(data, broken_run)
 #urid = URIDS[0]
 
-#insertions = time_insertions(testBusData, urid, True)
+#insertions = time_insertions(testBusData, urid, True) #pandas data.frame
