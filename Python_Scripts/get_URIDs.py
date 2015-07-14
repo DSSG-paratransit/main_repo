@@ -51,8 +51,8 @@ def get_URIDs(data, broken_Run, resched_init_time):
             DropOffCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[1,],
             PickupStart = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupStart"]],
             PickupEnd = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]],
-            DropoffStart = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]],
-            DropoffEnd = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]],
+            DropoffStart = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["DropoffStart"]],
+            DropoffEnd = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["DropoffEnd"]],
             SpaceOn = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["SpaceOn"]].iloc[0,],
             MobAids = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["MobAids"]].iloc[0,])
         saveme.append(temp)
