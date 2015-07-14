@@ -4,6 +4,8 @@ def time_insertions(Run_Schedule, URID, pickUpDropOff = True):
 
 		RETURN: pd.Data.Frame corresponding to nodes with overlapping pickup/dropoff windows'''
 
+	#CURRENT ISSUES: RUNSCHEDULE SHOULD HAVE PRECEDING NODES, AT LEAST ONE PRIOR TO RESCHED_INIT_TIME
+
 	if pickUpDropOff:
 	    Start = URID.PickupStart[0]
 	    End = URID.PickupEnd[0]
