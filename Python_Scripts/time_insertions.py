@@ -50,7 +50,7 @@ def time_insertions(Run_Schedule, URID, pickUpDropOff = True):
 	#Get rid of cases that repeat themselves:
 	crossover = set(crossover)
 	print("Need to service URID within %s sec to %s sec" % (Start, End))
-	print("These indices of Run_Schedule overlap: %s" % crossover)
+	print("These indices of Run_Schedule overlap with URID: %s" % crossover)
 
 return Run_Schedule.loc[crossover]
 
