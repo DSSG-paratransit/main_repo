@@ -15,6 +15,12 @@ def containsCode(code, x):
 	else:
 		return 0
 
+def characterString(c, n):
+	r = ''
+	for i in range(n):
+		r = r + c
+	return r
+
 data = pd.read_csv('D:\\Documents\\Repos\\main_repo\\data\\single_clean_day.csv')
 
 # gathers needed data
@@ -29,8 +35,11 @@ for code in allCodes:
 	data[code] = data.MobAids.apply(lambda x: containsCode(code, x))
 # print(data) # debug
 
+# Attempt to fix an error caused in the regression by this 0T
+data.rename(columns={'0T' : 'OT'}, inplace=True)
+
 boardings = data[pd.notnull(data.PassOn)]
-print(boardings) # debug
+# print(boardings) # debug
 deboardings = data[pd.isnull(data.PassOn)]
 
 
@@ -45,7 +54,16 @@ deboardings = data[pd.isnull(data.PassOn)]
 x = ' + '.join(boardings.columns.values[7:])
 y = 'DwellTime'
 reg_formula = y + ' ~ ' + x
-print reg_formula
+# print reg_formula # debug
 
-lmb = smf.ols(formula=reg_formula, data=boardings).fit()
-lmb.summary()
+# boarding regression
+lmb = smf.ols(formula=reg_formula, data=boardings).fit() 
+# deboarding regression
+lmd = smf.ols(formula=reg_formula, data=deboardings).fit()
+
+top = characterString('#', 78)  + '\n'
+bottom = characterString('-', 78)
+print top + characterString(' ', 34) + 'Boardings\n' + bottom
+print lmb.summary()
+print '\n\n' + top + characterString(' ', 33) + 'Deboardings\n' + bottom
+print lmd.summary()
