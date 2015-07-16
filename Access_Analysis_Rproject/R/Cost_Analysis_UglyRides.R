@@ -26,7 +26,8 @@ while(good != 1){
   else{good = 1}
 }
 
-clients_route <- na.omit(unique(route$ClientId))
+route$ClientId <- suppressWarnings(as.numeric(route$ClientId))
+clients_route <- na.omit(route$ClientId)
 for(cli in clients_route){
   temp <- route[which(route$ClientId == cli),]
   if(nrow(temp)%%2 != 0){stop("Client only mentioned once!")}
@@ -41,22 +42,21 @@ ctr = 1; ugVec <- matrix(0, nrow = nrow(route), ncol = 1)
 row.names(route) <- 1:nrow(route)
 for(cli in clients_route){
   temp <- route[which(route$ClientId == cli),]
-  if(nrow(temp)==2){
-    if(temp$Ugly[1] == 1){
-    ugVec[row.names(temp)[1]:row.names(temp)[2]] <- 1
+  for(jj in 1:(nrow(temp)/2)){
+    if(temp$Ugly[(jj*2) - 1] == 1){
+      ugVec[row.names(temp)[(jj*2) - 1]:row.names(temp)[(jj*2)]] <- 1
     }
   }
-  else{print("RUN AGAIN")}
 }
+
 plotRoute <- route
 plotRoute$Ugly <- ugVec
-
 
 lons = as.numeric(unlist(plotRoute$LON))
 lats = as.numeric(unlist(plotRoute$LAT))
 zm = 11
 
-center_King_Co = c(mean(lons), mean(lats))
+center_King_Co = c(quantile(lons,.5, type = 4), quantile(lats,.5, type = 4))
 map <- get_googlemap(center = center_King_Co, zoom = zm, maptype = "roadmap", messaging = FALSE)
 
 p <- ggmap(map, extent = "device")+
