@@ -52,33 +52,25 @@ plotRoute <- route
 plotRoute$Ugly <- ugVec
 
 
-lons = as.numeric(plotRoute$LON)
-lats = as.numeric(plotRoute$LAT)
-zm = 10
+lons = as.numeric(unlist(plotRoute$LON))
+lats = as.numeric(unlist(plotRoute$LAT))
+zm = 11
 
 center_King_Co = c(mean(lons), mean(lats))
-map <- get_googlemap(center = center_King_Co, zoom = zm, maptype = "roadmap")
+map <- get_googlemap(center = center_King_Co, zoom = zm, maptype = "roadmap", messaging = FALSE)
 
-p <- ggmap(map)+
-  geom_point(aes(x = lons, y = lats), data = as.numeric(plotRoute[,c("LAT", "LON")]), size = sqrt(2), colour = "black")+
-  geom_segment(aes(x = lons[1], y = lats[1], xend = lons[2], yend = lats[2]), data = temp, size = .24, colour = "red")
-if(nrow(pl))
-for (j in 1:nrow()){
+p <- ggmap(map, extent = "device")+
+  geom_point(aes(x = lons, y = lats), data =plotRoute, size = sqrt(2), colour = "black")+
+  geom_segment(aes(x = lons[1], y = lats[1], xend = lons[2], yend = lats[2]), size = .24, colour = "green")
+
+for (j in 2:(nrow(plotRoute)-1)){
   if (plotRoute$Ugly[j]==0){
-    p <- p + geom_segment(x = lons[j], y = lats[j], xend = lons[j+1], yend = lats[j+1],data=as.numeric(plotRoute[,c("LAT", "LON")]), size = .24, colour = "green")
+    p <- p + geom_segment(x = lons[j], y = lats[j], xend = lons[j+1], yend = lats[j+1],data=plotRoute, size = .24, colour = "green")
   }
   else{
-    p <- p + geom_segment(x = lons[j], y = lats[j], xend = lons[j+1], yend = lats[j+1],data = as.numeric(plotRoute[,c("LAT", "LON")]), size = .24, colour = "red")
+    p <- p + geom_segment(x = lons[j], y = lats[j], xend = lons[j+1], yend = lats[j+1],data =plotRoute, size = .24, colour = "red")
   }
 }
 
 print(p)
 
-
-# for (run in 1:rides){
-#   temp_ride = data[which(data$Run == run),]
-#   dates_ride = unique(temp_ride$ServiceDate)
-#   for (k in 1:length(dates_ride)){
-#     
-#   }
-# }
