@@ -81,7 +81,8 @@ print(p)
 
 dates = unique(data$ServiceDate)
 rides = unique(data$Run)
-rand_ug_ind <- sample(which(data$Ugly==1), 1)
+rand_date <- sample(dates,1)
+rand_ride <- sample(rides,1)
 rand_ug_run <- c(data$Run[rand_ug_ind], data$ServiceDate[rand_ug_ind])
 route <- data[which(data$Run == rand_ug_run[1][[1]] & data$ServiceDate == rand_ug_run[2][[1]]), ]
 
