@@ -13,12 +13,8 @@ options(digits = 8)
 # (2) there will be 2 files created, make sure you don't upload to Github.
 
 ################### Initial cleaning step: remove obviously bad rides ############################
-#delete pre-existing .csv data file
-#files <- list.files("/home/kivan/Dropbox/Current Projects/DSSG/access")
-#if("UW_Trip_Data_QC.csv" %in% files){file.remove("/UW_Trip_Data_QC.csv")}
-#if (!("AD" %in% ls())){AD = read.csv("UW_Trip_Data.csv")}
-#setwd('~/Dropbox/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data')
-setwd('D:/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data')
+#loading data
+#setwd('./data')
 AD = read.csv("UW_Trip_Data_FullHeaders.csv")
 
 AD_56 = AD[which(AD$ProviderId==5 | AD$ProviderId==6),]
@@ -101,17 +97,20 @@ for (ride in rides){ #iterate over every instance of a route
         }
       }
       this_ride$NumPass <- busCount
-      write.table(this_ride, file = "UW_Trip_Data_new.csv", col.names = F, append = T, sep = ",")
+      write.table(this_ride, file = "UW_Trip_Data_18mo_QC_a.csv", col.names = F, append = T, sep = ",")
     }
   }
 }
 
 ############ Second cleaning step: consolidate city names, remove runs in excess of 24hrs ####################
-if (!("data" %in% ls())){data = read.csv("D:/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data/UW_Trip_Data_new.csv", header = F)}
-headers = c("Rownum", "ServiceDate", "Run", "ProviderId", "EvOrder", 
-            "EvId", "Activity", "ETA", "DwellTime", "StreetNo", "OnStreet", "City",
-            "LON", "LAT", "BookingId", "SchedStatus", "SubtypeAbbr", "FundingsourceId1", "PassOn", "PassOff", "ClientID",
-            "NumOn", "NumOff", "TotalPass")
+if (!("data" %in% ls())){data = read.csv("UW_Trip_Data_18mo_QC_a.csv", header = F)}
+
+headers = c("Rownum", "ServiceDate", "Run", "ProviderId", "EvOrder", "EvId", 
+            "ReqTime", "SchTime", "ReqLate", "Activity", "ETA", "DwellTime", 
+            "StreetNo", "OnStreet", "City", "LON", "LAT", "BookingId", "SchedStatus", "SubtypeAbbr", 
+            "FundingsourceId1", "PassOn", "Spaceon", "PassOff", "SpaceOff", "ClientID","MobAids",
+            "NumOn", "NumOff", "TotalPass"
+            )
 colnames(data) <- headers
 
 data$ServiceDate <- as.timeDate(as.character(data$ServiceDate))
@@ -120,30 +119,10 @@ dates <- unique(data$ServiceDate)
 runs <- unique(data$Run)
 
 # fix city names. Takes a minute...
-data$City <- tolower(as.character(data$City))
-for(jj in 1:nrow(data)){
-  city_name = data$City[jj]
-  if(city_name == "federal waye" | city_name == "federal" | city_name == "fedral way"){
-    data$City[jj] <- "federal way"
-  }
-  if(city_name == "seatle"){ data$City[jj] <- "seattle"}
-  if(city_name == "remond"){data$City[jj] <- "redmond"}
-  if(city_name == "vashon"){data$City[jj] <- "vashon island"}
-  if(city_name == "des monies"){data$City[jj] <- "des moines"}
-  if(city_name == "eedmonds"){data$City[jj] <- "edmonds"}
-  if(city_name == "lynwood"){data$City[jj] <- "lynnwod"}
-  if(city_name == "aubuirn"){data$City[jj] <- "auburn"}
-  if(city_name == "bothell-"){data$City[jj] <- "bothell"}
-  if(city_name == "kikrland"){data$City[jj] <- "kirkland"}
-  if(city_name == "tulwila"){data$City[jj] <- "tukwila"}
-  if(city_name == "normandy pk"){data$City[jj] <- "normandy park"}
-  if(city_name == "mountlake  terra e"){data$City[jj] <- "mountlake terrace"}
-  if(city_name == "burien wa"){data$City[jj] <- "burien"}
-  if(city_name == "sea tac"){data$City[jj] <- "seatac"} 
-}
+source('../R/canonicalize_city.R')
 
 #overwrite previously QC'ed data for better quality one.
-write.csv(data, file="D:/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data/UW_Trip_Data_new.csv", header = T)
+write.csv(data, file="UW_Trip_Data_18mo_QC_b.csv")
 
 ######################## Third step: get ride meta data ##############################
 ## Get meta_data about each ride. Use for regression later.
@@ -168,7 +147,7 @@ for(ii in 1:length(runs)){
 saveme <- saveme[which(saveme$elapsed_time < 86400),]
 
 #Save file. Don't post on Github!!!!
-write.table(x = saveme, file = "~/Dropbox/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data/new.txt", sep = ",")
+write.table(x = saveme, file = "UW_Trip_Data_18mo_QC_c.txt", sep = ",")
 
 
 
