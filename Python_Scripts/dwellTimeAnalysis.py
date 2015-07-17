@@ -26,8 +26,17 @@ def characterString(c, n):
 def test(x):
 	print(x)
 
-data_path = os.path.join(os.pardir,'data','single_clean_day.csv')
-data = pd.read_csv(data_path)
+# get data file from 1st argument
+data = None
+try:
+	data_path = os.path.join(os.pardir,'data',sys.argv[1])
+	data = pd.read_csv(data_path)
+except IOError:
+	print('\n\tError: No file at ../data/' + sys.argv[1] + ' from ' + os.getcwd() + '\n')
+	quit()
+except IndexError: 
+	print('\n\tdwellTimeAnalysis.py takes a csv file from\n\n\t\tmain_repo\data\n\n\tassuming that the file is run in the Python_Scripts folder\n')
+	quit()
 
 # gathers needed data
 data.Activity = data.Activity.apply(lambda x: int(x))
