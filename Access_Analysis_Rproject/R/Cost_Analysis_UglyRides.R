@@ -27,7 +27,7 @@ while(good != 1){
 }
 
 route$ClientId <- suppressWarnings(as.numeric(route$ClientId))
-clients_route <- na.omit(route$ClientId)
+clients_route <- unique(na.omit(route$ClientId))
 for(cli in clients_route){
   temp <- route[which(route$ClientId == cli),]
   if(nrow(temp)%%2 != 0){stop("Client only mentioned once!")}

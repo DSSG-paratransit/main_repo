@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # git ls-files --others --exclude-from=.git/info/exclude
 # Lines that start with '#' are comments.
 # For a project mostly in C, the following would be a good set of
@@ -26,3 +27,8 @@
 .Rproj.user
 *.pem
 >>>>>>> origin/rohansrepo
+=======
+_site
+.sass-cache
+.DS_Store
+>>>>>>> fcece44389bfa1040e70facebb4fb3395e74c415
