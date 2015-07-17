@@ -106,5 +106,3 @@ def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
 #outbound = np.column_stack((np.array(outbound.LAT), np.array(outbound.LON))) #GODDAMNIT THAT WAS COMPLICATED
 #inbound = Run_Schedule.loc[inserts["inbound"]]
 #inbound = np.column_stack((np.array(inbound.LAT), np.array(inbound.LON))) 
-#inbound
-
