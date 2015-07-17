@@ -12,6 +12,8 @@ library(ggmap)
 data$ServiceDate <- as.timeDate(as.character(data$ServiceDate))
 data$Run <- as.character(data$Run)
 
+########################## Plot routes containing ugly rides ##################################
+# Pick a random run containing an ugly ride, plot it with ggmap
 good = 0
 while(good != 1){
   #pick random route with an ugly ride.
@@ -73,4 +75,14 @@ for (j in 2:(nrow(plotRoute)-1)){
 }
 
 print(p)
+
+
+######################## Randomly sample Bus Runs, see if they contain ugly ride ##############################
+
+dates = unique(data$ServiceDate)
+rides = unique(data$Run)
+rand_ug_ind <- sample(which(data$Ugly==1), 1)
+rand_ug_run <- c(data$Run[rand_ug_ind], data$ServiceDate[rand_ug_ind])
+route <- data[which(data$Run == rand_ug_run[1][[1]] & data$ServiceDate == rand_ug_run[2][[1]]), ]
+
 
