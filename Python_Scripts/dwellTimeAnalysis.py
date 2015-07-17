@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import pandas as pd
 import statsmodels.formula.api as smf
 
@@ -24,7 +25,8 @@ def characterString(c, n):
 def test(x):
 	print(x)
 
-data = pd.read_csv('D:\\Documents\\Repos\\main_repo\\data\\single_clean_day.csv')
+data_path = os.path.join(os.pardir,'data','single_clean_day.csv')
+data = pd.read_csv(data_path)
 
 # gathers needed data
 data.Activity = data.Activity.apply(lambda x: int(x))
@@ -45,11 +47,16 @@ for code in allCodes:
 data.rename(columns={'0T' : 'OT'}, inplace=True)
 
 # combines boardings at the same stop
+temp = data # debug
+print(temp.columns.values) #debug
+temp.drop('MobAids',1,inplace=True)
 data = data.groupby(['ServiceDate','Run','ETA','DwellTime','Activity']).sum()
 #data['DwellTime'] = data.index.get_level_values('DwellTime') # HACK
 #data['Activity'] = data.index.get_level_values('Activity') # HACK
 data.reset_index(inplace=True)
-# print(data) # debug
+print(data.columns.values) # debug
+np.max(np.abs(np.array(temp) - np.array(data)))
+
 
 # splits data into boading and deboarding
 boardings = data[data.Activity == 0]
