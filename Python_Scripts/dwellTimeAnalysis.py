@@ -48,14 +48,12 @@ data.rename(columns={'0T' : 'OT'}, inplace=True)
 
 # combines boardings at the same stop
 temp = data # debug
-print(temp.columns.values) #debug
-temp.drop('MobAids',1,inplace=True)
+print(temp.columns.values) # debug
+temp.drop('MobAids', 1 ,inplace=True) # debug 
 data = data.groupby(['ServiceDate','Run','ETA','DwellTime','Activity']).sum()
-#data['DwellTime'] = data.index.get_level_values('DwellTime') # HACK
-#data['Activity'] = data.index.get_level_values('Activity') # HACK
 data.reset_index(inplace=True)
 print(data.columns.values) # debug
-np.max(np.abs(np.array(temp) - np.array(data)))
+print(data.equals(temp)) # debug
 
 
 # splits data into boading and deboarding
