@@ -21,7 +21,7 @@ lats = temp$LAT
 if (length(lons)>20){
   zm = 11
 } else {
-  zm = 10
+  zm = 12
 }
 
 center_King_Co = c(mean(lons), mean(lats))
