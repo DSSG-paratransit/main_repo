@@ -2,6 +2,7 @@ import numpy as np
 import os
 import pandas as pd
 import statsmodels.formula.api as smf
+import sys
 
 def splitCode(x):
 	if type(x) is str:
@@ -46,15 +47,21 @@ for code in allCodes:
 # Attempt to fix an error caused in the regression by this 0T
 data.rename(columns={'0T' : 'OT'}, inplace=True)
 
-# combines boardings at the same stop
-temp = data # debug
-print(temp.columns.values) # debug
-temp.drop('MobAids', 1 ,inplace=True) # debug 
+## combines boardings at the same stop
+# temp = data # debug
+# print(temp.columns.values) # debug
+# temp.drop('MobAids', 1 ,inplace=True) # debug 
 data = data.groupby(['ServiceDate','Run','ETA','DwellTime','Activity']).sum()
+# 55-60 removes colums that have all 0 data
+bool_column_df = data.apply(lambda x: (min(x) == 0) and (max(x) == 0))
+bool_column_df.columns = ['values']
+print(bool_column_df.values) # debug
+columns = bool_column_df[bool_column_df.values].index.values
+print(columns) # debug
+data.drop(columns,1,inplace=True)
 data.reset_index(inplace=True)
-print(data.columns.values) # debug
-print(data.equals(temp)) # debug
-
+# print(data.columns.values) # debug
+# print(data.equals(temp)) # debug
 
 # splits data into boading and deboarding
 boardings = data[data.Activity == 0]
@@ -80,14 +87,15 @@ lmb = smf.ols(formula=reg_formula, data=boardings).fit()
 # deboarding regression
 lmd = smf.ols(formula=reg_formula, data=deboardings).fit()
 
+# prints and writes data to file
+orig_stdout = sys.stdout
 output = open("../data/dwell_time_mobaid_regression.txt", 'w')
+sys.stdout = output
 top = characterString('#', 78)  + '\n'
 bottom = characterString('-', 78)
 print top + characterString(' ', 34) + 'Boardings\n' + bottom
-output.write(top + characterString(' ', 34) + 'Boardings\n' + bottom)
 print lmb.summary()
-output.write(str(lmb.summary))
 print '\n\n' + top + characterString(' ', 33) + 'Deboardings\n' + bottom
-output.write('\n\n' + top + characterString(' ', 33) + 'Deboardings\n' + bottom)
 print lmd.summary()
-output.write(str(lmd.summary))
+sys.stdout = orig_stdout
+output.close()
