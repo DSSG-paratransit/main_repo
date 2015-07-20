@@ -4,6 +4,8 @@ import pandas as pd
 import statsmodels.formula.api as smf
 import sys
 
+# @params: takes mobaid codes string
+# @returns: list of mobaid strings
 def splitCode(x):
 	if type(x) is str:
 		codes = x.split(',')
@@ -11,18 +13,22 @@ def splitCode(x):
 	else:
 		return []
 
+# @returns binary T/F if string code is in string/list x
 def containsCode(code, x):
 	if code in x:
 		return 1
 	else:
 		return 0
 
+# @param: takes char to be repeated c and number of repeats n
+# @returns: a string with c repeated n times
 def characterString(c, n):
 	r = ''
 	for i in range(n):
 		r = r + c
 	return r
 
+# to debug lambda functions
 def test(x):
 	print(x)
 
