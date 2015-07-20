@@ -1,41 +1,43 @@
+#print distances that bus 181SEB is from URID location during time windows... It's pretty far...
 def radius_Elimination(data, URID, radius, pickUpDropOff):
-	'''Given a set of the day's bus data and an unhandled requst,
-		eliminate all bus routes that are farther than radius-miles away at all
-		points in the URID's pickup or dropoff window, the window being specified
-		by pickUpDropOff. Run time_insertions.py on the resultant list.
+    '''Given a set of the day's bus data and an unhandled requst,
+    eliminate all bus routes that are farther than radius-miles away at all
+        points in the URID's pickup or dropoff window, the window being specified
+        by pickUpDropOff. Run time_insertions.py on the resultant list.
 
-		NOTE: you need to "> pip install haversine"
+        NOTE: you need to "> pip install haversine"
 
-		INPUT:  data - pd.Data.Frame returned from add_TimeWindows.py
-				URID - URID object from get_URIDS.py	
-				radius - float, number of miles
-				pickUpDropOff - boolean True/False for PickUp (True) or Dropoff (False)
+        INPUT:  data - pd.Data.Frame returned from add_TimeWindows.py
+                URID - URID object from get_URIDS.py	
+                radius - float, number of miles
+                pickUpDropOff - boolean True/False for PickUp (True) or Dropoff (False)
 
-		RETURN: LIST of runs within radius-miles of URID.'''
+        RETURN: LIST of runs within radius-miles of URID.'''
 
-	import haversine from haversine
+    #obviously, broken bus can't be in the list of nearby buses.
+    data = data[data.Run != URID.Run]
 
-	#obviously, broken bus can't be in the list of nearby buses.
-	data = data[data.Run != URID.Run]
+    if pickUpDropOff:
+        URID_loc = ([URID.PickUpCoords["LAT"], URID.PickUpCoords["LON"]])
+    else:
+        URID_loc = ([URID.DropOffCoords["LAT"], URID.PickUpCoords["LON"]])
+        
+    #get pd.Data.Frame of nodes that have overlap with URID's pickup or dropoff window
+    overlap_data = time_overlap(data, URID, pickUpDropOff)
+    print(overlap_data["all_nodes"][0:10])
 
-	#get pd.Data.Frame of nodes that have overlap with URID's pickup or dropoff window
-	overlap_data = time_overlap(data, URID, pickUpDropOff)
+    #get row index of nodes that may have either inbound/outbound overlap with URID TW.
+    overlap_data = data.loc[overlap_data['all_nodes']]
+    overlap_LAT = overlap_data.LAT.tolist()
+    overlap_LON = overlap_data.LON.tolist()
 
-	if pickUpDropOff:
-		URID_loc = ([URID.PickUpCoords["LAT"], URID.PickUpCoords["LON"]])
-	else:
-		URID_loc = ([URID.DropOffCoords["LAT"], URID.PickUpCoords["LON"]])
-
-	overlap_LAT = overlap_data.LAT.tolist()
-	overlap_LON = overlap_data.LON.tolist()
-
-	#store list of rides that are sufficiently nearby URID's location
-	okBuses = []
-	for k in range(len(overlap_LAT)):
-    	point = (overlap_LAT[k], overlap_LON[k])
-    	dist = haversine(point, URID_loc, miles=True)
-    	if(dist < radius):
-    		okBuses.append(overlap_data.Run.iloc[k])
+    #store list of rides that are sufficiently nearby URID's location
+    okBuses = []
+    for k in range(len(overlap_LAT)):
+        point = (overlap_LAT[k], overlap_LON[k])
+        dist = haversine(point, URID_loc, miles=True)
+        if(dist < radius):
+            okBuses.append(overlap_data.Run.iloc[k])
 
     return set(okBuses)
 

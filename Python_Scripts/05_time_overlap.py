@@ -1,3 +1,4 @@
+#Find windows that overlap 
 def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
     '''URID: of class URID, has bookingId, pickUpLocation, dropOffLocation, etc.
         Run_Schedule: Schedule (pd.Data.Frame) of the run on which we're trying to insert the URID
@@ -57,11 +58,12 @@ def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
     #Get rid of cases that repeat themselves:
     crossover = list(set(crossover))
     
-    inserts = Run_Schedule.loc[crossover]; inserts = inserts.index
+    inserts = Run_Schedule.loc[crossover]; indices = Run_Schedule.index
+    print(indices)
     lst = []; outbound = []; inbound = []
     #Lists of continuously arranged nodes with overlap
-    for k, g in groupby(enumerate(inserts), lambda (i,x):i-x):
-        k = map(itemgetter(1), g)
+    for k, g in itertools.groupby(enumerate(inserts.index), lambda (i,x):i-x):
+        k = map(operator.itemgetter(1), g)
         #save nodes with time overlap
         outbound += k; inbound +=k
         #save upper/lower bound where appropriate
