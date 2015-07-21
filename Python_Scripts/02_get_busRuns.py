@@ -5,7 +5,7 @@ def get_busRuns(data, Run, resched_init_time):
 	RETURN: busRun pandas.dataframe for specified Run.'''
 
       #subset based on matching Run number, and subset for stops only at or after resched_init_time
-	dataSub = data[(data["Run"] == Run) & (data["ETA"] >= resched_init_time)]
+	dataSub = data[(data["Run"] == Run)] # & (data["ETA"] >= resched_init_time)]
 
       # leave garage (beginning of route index), gas (end of route index)
       # get all rides between/including leave garage and gas indices.
