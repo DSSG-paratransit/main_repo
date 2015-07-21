@@ -39,9 +39,8 @@ def osrm (URID_location, inbound, outbound):
         in_end_points += [in_route_results[u'route_summary'][u'end_point']]
 
     a = np.array([in_total_time]); b = np.array([out_total_time])
-    retDict = {"inbound_times": a, "outbound_times": b}
     
-    return(retDict)
+    return(np.hstack((a.T, b.T)))
 
 
 

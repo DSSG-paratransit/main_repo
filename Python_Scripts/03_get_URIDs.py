@@ -24,7 +24,7 @@ def get_URIDs(data, broken_Run, resched_init_time):
             rmClients.append(cli)
     unsched = pickmeup[~pickmeup["ClientId"].isin(rmClients)]
 
-    print("There are %s rides left to be scheduled" % unsched.shape[0])
+    print("There are %s rides left to be scheduled on broken run %s" % (unsched.shape[0], broken_Run))
 
     class URID:
         def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids):
@@ -39,22 +39,22 @@ def get_URIDs(data, broken_Run, resched_init_time):
             self.SpaceOn = SpaceOn
             self.MobAids = MobAids
 
-
     diffIDs = unsched.BookingId.unique()
     saveme = []
 
     #save separate URID's in a list
     for ID in diffIDs:
+        my_info = unsched[unsched["BookingId"]==ID]
         temp = URID(BookingId = ID,
             Run = broken_Run,
-            PickUpCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[0,],
-            DropOffCoords = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["LAT", "LON"]].iloc[1,],
-            PickupStart = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupStart"]],
-            PickupEnd = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["PickupEnd"]],
-            DropoffStart = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["DropoffStart"]],
-            DropoffEnd = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["DropoffEnd"]],
-            SpaceOn = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["SpaceOn"]].iloc[0,],
-            MobAids = unsched[unsched["BookingId"]==unsched.BookingId.iloc[0]][["MobAids"]].iloc[0,])
+            PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
+            DropOffCoords = my_info[["LAT", "LON"]].iloc[1,],
+            PickupStart = my_info[["PickupStart"]].iloc[0,],
+            PickupEnd = my_info[["PickupEnd"]].iloc[0,],
+            DropoffStart = my_info[["DropoffStart"]].iloc[1,],
+            DropoffEnd = my_info[["DropoffEnd"]].iloc[1,],
+            SpaceOn = my_info[["SpaceOn"]].iloc[0,],
+            MobAids = my_info[["MobAids"]].iloc[0,])
         saveme.append(temp)
 
     return saveme

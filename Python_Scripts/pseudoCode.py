@@ -41,8 +41,7 @@ for URID in URIDS:
         time_matrix = osrm(uridLoc, inbound, outbound)
 
         #We now have travel times for the inbound, outbound insertions!
-        outbound_times = np.column_stack((outbound, time_matrix["outbound_times"].T))
-        inbound_times = np.column_stack((inbound, time_matrix["inbound_times"].T)) 
+        
 
         
         
