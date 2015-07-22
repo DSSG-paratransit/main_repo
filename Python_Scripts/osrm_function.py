@@ -2,19 +2,16 @@ import requests
 import pandas as pd
 import numpy as np
 
-<<<<<<< HEAD
 #osrm function
 def osrm (URID_location, busRun):
     #URID_location it's a lat, lon list of URID 
     #lists for inbound and outbound matrices
     # outbound (from urid location to scheduled location)
-=======
 #Get distances between (insertable nodes, URID location)
 def osrm (URID_location, inbound, outbound):
     #URID_location it's a list: [lat, lon]
     #lists for inbound and outbound matrices
     # inbound/outbound: 2-column np.arrays storing inbound/outbound node latitude/longitude
->>>>>>> 858dbc9ad46fa84180e89014be61114e6e3c7f06
     # and inbound (from scheduled location to urid location) 
     out_total_time = []
     out_start_points = []
@@ -24,7 +21,6 @@ def osrm (URID_location, inbound, outbound):
     in_end_points = []
     out_osrm_url = "http://router.project-osrm.org/viaroute?"
     in_osrm_url = "http://router.project-osrm.org/viaroute?"
-<<<<<<< HEAD
 
         # outbound 
         for lat_cord,lon_cord in zip(subset.LAT,subset.LON): 
@@ -54,7 +50,7 @@ def osrm (URID_location, inbound, outbound):
     total_bus_matrix = {'outbound_location':out_bus_matrix[0],'outbound_time':out_bus_matrix[1],'inbound_location':in_bus_matrix[0],'inbound_time':in_bus_matrix[1]}
     total_route_df = pd.DataFrame(data=total_bus_matrix)
     #print(total_route_df)
-=======
+
     urid_LAT = URID_location[0]; urid_LON = URID_location[1]
 
     # outbound
@@ -106,4 +102,3 @@ def osrm (URID_location, inbound, outbound):
 # inbound = np.column_stack((inbound, time_matrix["inbound_times"].T))
 # outbound
 
->>>>>>> 858dbc9ad46fa84180e89014be61114e6e3c7f06
