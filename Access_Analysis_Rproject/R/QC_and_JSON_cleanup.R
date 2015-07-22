@@ -16,7 +16,7 @@ options(digits = 8)
 #delete pre-existing .csv data file
 files <- list.files("./data/")
 if("UW_Trip_Data_QC.csv" %in% files){file.remove("./data/UW_Trip_Data_QC.csv")}
-if (!("AD" %in% ls())){AD = read.csv("UW_Trip_Data.csv")}
+if (!("AD" %in% ls())){AD = read.csv("./data/UW_Trip_Data.csv")}
 
 AD_56 = AD[which(AD$ProviderId==5 | AD$ProviderId==6),]
 AD_56$Run <-as.character(AD_56$Run)
@@ -34,6 +34,7 @@ AD_56 = AD_56[-(1:(ctr-1)),]
 passon <- as.character(AD_56$PassOn); passoff <- as.character(AD_56$PassOff)
 nOn <- rep(0, length=length(passon)); nOff = nOn
 nOn[passon!=""] <- 1; nOff[passoff!=""] <- 1
+nOn[AD_56$SchedStatus %in% c(20,21,42)] <- 0
 AD_56$nOn <- nOn; AD_56$nOff <- nOff
 
 #Unique dates serviced, unique run numbers
@@ -71,12 +72,6 @@ for (ride in rides){ #iterate over every instance of a route
       flag = "NO_MOVEMENT"
     }
     
-    for (leg in 2:nrow(this_ride)){
-      lat = c(this_ride$LAT[leg-1], this_ride$LAT[leg]); lon = c(this_ride$LON[leg-1], this_ride$LON[leg])
-      Durs[leg-1] = this_ride$ETA[leg]-this_ride$ETA[leg-1]
-      Dists[leg-1] = gcd.hf(lat, lon)
-    }
-    
     if(this_ride$Activity[1]!=4 | this_ride$Activity[nrow(this_ride)]!=3){
       if(flag != "OK"){
         flag = paste(flag, "ROUTE_FINISH_ERROR", sep = ", ")
@@ -98,19 +93,25 @@ for (ride in rides){ #iterate over every instance of a route
               busCount[jj] = busCount[jj-1] + (addme - subme)
           }
       }
+    if(ride == rides[1]){
+      this_ride$NumPass <- busCount
+      write.table(this_ride, file = "./data/UW_Trip_Data_QC.csv", col.names = T, append = T, sep = ",")           
+    }
+    else{
       this_ride$NumPass <- busCount
       write.table(this_ride, file = "./data/UW_Trip_Data_QC.csv", col.names = F, append = T, sep = ",")
+      }
     }
   }
 }
 
 ############ Second cleaning step: consolidate city names, remove runs in excess of 24hrs ####################
-if (!("data" %in% ls())){data = read.csv("./data/UW_Trip_Data_QC.csv", header = F)}
-headers = c("Rownum", "ServiceDate", "Run", "ProviderId", "EvOrder", 
-            "EvId", "Activity", "ETA", "DwellTime", "StreetNo", "OnStreet", "City",
-            "LON", "LAT", "BookingId", "SchedStatus", "SubtypeAbbr", "FundingsourceId1", "PassOn", "PassOff", "ClientID",
-            "NumOn", "NumOff", "TotalPass")
-colnames(data) <- headers
+if (!("data" %in% ls())){data <- read.csv("./data/UW_Trip_Data_QC.csv", header = T)}
+# headers = c("Rownum", "ServiceDate", "Run", "ProviderId", "EvOrder", 
+#             "EvId", "Activity", "ETA", "DwellTime", "StreetNo", "OnStreet", "City",
+#             "LON", "LAT", "BookingId", "SchedStatus", "SubtypeAbbr", "FundingsourceId1", "PassOn", "PassOff", "ClientID",
+#             "NumOn", "NumOff", "TotalPass")
+# colnames(data) <- headers
 
 data$ServiceDate <- as.timeDate(as.character(data$ServiceDate))
 data$Run <- as.character(data$Run)
@@ -141,7 +142,7 @@ for(jj in 1:nrow(data)){
 }
 
 #overwrite previously QC'ed data for better quality one.
-write.csv(data, file="./data/UW_Trip_Data_QC.csv", header = T)
+write.csv(data, file="./data/UW_Trip_Data_QC.csv")
 
 ######################## Third step: get ride meta data ##############################
 ## Get meta_data about each ride. Use for regression later.
@@ -156,6 +157,7 @@ for(ii in 1:length(runs)){
   temp_days <- unique(temp$ServiceDate)
   for (kk in 1:length(temp_days)){
     this_run <- temp[which(temp$ServiceDate==temp_days[kk]),]
+    this_run <- this_run[-which(this_run$Activity !=3), ]
     elapsed <- this_run$ETA[nrow(this_run)] - this_run$ETA[1]
     max_pass <- max(this_run$TotalPass)
     avg_dwell <- mean(this_run$DwellTime)
