@@ -7,11 +7,11 @@ date:   2015-07-24
 
 #Updates from Emily
 
-###Quick Link
+##Quick Link
 
-My blog can be found [at this page](http://emilydreu.weebly.com/blog.html)
+###My blog can be found [at this page](http://emilydreu.weebly.com/blog.html)
 
-###Explaining my blog
+##Explaining my blog
 
 If you take a look at my blog, you might start wondering, "Hey, what is this DREU thing?
 Isn't this supposed to be done through the eScience's DSSG summer program?" 
@@ -27,4 +27,5 @@ DSSG program. So, as her student, Anat decided to put me on the paratransit proj
 As part of my requirements for my DREU, I must keep an updated blog about my research and what I have been up
 to each week. I write daily updates that are just short snippets about what is happening with our project, so
 you can keep up with what we're doing (through Emily's perspective) by checking out the link above. Please note
-that I arrived here two weeks before the DSSG program started, so blog posts about DSSG related work start at week three. 
+that I arrived here two weeks before the DSSG program started, so blog posts about DSSG related work start at 
+[week three](http://emilydreu.weebly.com/week-three). 
