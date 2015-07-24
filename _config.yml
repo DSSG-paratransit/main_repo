@@ -1,0 +1,11 @@
+# Site settings
+title: King County Metro Paratransit Group
+email: kgarofali@gmail.com
+description: "#DSSG2015 @uwescience"
+baseurl: "http://DSSG-paratransit.github.io/main_repo" 
+url: "http://DSSG-paratransit.github.io/main_repo" 
+twitter_username: uwescience
+github_username:  uwescience
+
+# Build settings
+markdown: kramdown
