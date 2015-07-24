@@ -9,14 +9,7 @@
 	  <div class="wrapper">
 		 <img src="images/dssg_logo_w_bkgrnd.png" width="500px;">
     
-        <ul>
-          {% for post in site.posts %}
-            <li>
-              <a href="{{ post.url }}">{{ post.title }}</a>
-              {{ post.excerpt }}
-            </li>
-          {% endfor %}
-        </ul>
+        {{ content }}
       </div>
     </div>
 	
