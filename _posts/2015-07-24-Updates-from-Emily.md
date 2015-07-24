@@ -1,6 +1,5 @@
 ---
 layout: post
-dsifonsdf
 title:  "Updates from Emily"
 date:   2015-07-24
 ---
