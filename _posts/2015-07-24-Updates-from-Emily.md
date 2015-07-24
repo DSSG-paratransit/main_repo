@@ -9,7 +9,7 @@ date:   2015-07-24
 
 ###Quick Link
 
-My blog can be found at http://emilydreu.weebly.com/blog.html
+My blog can be found [at this page.] (http://emilydreu.weebly.com/blog.html)
 
 ###Explaining my blog
 
