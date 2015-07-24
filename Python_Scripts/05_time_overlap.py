@@ -1,3 +1,4 @@
+#Find windows that overlap 
 def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
     '''URID: of class URID, has bookingId, pickUpLocation, dropOffLocation, etc.
         Run_Schedule: Schedule (pd.Data.Frame) of the run on which we're trying to insert the URID
@@ -57,31 +58,33 @@ def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
     #Get rid of cases that repeat themselves:
     crossover = list(set(crossover))
     
-    inserts = Run_Schedule.loc[crossover]; inserts = inserts.index
+    inserts = Run_Schedule.loc[crossover]; indices = Run_Schedule.index
     lst = []; outbound = []; inbound = []
     #Lists of continuously arranged nodes with overlap
-    for k, g in groupby(enumerate(inserts), lambda (i,x):i-x):
-        k = map(itemgetter(1), g)
-        #save nodes with time overlap
-        outbound += k; inbound +=k
+    for k, g in itertools.groupby(enumerate(inserts.index), lambda (i,x):i-x):
+        k = map(operator.itemgetter(1), g)
         #save upper/lower bound where appropriate
         lst += [min(k)]; lst+=[max(k)]
         if len(lst) == 2:
+            outbound += k; inbound +=k
             if lst[0] != min(indices):
                 outbound.append(lst[0]-1) #we have a lower bound node, heading outbound from Run_Schedule
-            if lst[-1] != max(indices):
-                inbound.append(lst[-1]+1) #upper bound node for first contiguous set of overlap nodes
+            else:
+                inbound.pop(0) #if first node is leave garage, can't add lower bound
         else:
-            if lst[-1] != max(indices):
-                inbound.append(lst[-1]+1) #upper bound node for first contiguous set of overlap nodes
+            outbound += k
+            inbound +=k[1:len(k)]
+        
+        inbound.append(lst[-1]+1) #upper bound node for each contiguous set of overlap nodes
     
     outbound, inbound = map(sorted, [outbound, inbound])
+    all_nodes = sorted(np.union1d(outbound, inbound))
     print("Need to service URID within %s sec to %s sec" % (Start, End))
-    print("These indices of Run_Schedule will need\nto have distances calculated: %s" % np.union1d(outbound, inbound))
+    print("...%s nodes fall within this criteria." % len(all_nodes))
+    #print("These indices of Run_Schedule will need to have distances calculated:\n%s" % np.union1d(outbound, inbound))
 
-    retDict = {"outbound": outbound, "inbound": inbound, "all_nodes" : sorted(np.union1d(outbound, inbound))}
+    retDict = {"outbound": outbound, "inbound": inbound, "all_nodes" : all_nodes}
     return retDict
-
 
 
 ### TEST THIS FUNCTION ###
