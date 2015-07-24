@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Plotting Rides"
-date:   2015-07-22
+date:   2015-07-24
 ---
 
 # Plotting Rides
