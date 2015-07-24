@@ -13,10 +13,10 @@ Plotting the routes traveled are also helpful for understanding why some routes
 
 
 In order to plot the routes, we first attach a cost to each rider. Then, we randomly
-sample from routes that have cost-probitive riders ("ugly rides") and select an
+sample from routes that have cost-probitive rides ("ugly rides") and select an
 individual bus' schedule for a given day. Using Google Maps API, each leg in a ride
 is sequentially plotted by color with green indicating cost-effective legs and red
-denoting legs where cost-prohibitive riders are on board. After plotting every leg
+denoting cost-prohibitive legs. After plotting every leg
 (with information about the preceding legs layered over), a .gif is created that
 shows an individual bus' schedule.
 
