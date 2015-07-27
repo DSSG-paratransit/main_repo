@@ -12,9 +12,9 @@ layout: home
       <li>
         <h2>
           <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
+          <p> {{ post.meta }} </p>
+          <p>  {{ post.excerpt }} </p>
           <p>
-            {{ post.meta }}
-            {{ post.excerpt }}
             {% if post.content contains "<!-- more -->" %}
               <a class="post-readmore" href="{{ post.url | prepend: site.baseurl }}">"[read more...]"</a>
             {% endif %}
