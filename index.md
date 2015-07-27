@@ -22,6 +22,7 @@ layout: home
         </h2>
       </li>
       <HR WIDTH="80%" align="center">
+      <br>
     {% endfor %}
   </ul>
 
