@@ -9,8 +9,8 @@ layout: home
 
   <ul class="post-list">
     {% for post in site.posts %}
-      <li class="post-item">
-        <h2>
+      <li>
+        <h2 class="post-item">
           <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
           {{ post.meta }}
           <p>  {{ post.excerpt }} </p>
