@@ -47,8 +47,8 @@ def get_URIDs(data, broken_Run, resched_init_time):
                 DropOffCoords = my_info[["LAT", "LON"]].iloc[0,],
                 PickupStart = resched_init_time,
                 PickupEnd = resched_init_time+30*60,
-                DropoffStart = my_info[["DropoffStart"]].iloc[0,],
-                DropoffEnd = my_info[["DropoffEnd"]].iloc[0,],
+                DropoffStart = int(my_info[["DropoffStart"]].iloc[0,]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[0,]),
                 SpaceOn = my_info[["SpaceOn"]].iloc[0,],
                 MobAids = my_info[["MobAids"]].iloc[0,])
         else:
@@ -56,10 +56,10 @@ def get_URIDs(data, broken_Run, resched_init_time):
                 Run = broken_Run,
                 PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
                 DropOffCoords = my_info[["LAT", "LON"]].iloc[1,],
-                PickupStart = my_info[["PickupStart"]].iloc[0,],
-                PickupEnd = my_info[["PickupEnd"]].iloc[0,],
-                DropoffStart = my_info[["DropoffStart"]].iloc[1,],
-                DropoffEnd = my_info[["DropoffEnd"]].iloc[1,],
+                PickupStart = int(my_info[["PickupStart"]].iloc[0,]),
+                PickupEnd = int(my_info[["PickupEnd"]].iloc[0,]),
+                DropoffStart = int(my_info[["DropoffStart"]].iloc[1,]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[1,]),
                 SpaceOn = my_info[["SpaceOn"]].iloc[0,],
                 MobAids = my_info[["MobAids"]].iloc[0,])
         
