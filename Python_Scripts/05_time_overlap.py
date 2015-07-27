@@ -13,11 +13,11 @@ def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
     # be an inbound ride from the URID node to the upper-time bound node. There can't be an outbound ride.
 
     if pickUpDropOff:
-        Start = URID.PickupStart[0]
-        End = URID.PickupEnd[0]
+        Start = URID.PickupStart
+        End = URID.PickupEnd
     else:
-        Start = URID.DropoffStart[0]
-        End = URID.DropoffEnd[0]
+        Start = URID.DropoffStart
+        End = URID.DropoffEnd
         
     crossover = []
     
