@@ -21,6 +21,7 @@ layout: home
           </p>
         </h2>
       </li>
+      <HR WIDTH="40%">
     {% endfor %}
   </ul>
 
