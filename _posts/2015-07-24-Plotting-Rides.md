@@ -5,8 +5,6 @@ date:   2015-07-24
 author: "Kivan Polimis"
 ---
 
-### Plotting Rides
-
 Recently, we've worked on cost per boarding metrics for individual passengers and
 we were interested in visualizing the physical distance that the riders traveled.
 Plotting the routes traveled are also helpful for understanding why some routes 
