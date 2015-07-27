@@ -23,7 +23,7 @@ applicants with a faculty mentor from a research institution. My mentor, Anat, i
 here at UW and she is the project lead for the paratransit project that TCAT is doing in conjunction with eScience's 
 DSSG program. So, as her student, Anat decided to put me on the paratransit project as the main part of my research for the summer.
 
-[[read more...]]({{ post.url }})
+[[read more...]]({{ page.url }})
 <!--more-->
 
 As part of my requirements for my DREU, I must keep an updated blog about my research and what I have been up
