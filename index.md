@@ -16,7 +16,7 @@ layout: home
           <!--<p>  {{ post.excerpt }} </p>-->
           <p>
             {% if post.content contains "<!-- more -->" %}
-              <a class="post-readmore" href="{{ post.url | prepend: site.baseurl }}">"[read more...]"</a>
+              "[Read more...]"
             {% endif %}
           </p>
         </h2>
