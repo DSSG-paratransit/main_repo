@@ -12,10 +12,10 @@ layout: home
       <li class="post-item">
         <h2>
           <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
-          {{ post.page.date }}
+          {{ post.meta }}
           <p>  {{ post.excerpt }} </p>
           <p>
-            {% if post.content != post.excerpt %}
+            {% if post.content contains site.excerpt_separator %}
               <a class="post-readmore" href="{{ post.url | prepend: site.baseurl }}">[read more...]</a>
             {% endif %}
           </p>
