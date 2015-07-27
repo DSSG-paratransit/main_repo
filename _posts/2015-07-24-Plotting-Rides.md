@@ -21,7 +21,6 @@ denoting cost-prohibitive legs. After plotting every leg
 (with information about the preceding legs layered over), a .gif is created that
 shows an individual bus' schedule.
 
-[[read more...]]({{ page.url | prepend: site.baseurl }})
 <!--more-->
 
 Besides, being fun to make, these .gifs visually represent the problem of cost-prohibitive 
