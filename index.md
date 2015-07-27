@@ -9,7 +9,7 @@ layout: home
 
   <ul class="post-list">
     {% for post in site.posts %}
-      <li>
+      <li class="post-item">
         <h2>
           <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
           <!--<p> {{ post.meta }} </p>-->
@@ -21,7 +21,6 @@ layout: home
           </p>
         </h2>
       </li>
-      <HR WIDTH="80%" ALIGN="CENTER">
       <br>
     {% endfor %}
   </ul>
