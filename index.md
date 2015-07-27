@@ -12,6 +12,7 @@ layout: home
       <li>
         <h2>
           <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
+          <p>{{ post.excerpt }}</p>
         </h2>
       </li>
     {% endfor %}

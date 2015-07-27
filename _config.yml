@@ -9,4 +9,4 @@ github_username:  uwescience
 
 # Build settings
 markdown: kramdown
-#excerpt_separator: <!--more-->
+excerpt_separator: <!--more-->
