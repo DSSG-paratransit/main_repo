@@ -11,7 +11,7 @@ layout: home
     {% for post in site.posts %}
       <li>
         <h2>
-          <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
+          <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.header.title }}</a>
           <!--<p> {{ post.meta }} </p>-->
           <p>  {{ post.excerpt }} </p>
           <p>
