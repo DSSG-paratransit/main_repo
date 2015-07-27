@@ -15,7 +15,7 @@ layout: home
           <!--<p> {{ post.meta }} </p>-->
           <!--<p>  {{ post.excerpt }} </p>-->
           <p>
-            {% if post.content contains "<!-- more -->" %}
+            {% if post.content %}
               "[Read more...]"
             {% endif %}
           </p>
