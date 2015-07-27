@@ -15,7 +15,7 @@ layout: home
           <!--<p> {{ post.meta }} </p>-->
           <p>  {{ post.excerpt }} </p>
           <p>
-            {% if post.content contains <!--more--> %}
+            {% if post.content contains "a" %}
               <a class="post-readmore" href="{{ post.url | prepend: site.baseurl }}">[read more...]</a>
             {% endif %}
           </p>
