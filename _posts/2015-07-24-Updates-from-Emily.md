@@ -2,15 +2,16 @@
 layout: post
 title:  "Updates from Emily"
 date:   2015-07-24
+author: "Emily Andrulis"
 ---
 
 
-##Quick Link
+###Quick Link
 
-###My blog can be found [at this page](http://emilydreu.weebly.com/blog.html). 
+####My blog can be found [at this page](http://emilydreu.weebly.com/blog.html). 
 As of July 24th, we are in week seven. Week eight starts July 28th, and so on and so forth.
 
-##Explaining my blog
+###Explaining my blog
 
 If you take a look at my blog, you might start wondering, "Hey, what is this DREU thing?
 Isn't this supposed to be done through the eScience's DSSG summer program?" 
@@ -22,6 +23,8 @@ applicants with a faculty mentor from a research institution. My mentor, Anat, i
 here at UW and she is the project lead for the paratransit project that TCAT is doing in conjunction with eScience's 
 DSSG program. So, as her student, Anat decided to put me on the paratransit project as the main part of my research for the summer.
 
+[[read more...]]({{ page.url | prepend: site.baseurl }})
+<!--more-->
 
 As part of my requirements for my DREU, I must keep an updated blog about my research and what I have been up
 to each week. I write daily updates that are just short snippets about what is happening with our project, so

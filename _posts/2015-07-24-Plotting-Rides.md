@@ -2,9 +2,10 @@
 layout: post
 title:  "Plotting Rides"
 date:   2015-07-24
+author: "Kivan Polimis"
 ---
 
-# Plotting Rides
+### Plotting Rides
 
 Recently, we've worked on cost per boarding metrics for individual passengers and
 we were interested in visualizing the physical distance that the riders traveled.
@@ -19,6 +20,9 @@ is sequentially plotted by color with green indicating cost-effective legs and r
 denoting cost-prohibitive legs. After plotting every leg
 (with information about the preceding legs layered over), a .gif is created that
 shows an individual bus' schedule.
+
+[[read more...]]({{ page.url | prepend: site.baseurl }})
+<!--more-->
 
 Besides, being fun to make, these .gifs visually represent the problem of cost-prohibitive 
 rides. Namely, cost-prohibitive rides tend to traverse comparatively large spatial
