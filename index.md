@@ -12,7 +12,7 @@ layout: home
       <li class="post-item">
         <h2>
           <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
-          <!--<p> {{ post.meta }} </p>-->
+          {{ post.page.date }}
           <p>  {{ post.excerpt }} </p>
           <p>
             {% if post.content != post.excerpt %}
