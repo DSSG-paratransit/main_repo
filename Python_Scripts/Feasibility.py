@@ -51,18 +51,21 @@ def insertFeasibility(Run_Schedule, URID):
 	pickup_score = np.zeros(((Run_Schedule.index.max() - comeback1 + 1),2)) 
 	row_ctr = 0
 	for k in range(comeback1,(Run_Schedule.index.max()+1)):
-	    bound = max(Run_Schedule.PickupEnd.loc[k], Run_Schedule.DropoffEnd.loc[k])
-	    eta_future = Run_Schedule.ETA.loc[k] + lag1
-	    #0 indicates TW not broken, 1 otherwise.
-	    pickup_score[row_ctr, 0] = int(eta_future > bound)
-	    #if time window is broken, by how much?
-	    pickup_score[row_ctr, 1] = max(0, eta_future - bound)
-	    #print(pickup_score[row_ctr,:])
-	    row_ctr+=1
+	    if (Run_Schedule.Activity.loc[k] not in [0,1]):
+	        row_ctr += 1
+	    else:
+	        bound = max(Run_Schedule.PickupEnd.loc[k], Run_Schedule.DropoffEnd.loc[k])
+	        eta_future = Run_Schedule.ETA.loc[k] + lag1
+	        #0 indicates TW not broken, 1 otherwise.
+	        pickup_score[row_ctr, 0] = int(eta_future > bound)
+	        #if time window is broken, by how much?
+	        pickup_score[row_ctr, 1] = max(0, eta_future - bound)
+	        #print(pickup_score[row_ctr,:])
+	        row_ctr+=1
 
 
 	#FEASIBILITY OF DROPOFF:
-	Run_Schedule_Lag = Run_Schedule
+	Run_Schedule_Lag = Run_Schedule.copy()
 	ETAlag = Run_Schedule.ETA + lag1
 	Run_Schedule_Lag.ETA = ETAlag
 	dropoff_inserts = time_overlap(Run_Schedule_Lag, URID, pickUpDropOff = False)
@@ -100,49 +103,55 @@ def insertFeasibility(Run_Schedule, URID):
 	dropoff_score = np.zeros(((Run_Schedule_Lag.index.max() - comeback2 + 1),2)) 
 	row_ctr = 0
 	for k in range(comeback2,(Run_Schedule_Lag.index.max()+1)):
-	    bound = max(Run_Schedule_Lag.PickupEnd.loc[k], Run_Schedule_Lag.DropoffEnd.loc[k])
-	    eta_future = Run_Schedule_Lag.ETA.loc[k] + total_lag
-	    #0 indicates TW not broken, 1 otherwise.
-	    dropoff_score[row_ctr, 0] = int(eta_future > bound)
-	    #if time window is broken, by how much?
-	    dropoff_score[row_ctr, 1] = max(0, eta_future - bound)
-	    #print(dropoff_score[row_ctr,:])
-	    row_ctr+=1
-	    
+	    if (Run_Schedule.Activity.loc[k] not in [0,1]):
+	        row_ctr += 1
+	    else:
+	        bound = max(Run_Schedule_Lag.PickupEnd.loc[k], Run_Schedule_Lag.DropoffEnd.loc[k])
+	        eta_future = Run_Schedule_Lag.ETA.loc[k] + total_lag
+	        #0 indicates TW not broken, 1 otherwise.
+	        dropoff_score[row_ctr, 0] = int(eta_future > bound)
+	        #if time window is broken, by how much?
+	        dropoff_score[row_ctr, 1] = max(0, eta_future - bound)
+	        #print(dropoff_score[row_ctr,:])
+	        row_ctr+=1
+
+	#assemble output:
 	pickup_df = pd.DataFrame({"nodes": range(comeback1,Run_Schedule.index.max()+1), "break_TW": pickup_score[:,0], "late": pickup_score[:,1]})
 	dropoff_df = pd.DataFrame({"nodes": range(comeback2,Run_Schedule.index.max()+1), "break_TW": dropoff_score[:,0], "late": dropoff_score[:,1]})
 	test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
 	ret = {"score": test.append(dropoff_df), "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
 	           "total_lag" : total_lag}
 
-	return ret
-
 
 
 def originalLateness(Run_Schedule):
-	'''
-	Run_Schedule: Pandas dataframe containing Trapeze-scheduled bus route and time windows, Run is listed in good_buses
-	URID: of class URID
+    '''
+    Run_Schedule: Pandas dataframe containing Trapeze-scheduled bus route and time windows, Run is listed in good_buses
+    URID: of class URID
 
-	return: pandas dataframe with 2 columns: 'break_TW' (binary variable
-		indicating whether future stop will be late), 'late' (integer indicating how late bus will be to stop).
-	'''
+    return: pandas dataframe with 2 columns: 'break_TW' (binary variable
+        indicating whether future stop will be late), 'late' (integer indicating how late bus will be to stop).
+    '''
 
-	lateness_score = np.zeros((len(Run_Schedule_Lag.index),2)) 
-	row_ctr = 0
-	for k in range(Run_Schedule_Lag.index.min(),(Run_Schedule_Lag.index.max()+1)):
-	    bound = max(Run_Schedule_Lag.PickupEnd.loc[k], Run_Schedule_Lag.DropoffEnd.loc[k])
-	    eta = Run_Schedule_Lag.ETA.loc[k]
-	    #0 indicates TW not broken, 1 otherwise.
-	    lateness_score[row_ctr, 0] = int(eta > bound)
-	    #if time window is broken, by how much?
-	    lateness_score[row_ctr, 1] = max(0, eta - bound)
-	    #print(dropoff_score[row_ctr,:])
-	    row_ctr+=1
+    lateness_score = np.zeros((Run_Schedule.shape[0],2))
+    row_ctr = 0
+    #Don't count lateness when the bus is leaving garage.
+    for k in range(Run_Schedule.index.min(),(Run_Schedule.index.max()+1)):
+        if (Run_Schedule.Activity.loc[k] not in [0,1]):
+            row_ctr += 1
+        else:
+            bound = max(Run_Schedule.PickupEnd.loc[k], Run_Schedule.DropoffEnd.loc[k])
+            eta = Run_Schedule.ETA.loc[k]
+            #0 indicates TW not broken, 1 otherwise.
+            lateness_score[row_ctr, 0] = int(eta > bound)
+            #if time window is broken, by how much?
+            lateness_score[row_ctr, 1] = max(0, eta - bound)
+            #print(dropoff_score[row_ctr,:])
+            row_ctr+=1
 
-	ret = pd.DataFrame({"break_TW": lateness_score[:,0], "late": lateness_score[:,1]})
+    ret = pd.DataFrame({"break_TW": lateness_score[:,0], "late": lateness_score[:,1]})
 
-	return ret
+    return ret
 
 
 

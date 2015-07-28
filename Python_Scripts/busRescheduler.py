@@ -68,3 +68,5 @@ for URID in URIDS:
 
     min_cost = np.min(cost_array)*(48./3600)
     run_wmin_cost = run_array[np.where(cost_array == min_cost)]
+
+    
