@@ -1,6 +1,9 @@
 # Modified version of AddLegTimes script that adds a column to a dataframe
-# that contains the percent of the total Run time that each lef took.
-# Only contains a function -- doesn't actually run it unless you ask
+# that contains the percent of the total Run time that each leg took.
+# Only contains functions -- doesn't actually run them unless you ask
+
+#DOES NOT ALWAYS WORK CORRECTLY
+#we're still unsure why the percentages aren't always correct
 
 
 library(dplyr)
@@ -60,6 +63,52 @@ getDeadheadPct <- function(dfr) {
 
 #dfr <- getDeadheadPct(dfr)
 
+#Used with the deadheadPct script to keep track of the total
+# percent of the time that has been accounted for 
+# Only works when the dataframe already has the PctTime column
+# This was originally created because deadheadPCt was not working
+# correctly, and it was used to try to figure out when/why it was breaking
+
+
+getTotalPCT <- function(dfr) {
+  totalPCT = vector(length=nrow(dfr))
+  totalPCT[1]=0
+  currentRun = dfr$Run[1]
+  for (i in 2:nrow(dfr)){
+    previousRun = currentRun
+    currentRun = dfr$Run[i]
+    if (previousRun != currentRun) {
+      totalPCT[i]=0
+    } else {
+      totalPCT[i]=dfr$PctTime[i]+totalPCT[i-1]
+    }
+    
+  }
+  dfr$totalPCT <- totalPCT
+  return(dfr)
+}
+
+
+
+######################Emily's random notes when trying to get it to work
+
+#Percents still don't work correctly all the time, don't always add up to 100%
+
+#16682
+#run 8708 adds to .65 total percent--that's good....
+
+#dfrShort <- rohansData[1:855, ] 
+#dfrShort <- getDeadheadPct(dfrShort)
+#dfrShort <- getTotalPCT(dfrShort)
+
+
+#dfr1 <- rohansData
+#dfr1 <- getDeadheadPct(dfr1)
+#dfr1 <- getTotalPCT(dfr1)
+
+#dfr8708 <- rohansData[which(rohansData$Run == 9701),]
+#dfr8708 <- getDeadheadPct(dfr8708)
+#dfr8708 <- getTotalPCT(dfr8708)
 
 
 
