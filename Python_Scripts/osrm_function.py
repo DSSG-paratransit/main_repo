@@ -65,4 +65,3 @@ def osrm (URID_location, inbound, outbound):
 # outbound = np.column_stack((outbound, time_matrix["outbound_times"].T))
 # inbound = np.column_stack((inbound, time_matrix["inbound_times"].T))
 # outbound
-

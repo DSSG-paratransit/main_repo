@@ -54,19 +54,17 @@ URIDs = get_URIDs(fullSchedule_windows, broken_Run, resched_init_time)
 # for each URID for each run we then want to check the capacity in the given time
 # window and return the URID with updated insert points. This URID with updated
 # insert points is fed to the feasibilty function, which we ultimately want to return
-# a minimum cost run for the URID and that run updated with the new URID slotted in. 
-for URID in URIDS:
-    busRuns_tocheck = radius_Elimination(fullSchedule_windows, URID, radius=5., pickUpDropOff=True)
+# a minimum cost run for the URID and that run updated with the new URID slotted in.
+cost_dict = {} #dictionary that will store, by BookingId key, the cost for inserting client into
+# new run as well as that run number 
+for i in range(len(URIDs)):
+    busRuns_tocheck = radius_Elimination(fullSchedule_windows, URIDs[i], radius=5., pickUpDropOff=True)
 
-    cost_array  = [] #this is incorrect as it stands right now as they get overwritten
-    run_array  = [] #this is incorrect as it stands right now as they get overwritten
     for run in busRuns_tocheck:
-        URID_updated_insertpts = checkCapacityInsertPts(URID,run)
+        URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
         brokenwindows_dict =Feasibility.insertFeasibility(run,URID_updated_insertpts)
-        cost_array = np.append(score_array, brokenwindows_dict['total_lag'])
-        run_array = np.append(run_array,run)
+        cost_dict[str(URIDS[i].BookingId)] = {'Cost' : brokenwindows_dict['total_lag'],'Run': run}
 
-    min_cost = np.min(cost_array)*(48./3600)
-    run_wmin_cost = run_array[np.where(cost_array == min_cost)]
-
+    min_cost = np.min([cost_dict[key]['Cost'] for key in cost_dict])*(48./3600)
+    min_cost_run = [cost_dict[key]['Run'] for key in cost_dict if cost_dict[key]['Cost'] == min_cost]
     
