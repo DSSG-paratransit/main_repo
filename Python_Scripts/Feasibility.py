@@ -26,7 +26,7 @@ def insertFeasibility(Run_Schedule, URID):
 
 	#smallest round trip travel time, corresponding rows on bus's schedule:
 	best_rt_time = rt_times[0][1]
-	#rows on Run_Schedule between which to insert:
+	#row indices on Run_Schedule between which to insert:
 	leave1 = pickup_inserts["outbound"][rt_times[0][0]] #leave this scheduled node
 	comeback1 = pickup_inserts["inbound"][rt_times[0][0]] #come back to this scheduled node
 
@@ -57,17 +57,15 @@ def insertFeasibility(Run_Schedule, URID):
 	    row_ctr+=1
 
 
-
 	#FEASIBILITY OF DROPOFF:
-	
 	Run_Schedule_Lag = Run_Schedule
-	ETAlag = Run_Schedule.ETA + lag
+	ETAlag = Run_Schedule.ETA + lag1
 	Run_Schedule_Lag.ETA = ETAlag
 	dropoff_inserts = time_overlap(Run_Schedule_Lag, URID, pickUpDropOff = False)
-	dropoff_all_nodes = filter(lambda x: x >= comeback, dropoff_inserts["all_nodes"])
-	dropoff_outbound = filter(lambda x: x >= comeback, dropoff_inserts["outbound"])
+	dropoff_all_nodes = filter(lambda x: x >= comeback1, dropoff_inserts["all_nodes"])
+	dropoff_outbound = filter(lambda x: x >= comeback1, dropoff_inserts["outbound"])
 	# can't return to first outbound node:
-	dropoff_inbound = filter(lambda x: x > comeback, dropoff_inserts["inbound"])
+	dropoff_inbound = filter(lambda x: x > comeback1, dropoff_inserts["inbound"])
 	if dropoff_outbound[0] == dropoff_inbound[0]: dropoff_inbound.pop(0)
 
 	outbound = Run_Schedule_Lag.loc[dropoff_outbound]
@@ -92,14 +90,14 @@ def insertFeasibility(Run_Schedule, URID):
 	newETA = Run_Schedule_Lag.ETA.loc[leave2] + dwell + best_rt_time
 	bound = max(Run_Schedule_Lag.PickupEnd.loc[comeback2], Run_Schedule_Lag.DropoffEnd.loc[comeback2])
 	#total lag: lag from pickup, and then difference between lagged eta and eta for coming back from pickup
-	total_lag = newETA - Run_Schedule_Lag.ETA.loc[comeback2] + lag
+	total_lag = newETA - Run_Schedule_Lag.ETA.loc[comeback2] + lag1
 
 	#count number of broken time windows from dropping off URID:
 	dropoff_score = np.zeros(((Run_Schedule_Lag.index.max() - comeback2 + 1),2)) 
 	row_ctr = 0
 	for k in range(comeback2,(Run_Schedule_Lag.index.max()+1)):
 	    bound = max(Run_Schedule_Lag.PickupEnd.loc[k], Run_Schedule_Lag.DropoffEnd.loc[k])
-	    eta_future = Run_Schedule_Lag.ETA.loc[k] + lag2
+	    eta_future = Run_Schedule_Lag.ETA.loc[k] + total_lag
 	    #0 indicates TW not broken, 1 otherwise.
 	    dropoff_score[row_ctr, 0] = int(eta_future > bound)
 	    #if time window is broken, by how much?
