@@ -1,10 +1,14 @@
 def insertFeasibility(Run_Schedule, URID):
 
 	'''
-	Run_Schedule: Pandas dataframe containing Trapeze-scheduled bus route, Run is listed in good_buses
+	Run_Schedule: Pandas dataframe containing Trapeze-scheduled bus route and time windows, Run is listed in good_buses
 	URID: of class URID
 
-	return: table indicating number of broken time windows, how much time windows are broken
+	return: dictionary. Largest component of dictionary is 'score,' a pd.df with 'break_TW' (binary variable
+		indicating whether future stop will be late), 'late' (integer indicating how late bus will be to stop),
+		and 'node' (the index, of the node within the Run_Schedule)
+		Also return 'total_lag', the total number of seconds by which the bus is currently late.
+		Also return 'pickup_insert' and 'dropoff_insert', i.e. indices of the best insertion point of URID on to Run_Schedule.
 	'''
 
 
@@ -113,6 +117,32 @@ def insertFeasibility(Run_Schedule, URID):
 
 	return ret
 
+
+
+def originalLateness(Run_Schedule):
+	'''
+	Run_Schedule: Pandas dataframe containing Trapeze-scheduled bus route and time windows, Run is listed in good_buses
+	URID: of class URID
+
+	return: pandas dataframe with 2 columns: 'break_TW' (binary variable
+		indicating whether future stop will be late), 'late' (integer indicating how late bus will be to stop).
+	'''
+
+	lateness_score = np.zeros((len(Run_Schedule_Lag.index),2)) 
+	row_ctr = 0
+	for k in range(Run_Schedule_Lag.index.min(),(Run_Schedule_Lag.index.max()+1)):
+	    bound = max(Run_Schedule_Lag.PickupEnd.loc[k], Run_Schedule_Lag.DropoffEnd.loc[k])
+	    eta = Run_Schedule_Lag.ETA.loc[k]
+	    #0 indicates TW not broken, 1 otherwise.
+	    lateness_score[row_ctr, 0] = int(eta > bound)
+	    #if time window is broken, by how much?
+	    lateness_score[row_ctr, 1] = max(0, eta - bound)
+	    #print(dropoff_score[row_ctr,:])
+	    row_ctr+=1
+
+	ret = pd.DataFrame({"break_TW": lateness_score[:,0], "late": lateness_score[:,1]})
+
+	return ret
 
 
 
