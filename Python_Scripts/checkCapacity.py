@@ -63,6 +63,9 @@ class PassengerCounter():
         """
         on_count = reduce(passenger_sum, self.on[:checkpoint],0)
         off_count = reduce(passenger_sum, self.off[:checkpoint],0)
+
+        if on_count - off_count < 0.:
+            return np.nan
     
         
         return on_count - off_count
@@ -177,11 +180,24 @@ def createOnOffcols(dataframe, onstring, offstring, wc=True):
 
 
 
-def checkCapacityInsertPt(URID, busRun):
+def checkCapacityInsertPts(URID, busRun):
     """
+    Assumes that busRun df has wcCapacity, amCapacity columns, and that URID
+    has amOn/Off and wcOn/Off columns added. 
 
     Args:
 
     Returns:
 
     """
+
+    restrictive_window = np.where((busRun['ETA'] > URID.PickupEnd ) & (busRun['ETA'] < URID.DropoffStart))
+    max_wcCapacity = np.max(busRun['wcCapacity'].iloc[restrictive_window])
+    max_amCapacity = np.max(busRun['amCapacity'].iloc[restrictive_window])
+    option1 = (max_wcCapacity + URID.wcOn > 3.)
+    option2 = (max_wcCapacity + URID_wcOn == 3) & (max_amCapacity + URID_amOn == 0)
+    option3 = (max_wcCapacity + URID_wcOn == 2) & (max_amCapacity + URID_amOn <= 4)
+    option4 = (max_wcCapacity + URID_wcOn == 1) & (max_amCapacity + URID_amOn <= 8)
+    option5 = (max_wcCapacity + URID_wcOn == 0) & (max_amCapaciy + URID_amOn <= 12)        
+
+    

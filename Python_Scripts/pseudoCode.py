@@ -18,34 +18,36 @@ URIDS = get_URIDs(dataTW, broken_Run, resched_init_time)
 for URID in URIDS:
     #CHECK PICK-UP INSERTIONS:
     #list of nearby buses within URID's time frame:
-    close_buses = radius_Elimination(dataTW, URID, resched_init_time, pickUpDropOff = True)
+    radius = 5
+    good_buses = radius_Elimination(dataTW, URID, radius, pickUpDropOff = True)
 
-    for bus in close_buses:
+    for bus in good_buses:
 
         #Non-broken bus is currently at:
         bus_Run = get_busRuns(dataTW, bus, resched_init_time)
-        #pd.data.frame of overlapping time windows:
-        overlap_nodes = time_OL(bus_Run, URID, pickUpDropOff = True)
+        #get inbound overlap nodes and outbound overlap nodes...
+        overlap_nodes = time_overlap(bus_Run, URID, pickUpDropOff = True)
 
-        plugLats = []; plugLons = [];
+        #formulate inbound nodes and outbound nodes, for input into OSRM!!!
+        outbound = Run_Schedule.loc[overlap_nodes["outbound"]]
+        outbound = np.column_stack((np.array(outbound.LAT), np.array(outbound.LON)))
+        inbound = Run_Schedule.loc[overlap_nodes["inbound"]]
+        inbound = np.column_stack((np.array(inbound.LAT), np.array(inbound.LON)))
 
-        #if there's a node before the first overlapping time window,
-        #potentially insert URID between prior node and first node with overlapping TW.
-        if overlap_nodes.index[0] != 0:
-            plugLats.append(bus_Run.loc[overlap_nodes.index[0]-1].LAT)
-            plugLons.append(bus_Run.loc[overlap_nodes.index[0]-1].LON)
+        #get URID's pickup location:
+        uridLoc = [URID.PickUpCoords[0], URID.PickUpCoords[1]]
 
-        for kk in range(len(overlap_nodes.index)):
-            plugLats.append(bus_Run.loc[overlap_nodes.index[0]].LAT)
-            plugLons.append(bus_Run.loc[overlap_nodes.index[0]].LON)
+        #get matrix of times between URID and scheduled route's nodes...
+        time_matrix = osrm(uridLoc, inbound, outbound)
 
-        if overlap_nodes.index[len(overlap_nodes.index)] != 0:
-            plugLats.append(bus_Run.loc[overlap_nodes.index[0]-1].LAT)
-            plugLons.append(bus_Run.loc[overlap_nodes.index[0]-1].LON)
+        #We now have travel times for the inbound, outbound insertions!
+        
 
-        D_table = kivansFunction(plugLats, plugLons, URID.PickUpCoords.tolist())
+        
+        
 
         #BEGIN TESTING POSSIBLE FITS OF URID ONTO BUS
+
 
         
 
