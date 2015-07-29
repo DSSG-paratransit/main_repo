@@ -9,17 +9,17 @@ layout: home
 
   <ul class="post-list">
     {% for post in site.posts %}
-      <li>
-        <h2 class="post-item">
+      <li class="post-item">
+        <h2>
           <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
-          <p>{{ post.meta }}</p>
-          <p>  {{ post.excerpt }} </p>
-          <p>
-            {% if post.content contains site.excerpt_separator %}
-              <a class="post-readmore" href="{{ post.url | prepend: site.baseurl }}">[read more...]</a>
-            {% endif %}
-          </p>
         </h2>
+        <p>{{ post.meta }}</p>
+        <p> {{ post.excerpt }} </p>
+        <p>
+          {% if post.content contains site.excerpt_separator %}
+            <a class="post-readmore" href="{{ post.url | prepend: site.baseurl }}">[read more...]</a>
+          {% endif %}
+        </p>
       </li>
       <br>
     {% endfor %}
