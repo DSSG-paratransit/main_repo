@@ -15,9 +15,22 @@ eventually make function(?) which makes sure user is passing correct num/type of
 # all try except statements are prompting the user for the needed input     
 try:
     fullSchedule = pd.DataFrame.from_csv(sys.argv[1], header=0, sep=',')
+
 except IndexError:
-    print "Please input path to csv file that contains day's schedule."
-    quit()
+    #grab s3 streaming_data/ file if no file specified
+    result = None
+    while result is None:
+        try:
+            qc_file_path = input("Please enter full path to the S3/QC script: ")
+            AWS_ACCESS_KEY = input("Please enter AWS access key: ")
+            AWS_SECRET_KEY = input("Please enter AWS secret key: ")
+            subprocess.call([qc_file_path, AWS_ACCESS_KEY, AWS_SECRET_KEY])
+            path_to_data = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/qc_streaming.csv'
+            result = pd.read_csv(path_to_data)
+            fullSchedule = result
+        except:
+            pass
+
 except IOError:
     print "File does not exist."
     quit()
@@ -48,7 +61,7 @@ except ValueError:
 fullSchedule_windows = add_TimeWindows(fullSchedule,windows)
 
 # this gets us all the URIDs for the broken run given the initial rescheduling time 
-URIDs = get_URIDs(fullSchedule_windows, broken_Run, resched_init_time)
+URIDs = get_URIDs(fullSchedule_windows, broken_Run)
 
 # for each URID we find the bus runs to check through a radius elimination.
 # for each URID for each run we then want to check the capacity in the given time
@@ -58,11 +71,12 @@ URIDs = get_URIDs(fullSchedule_windows, broken_Run, resched_init_time)
 cost_dict = {} #dictionary that will store, by BookingId key, the cost for inserting client into
 # new run as well as that run number 
 for i in range(len(URIDs)):
-    busRuns_tocheck = radius_Elimination(fullSchedule_windows, URIDs[i], radius=5., pickUpDropOff=True)
+    busRuns_tocheck = radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
 
     for run in busRuns_tocheck:
         URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
-        brokenwindows_dict =Feasibility.insertFeasibility(run,URID_updated_insertpts)
+        runSchedule = get_busRuns(fullSchedule_windows, run)
+        brokenwindows_dict =Feasibility.insertFeasibility(runSchedule, URID_updated_insertpts)
         cost_dict[str(URIDS[i].BookingId)] = {'Cost' : brokenwindows_dict['total_lag'],'Run': run}
 
     min_cost = np.min([cost_dict[key]['Cost'] for key in cost_dict])*(48./3600)

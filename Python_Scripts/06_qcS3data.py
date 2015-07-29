@@ -16,6 +16,7 @@ import pandas as pd
 
 path_to_data = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/'
 os.chdir(path_to_data)
+qc_file_name = path_to_data+'qc_streaming.csv'
 
 #For establishing connection, use access and secret keys sent by Valentina.
 #aws access key: sys.argv[1]
