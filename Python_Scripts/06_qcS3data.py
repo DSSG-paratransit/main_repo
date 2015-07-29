@@ -54,7 +54,8 @@ data = pd.read_csv('real_time_tab.csv', sep = '\t')
 
 
 data56 = data.loc[(data.ProviderId == 5) | (data.ProviderId == 6)]
-rides = data.Run.unique()
+rides = data56.Run.unique()
+data56.loc[:,'Activity'] = data56.loc[:,'Activity'].astype('int')
 
 #lat/lon constraints:
 upper_right <- [49.020430, -116.998768]
@@ -62,7 +63,35 @@ lower_left <- [45.606961, -124.974842]
 minlat = lower_left[0]; maxlat = upper_right[0]
 minlon = lower_left[1]; maxlon = upper_right[1]
 
+
+#Write the cleaned up data:
+ctr = 0
 for ride in rides:
+    temp_ride = data56.loc[data56.Run == ride]
+    temp_ride.drop(temp_ride.columns[0], axis = 1)
+    
+    flag = 1 #1 == good, 0 == eliminate.
+    lats = temp_ride.LAT; lons = temp_ride.LON
+    #eliminate runs from roster that have bad lat/lon data:
+    if(any(lats < minlat) | any(lats>maxlat) | any(lons<minlon) | any(lons > maxlon)):
+        flag = 0
+    #eliminate runs that don't move
+    if(all(lats == lats.iloc[0]) | all(lons == lons.iloc[0])):
+        flag = 0
+    #eliminate runs that don't leave a garage and return to a garage
+    if (temp_ride.Activity.iloc[0] != 4.) | (temp_ride.Activity.iloc[-1] != 3.):
+        flag = 0
+        
+    temp_ride = temp_ride.drop(temp_ride.columns[0], axis = 1)
+    
+    if (ctr == 0) & (flag == 1):
+        temp_ride.to_csv(qc_file_name, mode = 'a', header = True, index = False)
+        ctr +=1
+    if (ctr != 0) & (flag == 1) :
+        temp_ride.to_csv(qc_file_name, mode = 'a', header = False, index = False)
+
+
+
 
 
 
