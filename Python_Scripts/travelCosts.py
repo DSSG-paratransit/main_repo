@@ -29,15 +29,11 @@ def taxi(lat1, lon1, lat2, lon2, wheelchair):
 	return cost
 
 '''
-@params: startLat: the pickup point of the first rider
-		 startLon: the pickup point of the first rider
-		 endLat: the drop off point of the last rider
-		 endLon: the drop off point of the last rider
-		 uhTravelTime: the amount of time scheduled to handle all trips
+@params: busRun: a clean busRun starting with activity code 0 and ending with 1
 		 provider: the provider ID
 @returns: the cost of sending a new bus to handle unhandled trip
 '''
-def newBusRun(startLat, startLon, endLat, endLon, uhTravelTime, provider):
+def newBusRun(busRun, provider):
 	baselat, baselon = None, None
 	costPH = None
 	if provider == 6:
@@ -51,6 +47,12 @@ def newBusRun(startLat, startLon, endLat, endLon, uhTravelTime, provider):
 	else:
 		raise ValueError("provider must be 5 or 6")
 
+	startLat = busRun['LAT'][0]
+	startLon = busRun['LON'][0]
+	endLat = busRun['LAT'][busRun.shape[0]]
+	endLon = busRun['LON'][busRun.shape[0]]
+	uhTravelTime = busRun['DropoffEnd'][busRun.shape[0]] - busRun['PickupStart'][0]
+
 	preTime = travelData.time(baselat,baselon,startLat,startLon)
 	# print preTime
 	postTime = travelData.time(endLat,endLon,baselat,baselon)
@@ -60,6 +62,7 @@ def newBusRun(startLat, startLon, endLat, endLon, uhTravelTime, provider):
 	totalTime = math.ceil((preTime + uhTravelTime + postTime) / 3600.0)
 	# print totalTime
 
+	# busses have to run for at least 4 hours
 	if totalTime > 4:
 		cost = costPH * totalTime
 	else:
