@@ -3,28 +3,34 @@ def add_TimeWindows(data, windowsz):
         from SchTime and ETA.
         data is subsetted schedule data from a day.
         windowsz is size of pickup/dropoff window in seconds'''
-
-    etas = data["ETA"]
-    schtime =data["SchTime"]
-    schtime[schtime<0] = np.nan
-    data["PickupStart"] = 0; data["PickupEnd"] = 0
-    data["DropoffStart"] = 0; data["DropoffEnd"] = 0
-    for x in range(0, len(etas)):
+    
+    etas = data.loc[:,"ETA"]
+    schtime =data.loc[:,"SchTime"]
+    schtime.loc[np.where(schtime<0)] = np.nan
+    schtime.head()
+    windowsz = 60*30
+    sLength = data.shape[0]
+    data.insert(len(data.columns), 'PickupStart',  pd.Series(np.zeros(sLength), index=data.index))
+    data.insert(len(data.columns), 'PickupEnd',  pd.Series(np.zeros(sLength), index=data.index))
+    data.insert(len(data.columns), 'DropoffStart',  pd.Series(np.zeros(sLength), index=data.index))
+    data.insert(len(data.columns), 'DropoffEnd',  pd.Series(np.zeros(sLength), index=data.index))
+    data.head(10)
+    for x in range(0, sLength):
 
         #make dropoff window when there's no required drop off time
-        if (data["Activity"].iloc[x] == 1) & (data["ReqLate"].iloc[x] <0):
-            data["DropoffStart"].iloc[x] = data["ETA"].iloc[x]-3600
-            data["DropoffEnd"].iloc[x] = data["ETA"].iloc[x]+3600
-        
+        if (data.Activity.loc[x] == 1) & (data.ReqLate.loc[x] <0):
+            data.DropoffStart.loc[x] = data.ETA.loc[x]-3600
+            data.DropoffEnd.loc[x] = data.ETA.loc[x]+3600
+
         #make dropoff window when there IS a required drop off time: 1hr before ReqLate time
-        if (data["Activity"].iloc[x] == 1) & (data["ReqLate"].iloc[x] >0):
-            data["DropoffStart"].iloc[x] = data["ETA"].iloc[x]-3600
-            data["DropoffEnd"].iloc[x] = data["ReqLate"].iloc[x]  
-        
+        if (data["Activity"].loc[x] == 1) & (data["ReqLate"].loc[x] >0):
+            data["DropoffStart"].loc[x] = data["ETA"].loc[x]-3600
+            data["DropoffEnd"].loc[x] = data["ReqLate"].loc[x]  
+
         #schtime is in the middle of the pick up window
-        if data["Activity"].iloc[x] == 0:
-            data["PickupStart"].iloc[x] = schtime.iloc[x]-(windowsz/2)
-            data["PickupEnd"].iloc[x] = schtime.iloc[x]+(windowsz/2)
+        if data["Activity"].loc[x] == 0:
+            data["PickupStart"].loc[x] = schtime.loc[x]-(windowsz/2)
+            data["PickupEnd"].loc[x] = schtime.loc[x]+(windowsz/2)
 
     return data
 
