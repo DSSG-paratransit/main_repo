@@ -12,8 +12,8 @@ layout: home
       <li>
         <h2 class="post-item">
           <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
-          {{ post.meta }}
-          <p>  {{ post.excerpt }} </p>
+          <p>{{ post.meta }}</p>
+          <article>  {{ post.excerpt }} </article>
           <p>
             {% if post.content contains site.excerpt_separator %}
               <a class="post-readmore" href="{{ post.url | prepend: site.baseurl }}">[read more...]</a>
