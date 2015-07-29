@@ -29,8 +29,12 @@ def taxi(lat1, lon1, lat2, lon2, wheelchair):
 	return cost
 
 '''
-@params: takes the start and end URIDs of an unhandled trip
-		 takes the total time in seconds to complete said trip
+@params: startLat: the pickup point of the first rider
+		 startLon: the pickup point of the first rider
+		 endLat: the drop off point of the last rider
+		 endLon: the drop off point of the last rider
+		 uhTravelTime: the amount of time scheduled to handle all trips
+		 provider: the provider ID
 @returns: the cost of sending a new bus to handle unhandled trip
 '''
 def newBusRun(startLat, startLon, endLat, endLon, uhTravelTime, provider):
