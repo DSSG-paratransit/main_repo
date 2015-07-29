@@ -125,7 +125,6 @@ def addCapacityColumn(dataframe,busDateCol=False):
 
     if not busDateCol:
         for run in np.unique(df.index):
-            print type(run)
             this_run = df[(df.index == run)]
             on_wc = np.array(this_run['wcOn'])
             off_wc = np.array(this_run['wcOff'])
@@ -183,7 +182,14 @@ def createOnOffcols(dataframe, onstring, offstring, wc=True):
 def checkCapacityInsertPts(URID, busRun):
     """
     Assumes that busRun df has wcCapacity, amCapacity columns, and that URID
-    has amOn/Off and wcOn/Off columns added. 
+    has amOn/Off and wcOn/Off columns added. First check most restrictive window,
+    if this is not okay then return null values. next check max in windows between
+    PUStart & PUEnd and DOStart & DOEnd. If these are okay then return the URID as is.
+    If either of these other windows are NOT okay  then we need to check in a more 
+    granular way to see what are new time windows are. Ultimately the URID should 
+    return the new time windows, so the  class will need to be changed to include 
+    something like self.PickupInsert, self.DropoffInsert, which will be the start/end
+    for new windows (or same if old windows work, or null if capacity is not okay). 
 
     Args:
 
@@ -191,13 +197,63 @@ def checkCapacityInsertPts(URID, busRun):
 
     """
 
+    def amCapacity(wcCapacityTotal):
+        '''
+        Quick function to do something 
+        like switch statements in python.
+        
+        Args: 
+        wcCapacityTotal (string): str(max_wcCapacity + URID.wcOn), basically total wc capacity 
+        given max wc capacity in that time window and URID wc capacity in string form 
+        
+        Returns:
+        appropriate am capacity given this total wc capacity, else -1000 if wc capacity entered is not in 
+        dictionary. need to catch cases where wc capacity is over 3 but am capacity is otherwise acceptably low 
+        
+        '''
+        return {
+            '0': 12,
+            '1': 8,
+            '2': 4,
+            '3': 0,
+            }.get(wcCapacityTotal,-1000)
+
     restrictive_window = np.where((busRun['ETA'] > URID.PickupEnd ) & (busRun['ETA'] < URID.DropoffStart))
+    PickupWindow = np.where((busRun['ETA'] > URID.PickupStart) & (busRun['ETA'] < URID.PickupEnd))
+    DropoffWindow = np.where((busRun['ETA'] > URID.DropoffStart) & (busRun['ETA'] < URID.DropoffEnd))
+
     max_wcCapacity = np.max(busRun['wcCapacity'].iloc[restrictive_window])
     max_amCapacity = np.max(busRun['amCapacity'].iloc[restrictive_window])
-    option1 = (max_wcCapacity + URID.wcOn > 3.)
-    option2 = (max_wcCapacity + URID_wcOn == 3) & (max_amCapacity + URID_amOn == 0)
-    option3 = (max_wcCapacity + URID_wcOn == 2) & (max_amCapacity + URID_amOn <= 4)
-    option4 = (max_wcCapacity + URID_wcOn == 1) & (max_amCapacity + URID_amOn <= 8)
-    option5 = (max_wcCapacity + URID_wcOn == 0) & (max_amCapaciy + URID_amOn <= 12)        
-
+    full = (max_wcCapacity + URID.wcOn > 3) & (max_amCapacity + URID.wcOn > amCapacity(str(max_wcCapacity + URID.wcOn)))
+    if full:
+        return URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
+    elif not full:
+        max_wcCapacity_pickup = np.max(busRun['wcCapacity'].iloc[PickupWindow])
+        max_amCapacity_pickup = np.max(busRun['amCapacity'].iloc[PickupWindow])
+        full_pickup = (max_wcCapacity_pickup + URID.wcOn > 3) & (max_amCapacity_pickup + URID.amOn > amCapacity(str(max_wcCapacity_pickup + URID.wcOn)))
+        if full_pickup:
+            full_indx = (busRun['wcCapacity'].iloc[DropoffWindow] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[DropoffWindow] + URID.amOn > amCapacity(str(max_wcCapacity_dropoff + URID.wcOn)))
+            # how do we get the next index after the one where capacity is maximum? how do we pick off cases
+            # where max is not unique? 
+            next_full_pickup = (busRun['wcCapacity'].iloc[PickupWindow].loc[full_indx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[PickupWindow].loc[full_indx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[PickupWindow].loc[full_indx] + URID.wcOn)))
+            if next_full_pickup:
+                # repeat for next indice
+            elif not next_full_pickup:
+                URID.PickupInsert = busRun['ETA'].iloc[PickupWindow].loc[full_indx] # actually should be next closest time
+        max_wcCapacity_dropoff = np.max(busRun['wcCapacity'].iloc[DropoffWindow])
+        max_amCapacity_dropoff = np.max(busRun['amCapacity'].iloc[DropoffWindow])
+        full_dropoff = (max_wcCapacity_dropoff + URID.wcOn > 3) & (max_amCapacity_dropoff + URID.amOn > amCapacity(str(max_wcCapacity_dropoff + URID.wcOn)))
+        if full_dropoff:
+            full_indx = (busRun['wcCapacity'].iloc[DropoffWindow] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[DropoffWindow] + URID.amOn > amCapacity(str(max_wcCapacity_dropoff + URID.wcOn)))
+            # how do we get the next index after the one where capacity is maximum? how do we pick off cases
+            # where max is not unique? 
+            next_full_dropoff = (busRun['wcCapacity'].iloc[DropoffWindow].loc[full_indx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[DropoffWindow].loc[full_indx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[DropoffWindow].loc[full_indx] + URID.wcOn)))
+            if next_full_dropoff:
+                # repeat for next indice
+            elif not next_full_dropoff:
+                URID.DropoffInsert = busRun['ETA'].iloc[DropoffWindow].loc[full_indx] # actually should be next closest time
     
+
+       
+        
+        
