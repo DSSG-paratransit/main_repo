@@ -1,4 +1,18 @@
-def get_URIDs(data, broken_Run, resched_init_time):
+class URID:
+    def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids):
+        self.BookingId= BookingId
+        self.Run = Run
+        self.PickUpCoords = PickUpCoords
+        self.DropOffCoords = DropOffCoords
+        self.PickupStart = PickupStart
+        self.PickupEnd = PickupEnd
+        self.DropoffStart = DropoffStart
+        self.DropoffEnd = DropoffEnd
+        self.SpaceOn = SpaceOn
+        self.MobAids = MobAids
+
+
+def get_URID_Bus(data, broken_Run, resched_init_time):
     '''get unscheduled request id's from broken bus,
         based on when we're allowed to first start rescheduling.
         resched_init_time is in seconds, marks the point in time we can begin considering reinserting new requests.
@@ -18,19 +32,6 @@ def get_URIDs(data, broken_Run, resched_init_time):
     unsched = pickmeup
 
     print("There are %s rides left to be scheduled on broken run %s" % (unsched.shape[0], broken_Run))
-
-    class URID:
-        def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids):
-            self.BookingId= BookingId
-            self.Run = Run
-            self.PickUpCoords = PickUpCoords
-            self.DropOffCoords = DropOffCoords
-            self.PickupStart = PickupStart
-            self.PickupEnd = PickupEnd
-            self.DropoffStart = DropoffStart
-            self.DropoffEnd = DropoffEnd
-            self.SpaceOn = SpaceOn
-            self.MobAids = MobAids
 
     diffIDs = unsched.BookingId.unique()
     saveme = []
@@ -77,4 +78,36 @@ def get_URIDs(data, broken_Run, resched_init_time):
 #resched_init_time = 800*60 #initial time IN SECONDS that we will begin rerouting buses. Idea is like 2hrs from breakdown time.
 
 # URIDs = get_URIDs(data_allday, broken_Run, resched_init_time)
+
+
+def get_URID_BookingIds(data, BookingId_list):
+    '''get unscheduled request id's from broken bus,
+    based on the list of BookingIds provided by dispatcher
+
+    RETURN: list of URIDs'''
+
+    diffIDs = BookingId_list
+    saveme = []
+    for ID in diffIDs:
+        my_info = unsched[unsched["BookingId"]==ID]
+        temp = URID(BookingId = ID,
+                Run = broken_Run,
+                PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
+                DropOffCoords = my_info[["LAT", "LON"]].iloc[1,],
+                PickupStart = int(my_info[["PickupStart"]].iloc[0,]),
+                PickupEnd = int(my_info[["PickupEnd"]].iloc[0,]),
+                DropoffStart = int(my_info[["DropoffStart"]].iloc[1,]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[1,]),
+                SpaceOn = my_info[["SpaceOn"]].iloc[0,],
+                MobAids = my_info[["MobAids"]].iloc[0,])
+        
+        saveme.append(temp)
+
+    return saveme
+
+
+
+
+
+
 

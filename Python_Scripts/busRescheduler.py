@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
 import sys
+import get_URIDS as g_u
+import Feasibility as Feasibility
 
 """
 sys.argv[1] is path to csv file for day's schedule
 sys.argv[2] is int for time window in seconds
-sys.argv[3] is str for broken bus run number 
+sys.argv[3] is str for broken bus run number, OR, it is a list of bookingId's (for single client input)
 sys.argv[4] is int for time in seconds (this should be changed to accept more user friendly input)
 
 eventually make function(?) which makes sure user is passing correct num/type of arguments
@@ -61,7 +63,11 @@ except ValueError:
 fullSchedule_windows = add_TimeWindows(fullSchedule,windows)
 
 # this gets us all the URIDs for the broken run given the initial rescheduling time 
-URIDs = get_URIDs(fullSchedule_windows, broken_Run)
+# OR it will get us URIDs given specific bookingIds to be rescheduled
+if type(sys.argv[3]) == str:
+    URIDs = g_u.get_URID_Bus(fullSchedule_windows, broken_Run)
+else:
+    URIDs = g_u.get_URID_BookingIds(sys.argv[3])
 
 # for each URID we find the bus runs to check through a radius elimination.
 # for each URID for each run we then want to check the capacity in the given time
@@ -70,15 +76,25 @@ URIDs = get_URIDs(fullSchedule_windows, broken_Run)
 # a minimum cost run for the URID and that run updated with the new URID slotted in.
 cost_dict = {} #dictionary that will store, by BookingId key, the cost for inserting client into
 # new run as well as that run number 
+
+overall_lag = 0 #keep track of overall lag from rerouting buses for all URIDs
+best_inserts = [] #for each URID, keep track of stats re: best insertion on to existing schedule
 for i in range(len(URIDs)):
     busRuns_tocheck = radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
-
+    insert_stats = []
     for run in busRuns_tocheck:
         URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
         runSchedule = get_busRuns(fullSchedule_windows, run)
         brokenwindows_dict =Feasibility.insertFeasibility(runSchedule, URID_updated_insertpts)
-        cost_dict[str(URIDS[i].BookingId)] = {'Cost' : brokenwindows_dict['total_lag'],'Run': run}
+        insert_stats.append(brokenwindows_dict)
 
-    min_cost = np.min([cost_dict[key]['Cost'] for key in cost_dict])*(48./3600)
-    min_cost_run = [cost_dict[key]['Run'] for key in cost_dict if cost_dict[key]['Cost'] == min_cost]
+    ordered_inserts = sorted(insert_stats.items(), key = operator.itemgetter('total_lag'))
+    overall_lag += ordered_inserts[0]['total_lag']
+    best_inserts.append(ordered_inserts[0])
+
+
+
+
+min_cost = np.min([cost_dict[key]['Cost'] for key in cost_dict])*(48.09/3600)
+min_cost_run = [cost_dict[key]['Run'] for key in cost_dict if cost_dict[key]['Cost'] == min_cost]
     
