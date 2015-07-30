@@ -46,6 +46,7 @@ def get_URID_Bus(data, broken_Run, resched_init_time):
         if(my_info.shape[0] == 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
+                #if person is stranded on bus, their PickUpCoords are the BREAKDOWN_LOC (global var)
                 PickUpCoords = pd.Series(data = np.array(BREAKDOWN_LOC), index = ["LAT", "LON"]),
                 DropOffCoords = my_info[["LAT", "LON"]].iloc[0,],
                 PickupStart = resched_init_time,

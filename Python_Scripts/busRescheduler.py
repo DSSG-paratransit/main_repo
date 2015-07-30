@@ -78,6 +78,7 @@ else:
 cost_dict = {} #dictionary that will store, by BookingId key, the cost for inserting client into
 # new run as well as that run number 
 
+delay_cost = 0
 for i in range(len(URIDs)):
     busRuns_tocheck = radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
     insert_stats = []
@@ -87,17 +88,21 @@ for i in range(len(URIDs)):
         brokenwindows_dict =Feasibility.insertFeasibility(runSchedule, URID_updated_insertpts)
         insert_stats.append(brokenwindows_dict)
 
+    #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
     ordered_inserts = sorted(insert_stats.items(), key = operator.itemgetter('total_lag'))
-    
+    delay_cost += ordered_inserts['total_lag']*(48.09/3600)
+
+    #calculate taxi cost
+    taxi_cost = taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
+        URIDs[i].DropOffCoords.LAT, DropOffCoords.LON, wheelchair_present(URIDs[i]))
     #write information about best insertions to text file
-    rUp.write_insert_data(URID, ordered_inserts[0:3], '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/')
+    rUp.write_insert_data(URID, ordered_inserts[0:3],
+        '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/', taxi_cost)
     #update whole day's schedule:
     fullSchedule_windows = rUp.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
-    
 
+#Calculate new bus's cost:
 
+return None
 
-
-min_cost = np.min([cost_dict[key]['Cost'] for key in cost_dict])*(48.09/3600)
-min_cost_run = [cost_dict[key]['Run'] for key in cost_dict if cost_dict[key]['Cost'] == min_cost]
     

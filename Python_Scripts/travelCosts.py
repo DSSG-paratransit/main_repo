@@ -8,6 +8,17 @@ import sys
 @returns: the maximum possible taxi cost for a trip with specified 
 		  params in dollars 
 '''
+
+def wheelchair_present(URID):
+	#check if URID has a wheelchair, returns Boolean True/False:
+
+	mobaids = URID.SpaceOn.tolist()[0]
+	WC = False
+	if type(mobaids) == str:
+        WC = any(['W' in x for x in mobaids.split(',')])
+    return WC
+
+
 def taxi(lat1, lon1, lat2, lon2, wheelchair):
 	# converts from miles to meters and ceilings to nearest decimal
 	miles = math.ceil(travelData.mileage(lat1, lon1, lat2, lon2) / 160.934) / 10

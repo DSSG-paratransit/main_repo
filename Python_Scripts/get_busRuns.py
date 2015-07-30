@@ -7,7 +7,7 @@ def get_busRuns(data, Run):
 
       # leave garage (beginning of route index), gas (end of route index)
       # get all rides between/including leave garage and gas indices.
-	print("Testing get_busRuns on run %s" % bus_Run)
+	print("Testing get_busRuns on run %s" % Run)
 
       # ISSUE: CUTTING OFF BUS STOPS PREMATURELY AT resched_init_time!!!!
       dataSub = data[(data["Run"] == bus_Run)]
