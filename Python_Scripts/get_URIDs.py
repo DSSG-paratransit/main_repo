@@ -1,4 +1,7 @@
 def get_URIDs(data, broken_Run, resched_init_time):
+    import numpy as np
+    import pandas as pd
+
     '''get unscheduled request id's from broken bus,
         based on when we're allowed to first start rescheduling.
         resched_init_time is in seconds, marks the point in time we can begin considering reinserting new requests.
@@ -8,6 +11,7 @@ def get_URIDs(data, broken_Run, resched_init_time):
         RETURN: list of URIDs'''
     
     #all rides that exist past time we're allowed to begin rescheduling
+    # print(data)
     leftover = data[data["ETA"] >= resched_init_time]
     leftover = leftover[(leftover["Activity"] != 6) & (leftover["Activity"] != 16) & (leftover["Activity"] != 3)]
     
@@ -43,6 +47,7 @@ def get_URIDs(data, broken_Run, resched_init_time):
         if(my_info.shape[0] == 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
+                # Change BREAKDOWN_LOC to [47.51, -122.34] for testing travelCosts.newBusRun
                 PickUpCoords = pd.Series(data = np.array(BREAKDOWN_LOC), index = ["LAT", "LON"]),
                 DropOffCoords = my_info[["LAT", "LON"]].iloc[0,],
                 PickupStart = resched_init_time,
