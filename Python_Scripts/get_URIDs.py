@@ -1,3 +1,5 @@
+import operator
+
 class URID:
     def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids):
         self.BookingId= BookingId
@@ -103,7 +105,8 @@ def get_URID_BookingIds(data, BookingId_list):
         
         saveme.append(temp)
 
-    return saveme
+    #return sorted URIDs based on PickupStart time
+    return sorted(saveme, key = operator.attrgetter('PickupStart'))
 
 
 

@@ -3,6 +3,7 @@ import pandas as pd
 import sys
 import get_URIDS as g_u
 import Feasibility as Feasibility
+import runUpdater as rUp
 
 """
 sys.argv[1] is path to csv file for day's schedule
@@ -77,8 +78,6 @@ else:
 cost_dict = {} #dictionary that will store, by BookingId key, the cost for inserting client into
 # new run as well as that run number 
 
-overall_lag = 0 #keep track of overall lag from rerouting buses for all URIDs
-best_inserts = [] #for each URID, keep track of stats re: best insertion on to existing schedule
 for i in range(len(URIDs)):
     busRuns_tocheck = radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
     insert_stats = []
@@ -89,8 +88,12 @@ for i in range(len(URIDs)):
         insert_stats.append(brokenwindows_dict)
 
     ordered_inserts = sorted(insert_stats.items(), key = operator.itemgetter('total_lag'))
-    overall_lag += ordered_inserts[0]['total_lag']
-    best_inserts.append(ordered_inserts[0])
+    
+    #write information about best insertions to text file
+    rUp.write_insert_data(URID, ordered_inserts[0:3], '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/')
+    #update whole day's schedule:
+    fullSchedule_windows = rUp.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
+    
 
 
 
