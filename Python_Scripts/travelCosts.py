@@ -41,10 +41,11 @@ def taxi(lat1, lon1, lat2, lon2, wheelchair):
 
 '''
 @params: busRun: a clean busRun starting with activity code 0 and ending with 1
-		 provider: the provider ID
+		 provider: the provider ID. That is, busRun should be abbreviated to begin
+		 at the first URID.
 @returns: the cost of sending a new bus to handle unhandled trip
 '''
-def newBusRun(busRun, provider):
+def newBusRun_cost(busRun, provider):
 	baselat, baselon = None, None
 	costPH = None
 	if provider == 6:

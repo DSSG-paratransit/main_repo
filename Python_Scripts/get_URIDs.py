@@ -1,4 +1,4 @@
-def get_URIDs(data, broken_Run, resched_init_time):
+def get_URID(data, broken_Run, resched_init_time):
     import numpy as np
     import pandas as pd
 
