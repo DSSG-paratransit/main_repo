@@ -51,6 +51,7 @@ if broken_Run is None:
         case = 'BROKEN_RUN' 
     else:
         case = 'INDIVIDUAL_REQUESTS'
+        individual_requests = broken_Run
 
 resched_init_time = sys.argv[4]
 if resched_init_time is None:
@@ -72,7 +73,7 @@ fS_w_copy = fullSchedule_windows.copy()
 if case == 'BROKEN_RUN':
     URIDs = g_u.get_URID_Bus(fullSchedule_windows, broken_Run)
 else:
-    URIDs = g_u.get_URID_BookingIds(sys.argv[3])
+    URIDs = g_u.get_URID_BookingIds(individual_requests)
 
 # for each URID we find the bus runs to check through a radius elimination.
 # for each URID for each run we then want to check the capacity in the given time
@@ -110,6 +111,8 @@ if case == 'BROKEN_RUN':
     newRun_cost = newBusRun_cost(get_busRuns(fS_w_copy, broken_Run, URID):, provider)
     # for provider we need to check availability of buses and compare costs---^^^
     print('Cost of sending new bus for broken run {0} is {1}.'.format(brokenRun, newBusRun_cost))
+
+print('Cost of rerouting all URIDs is {0}'.format(delay_cost*(48.09/3600)))
 
 fullSchedule_windows.to_csv('/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/newSchedule.csv', index = False)
 
