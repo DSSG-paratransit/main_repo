@@ -182,18 +182,16 @@ def createOnOffcols(dataframe, onstring, offstring, wc=True):
 def checkCapacityInsertPts(URID, busRun):
     """
     Assumes that busRun df has wcCapacity, amCapacity columns, and that URID
-    has amOn/Off and wcOn/Off columns added. First check most restrictive window,
-    if this is not okay then return null values. next check max in windows between
-    PUStart & PUEnd and DOStart & DOEnd. If these are okay then return the URID as is.
-    If either of these other windows are NOT okay  then we need to check in a more 
-    granular way to see what are new time windows are. Ultimately the URID should 
-    return the new time windows, so the  class will need to be changed to include 
-    something like self.PickupInsert, self.DropoffInsert, which will be the start/end
-    for new windows (or same if old windows work, or null if capacity is not okay). 
+    has amOn/Off and wcOn/Off columns added so it can return capacity insert points. 
+    
+    **Currently not implemented: apparently 2 WC + PK + AM is allowed (how often does 
+    this occur in 18 month data?), so we need a check for this. Perhaps make PK 
+    count as 0.9xWC?**
 
     Args:
 
     Returns:
+    URID.PickupInsert, URID.DropoffInsert
 
     """
 
@@ -218,40 +216,122 @@ def checkCapacityInsertPts(URID, busRun):
             '3': 0,
             }.get(wcCapacityTotal,-1000)
 
-    restrictive_window = np.where((busRun['ETA'] > URID.PickupEnd ) & (busRun['ETA'] < URID.DropoffStart))
-    PickupWindow = np.where((busRun['ETA'] > URID.PickupStart) & (busRun['ETA'] < URID.PickupEnd))
-    DropoffWindow = np.where((busRun['ETA'] > URID.DropoffStart) & (busRun['ETA'] < URID.DropoffEnd))
+
+
+    def checkWindow(URID, busRun, window, dropoffpickupiloc, dropoffpickupindx):
+
+    '''
+    Check max capacity + URID capacity in windows between
+    PUStart & PUEnd or DOStart & DOEnd. If these are okay then return insert points 
+    as PUStart and DOEnd. If either of these other windows are NOT okay  
+    then look at timestep right after (pickup) or right before (dropoff) where
+    max capacity occurs. Repeat if still full. 
+    
+    **Currently not implemented: check on
+    the edge case, i.e. looking between end of time window and PUEnd or DOStart and 
+    last checked time window. The returned value in these cases is just beginning or 
+    end of time window itself.**
+    
+    Args: 
+    busRun (dataframe): contains all info for bus run to check 
+    URID (class instance): contains all info for unscheduled request 
+    window (array): window in which to check capacity, i.e. PickupWindow/DropoffWindow
+    dropoffpickupiloc (int): used for indexing window array. For pickups we want closest to PickupEnd, i.e. + 1. For dropoffs we want closest to DropoffStart, i.e. -1.
+    dropoffpickupindx (int): used for indexing bool array in the event of non-unique max capacity. For pickups
+    we want closest to PickupEnd, i.e. -1. For dropoffs we want closest to DropoffStart, i.e. 0.
+
+    Returns:
+    URID.PickupInsert or URID.DropoffInsert depending on how it's called 
+    
+
+    '''
+    max_wcCapacity = np.max(busRun['wcCapacity'].iloc[window])
+    max_amCapacity = np.max(busRun['amCapacity'].iloc[window])
+    full_bool = (max_wcCapacity + URID.wcOn > 3) & (max_amCapacity + URID.amOn > amCapacity(str(max_wcCapacity + URID.wcOn)))
+    
+    if full_bool:
+        full_indx = np.array((busRun['wcCapacity'].iloc[window] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[window] + URID.amOn > amCapacity(str(max_wcCapacity + URID.wcOn))))
+                        
+        # check capacity in window if max capacity is unique   
+        if len(busRun['wcCapacity'].iloc[window].loc[full_indx]) == 1:
+            next_full_bool = np.array((busRun['wcCapacity'].iloc[window + pickupdropoffiloc].loc[full_indx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[window + pickupdropoffiloc].loc[full_indx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[window + pickupdropoffiloc].loc[full_indx] + URID.wcOn))))
+            if next_full_bool:
+                counter = pickupdropoffiloc
+                if pickupdropoffiloc == 1:
+                    while busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx] < busRun['ETA'].iloc[window[-1]]:
+                        counter += 1
+                        check_full_bools = np.array((busRun['wcCapacity'].iloc[window + counter].loc[full_indx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[window + counter].loc[full_indx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[window + counter].loc[full_indx] + URID.wcOn))))
+                        if check_full_bools:
+                            continue
+                        elif check_full_bools & (busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx] == busRun['ETA'].iloc[window[-1]]):
+                            return busRun['ETA'].iloc[window[-1]]
+                        elif not check_full_bools:
+                            return busRun['ETA'].iloc[window + counter].loc[full_indx]
+                elif pickupdropoffiloc == -1:
+                    while busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx] > busRun['ETA'].iloc[window[0]]:
+                        counter -= 1
+                        check_full_bools = np.array((busRun['wcCapacity'].iloc[window + counter].loc[full_indx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[window + counter].loc[full_indx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[window + counter].loc[full_indx] + URID.wcOn))))
+                        if check_full_bools:
+                            continue
+                        elif check_full_bools & (busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx] == busRun['ETA'].iloc[window[0]]):
+                            return busRun['ETA'].iloc[window[0]]
+                        elif not check_full_bools:
+                            return busRun['ETA'].iloc[window + counter].loc[full_indx]
+            elif not next_full_bool:
+                    return busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx]
+
+        # if there are multiple places in PickupWindow where we go over max capacity
+        # choose one that is closest to PickupEnd
+        elif len(busRun['wcCapacity'].iloc[window].loc[full_indx]) > 1:
+                next_full_bool = np.array((busRun['wcCapacity'].iloc[window + pickupdropoffiloc].loc[full_indx][pickupdropoffindx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[window + pickupdropoffiloc].loc[full_indx][pickupdropoffindx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[window + pickupdropoffiloc].loc[full_indx][pickupdropoffindx] + URID.wcOn))))
+                if next_full_bool:
+                    counter = pickupdropoffiloc
+                    if pickupdropoffiloc == 1:
+                        while busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx][pickupdropoffindx] < busRun['ETA'].iloc[window[-1]]:
+                            counter += 1
+                            check_full_bools = np.array((busRun['wcCapacity'].iloc[window + counter].loc[full_indx][pickupdropoffindx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[window + counter].loc[full_indx][pickupdropoffindx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[window + counter].loc[full_indx][pickupdropoffindx] + URID.wcOn))))
+                            if check_full_bools:
+                                continue
+                            elif check_full_bools & (busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx][pickupdropoffindx] == busRun['ETA'].iloc[window[-1]]):
+                                return busRun['ETA'].iloc[window[-1]]
+                            elif not check_full_bools:
+                                return busRun['ETA'].iloc[window + counter].loc[full_indx][pickupdropoffindx]
+                    if pickupdropoffiloc == -1:
+                        while busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx][pickupdropoffindx] > busRun['ETA'].iloc[window[0]]:
+                            counter -= 1
+                            check_full_bools = np.array((busRun['wcCapacity'].iloc[window + counter].loc[full_indx][pickupdropoffindx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[window + counter].loc[full_indx][pickupdropoffindx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[window + counter].loc[full_indx][pickupdropoffindx] + URID.wcOn))))
+                            if check_full_bools:
+                                continue
+                            elif check_full_bools & (busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx][pickupdropoffindx] == busRun['ETA'].iloc[window[0]]):
+                                return busRun['ETA'].iloc[window[0]]
+                            elif not check_full_bools:
+                                return busRun['ETA'].iloc[window + counter].loc[full_indx][pickupdropoffindx] 
+     
+                elif not next_full_bool:
+                        return busRun['ETA'].iloc[window + pickupdropoffiloc].loc[full_indx][pickupdropoffindx]
+        
+    elif not full_bool:
+        if pickupdropoffiloc == -1:
+            return busRun['ETA'][window[-1]]
+        elif pickupdropoffiloc == 1:
+            return busRun['ETA'][window[0]]
+
+    
+
+    restrictive_window, = np.where((busRun['ETA'] > URID.PickupEnd ) & (busRun['ETA'] < URID.DropoffStart))
+    PickupWindow, = np.where((busRun['ETA'] >= URID.PickupStart) & (busRun['ETA'] <= URID.PickupEnd))
+    DropoffWindow, = np.where((busRun['ETA'] >= URID.DropoffStart) & (busRun['ETA'] <= URID.DropoffEnd))
 
     max_wcCapacity = np.max(busRun['wcCapacity'].iloc[restrictive_window])
     max_amCapacity = np.max(busRun['amCapacity'].iloc[restrictive_window])
     full = (max_wcCapacity + URID.wcOn > 3) & (max_amCapacity + URID.wcOn > amCapacity(str(max_wcCapacity + URID.wcOn)))
     if full:
-        return URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
+        # URID.PickupInsert, URID.DropoffInsert
+        return np.nan, np.nan 
     elif not full:
-        max_wcCapacity_pickup = np.max(busRun['wcCapacity'].iloc[PickupWindow])
-        max_amCapacity_pickup = np.max(busRun['amCapacity'].iloc[PickupWindow])
-        full_pickup = (max_wcCapacity_pickup + URID.wcOn > 3) & (max_amCapacity_pickup + URID.amOn > amCapacity(str(max_wcCapacity_pickup + URID.wcOn)))
-        if full_pickup:
-            full_indx = (busRun['wcCapacity'].iloc[DropoffWindow] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[DropoffWindow] + URID.amOn > amCapacity(str(max_wcCapacity_dropoff + URID.wcOn)))
-            # how do we get the next index after the one where capacity is maximum? how do we pick off cases
-            # where max is not unique? 
-            next_full_pickup = (busRun['wcCapacity'].iloc[PickupWindow].loc[full_indx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[PickupWindow].loc[full_indx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[PickupWindow].loc[full_indx] + URID.wcOn)))
-            if next_full_pickup:
-                # repeat for next indice
-            elif not next_full_pickup:
-                URID.PickupInsert = busRun['ETA'].iloc[PickupWindow].loc[full_indx] # actually should be next closest time
-        max_wcCapacity_dropoff = np.max(busRun['wcCapacity'].iloc[DropoffWindow])
-        max_amCapacity_dropoff = np.max(busRun['amCapacity'].iloc[DropoffWindow])
-        full_dropoff = (max_wcCapacity_dropoff + URID.wcOn > 3) & (max_amCapacity_dropoff + URID.amOn > amCapacity(str(max_wcCapacity_dropoff + URID.wcOn)))
-        if full_dropoff:
-            full_indx = (busRun['wcCapacity'].iloc[DropoffWindow] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[DropoffWindow] + URID.amOn > amCapacity(str(max_wcCapacity_dropoff + URID.wcOn)))
-            # how do we get the next index after the one where capacity is maximum? how do we pick off cases
-            # where max is not unique? 
-            next_full_dropoff = (busRun['wcCapacity'].iloc[DropoffWindow].loc[full_indx] + URID.wcOn > 3) & (busRun['amCapacity'].iloc[DropoffWindow].loc[full_indx] + URID.amOn > amCapacity(str(busRun['wcCapacity'].iloc[DropoffWindow].loc[full_indx] + URID.wcOn)))
-            if next_full_dropoff:
-                # repeat for next indice
-            elif not next_full_dropoff:
-                URID.DropoffInsert = busRun['ETA'].iloc[DropoffWindow].loc[full_indx] # actually should be next closest time
+        # URID.PickUpInsert, URID.DropoffInsert
+        return checkWindow(URID, busRun, PickupWindow,1,-1), checkWindow(URID, busRun, DropoffWindow,-1,0)
+        
     
 
        
