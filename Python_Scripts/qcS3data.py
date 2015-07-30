@@ -17,8 +17,6 @@ import pandas as pd
 path_to_data = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/'
 os.chdir(path_to_data)
 qc_file_name = path_to_data+'qc_streaming.csv'
-if 'qc_streaming.csv' in os.listdir(os.getcwd()):
-    os.remove(qc_file_name)
 
 #For establishing connection, use access and secret keys sent by Valentina.
 #aws access key: sys.argv[1]
@@ -58,11 +56,11 @@ data = pd.read_csv('real_time_tab.csv', sep = '\t')
 
 data56 = data.loc[(data.ProviderId == 5) | (data.ProviderId == 6)]
 rides = data56.Run.unique()
-data56.ix[:,'Activity'] = data56.ix[:,'Activity'].astype('int')
+data56.loc[:,'Activity'] = data56.loc[:,'Activity'].astype('int')
 
 #lat/lon constraints:
-upper_right = [49.020430, -116.998768]
-lower_left = [45.606961, -124.974842]
+upper_right <- [49.020430, -116.998768]
+lower_left <- [45.606961, -124.974842]
 minlat = lower_left[0]; maxlat = upper_right[0]
 minlon = lower_left[1]; maxlon = upper_right[1]
 
