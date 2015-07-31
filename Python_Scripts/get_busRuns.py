@@ -1,4 +1,4 @@
-def get_busRuns(data, Run, URID):
+def get_busRuns(data, Run, URID, resched_init_time):
       ''' take pd.DataFrame from add_Time_Windows.py and create busRun object for specified Run number,
       for all scheduled stops for the day, between activity code 4 and the first of either 6, 16, or 3.
       RETURN: busRun pandas.dataframe for specified Run.'''
@@ -8,8 +8,7 @@ def get_busRuns(data, Run, URID):
       # get all rides between/including leave garage and gas indices.
       print("Testing get_busRuns on run " + Run)
 
-      # ISSUE: CUTTING OFF BUS STOPS PREMATURELY AT resched_init_time!!!!
-      dataSub = data[(data["Run"] == Run)]
+      dataSub = data[(data["Run"] == Run) & data['ETA'] >= resched_init_time]
 
       # if full busRun or partial
       if URID is None:

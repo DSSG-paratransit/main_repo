@@ -1,3 +1,5 @@
+from time_overlap import time_overlap
+
 #print distances that bus 181SEB is from URID location during time windows... It's pretty far...
 def radius_Elimination(data, URID, radius):
     '''Given a set of the day's bus data and an unhandled requst,
@@ -19,8 +21,7 @@ def radius_Elimination(data, URID, radius):
     URID_loc = ([URID.PickUpCoords["LAT"], URID.PickUpCoords["LON"]])
         
     #get pd.Data.Frame of nodes that have overlap with URID's pickup or dropoff window
-    overlap_data = time_overlap(data, URID, pickUpDropOff)
-    print(overlap_data["all_nodes"][0:10])
+    overlap_data = time_overlap(data, URID)
 
     #get row index of nodes that may have either inbound/outbound overlap with URID TW.
     overlap_data = data.loc[overlap_data['all_nodes']]

@@ -1,7 +1,8 @@
 #Find windows that overlap 
-def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
+def time_overlap(Run_Schedule, URID):
     '''URID: of class URID, has bookingId, pickUpLocation, dropOffLocation, etc.
-        Run_Schedule: Schedule (pd.Data.Frame) of the run on which we're trying to insert the URID
+        Run_Schedule: Schedule (pd.Data.Frame) of the run on which we're trying to insert the URID. Should be
+                    output from get_busRuns.
         RETURN: dictionary containing indices of schedule-outbound and -inbound nodes that we need
         to get distance between w/r/t URID location.'''
 
@@ -12,48 +13,32 @@ def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
     # For every chunk of contiguous overlap nodes, add in the upper-time bound node, because there can potentially
     # be an inbound ride from the URID node to the upper-time bound node. There can't be an outbound ride.
 
-    if pickUpDropOff:
-        Start = URID.PickupStart
-        End = URID.PickupEnd
-    else:
-        Start = URID.DropoffStart
-        End = URID.DropoffEnd
+
+    Start = URID.PickupStart
+    End = URID.PickupEnd
         
     crossover = []
     
     for jj in range(Run_Schedule.shape[0]):
         #Checking if a Run's PickupWindow overlaps with URID's Window.
-        if Run_Schedule.Activity.iloc[jj] == 0:
-            PUE = Run_Schedule.PickupEnd.iloc[jj]; PUS = Run_Schedule.PickupStart.iloc[jj]
-            #simple, unequal overlap
-            if (PUE > Start) & (PUS < End):
-                crossover.append(Run_Schedule.index[jj])
-            # equal or strictly within [PUS, PUE]
-            if (PUE <= End) & (PUS >= Start):
-                crossover.append(Run_Schedule.index[jj])
-            # [Start, End] completely covered by [PUS, PUE] and then some on both sides
-            if (PUE > End) & (PUS < Start):
-                crossover.append(Run_Schedule.index[jj])
-            # [Start, End] completely covered and then some only on left side
-            if (PUE == End) & (PUS < Start):
-                crossover.append(Run_Schedule.index[jj])
-            # [Start, End] completely covered and then some only on right side
-            if (PUS == Start) & (PUE > End):
-                crossover.append(Run_Schedule.index[jj])
-                
-        #Checking if a Run's DropoffWindow overlaps with URID's Window.
-        if Run_Schedule.Activity.iloc[jj] == 1:
-            DOE = Run_Schedule.DropoffEnd.iloc[jj]; DOS = Run_Schedule.DropoffStart.iloc[jj]
-            if (DOE > Start) & (DOS < End):
-                crossover.append(Run_Schedule.index[jj])
-            if (DOE <= End) & (DOS >= Start):
-                crossover.append(Run_Schedule.index[jj])
-            if (DOE > End) & (DOS < Start):
-                crossover.append(Run_Schedule.index[jj])
-            if (DOE == End) & (DOS < Start):
-                crossover.append(Run_Schedule.index[jj])
-            if (DOS == Start) & (DOE > End):
-                crossover.append(Run_Schedule.index[jj])
+        WinSt = max(Run_Schedule.PickupStart.iloc[jj], Run_Schedule.DropoffStart.iloc[jj])
+        WinEnd = max(Run_Schedule.PickupEnd.iloc[jj], Run_Schedule.DropoffEnd.iloc[jj])
+
+        #simple, unequal overlap
+        if (WinEnd > Start) & (WinSt < End):
+            crossover.append(Run_Schedule.index[jj])
+        # equal or strictly within [WinSt, WinEnd]
+        if (WinEnd <= End) & (WinSt >= Start):
+            crossover.append(Run_Schedule.index[jj])
+        # [Start, End] completely covered by [WinSt, WinEnd] and then some on both sides
+        if (WinEnd > End) & (WinSt < Start):
+            crossover.append(Run_Schedule.index[jj])
+        # [Start, End] completely covered and then some only on left side
+        if (WinEnd == End) & (WinSt < Start):
+            crossover.append(Run_Schedule.index[jj])
+        # [Start, End] completely covered and then some only on right side
+        if (WinEnd > End) & (WinSt == Start):
+            crossover.append(Run_Schedule.index[jj])
                 
     #Get rid of cases that repeat themselves:
     crossover = list(set(crossover))
@@ -67,10 +52,11 @@ def time_overlap(Run_Schedule, URID, pickUpDropOff = True):
         lst += [min(k)]; lst+=[max(k)]
         if len(lst) == 2:
             outbound += k; inbound +=k
-            if lst[0] != min(indices):
+            if Run_Schedule.Activity.loc[lst[0]] != 4:
                 outbound.append(lst[0]-1) #we have a lower bound node, heading outbound from Run_Schedule
             else:
-                inbound.pop(0) #if first node is leave garage, can't add lower bound
+                inbound.pop(0) #if first node is leave garage, can't add lower bound,
+                               #and therefore can't return from having left from lower bound
         else:
             outbound += k
             inbound +=k[1:len(k)]

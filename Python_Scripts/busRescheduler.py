@@ -2,8 +2,13 @@ import numpy as np
 import pandas as pd
 import sys
 import get_URIDS as g_u
+import get_busRuns as g_bR
 import Feasibility as Feasibility
 import runUpdater as rUp
+from humanToSeconds import humanToSeconds
+import travelCosts as tc
+from radius_Elimination import radius_Elimination
+from time_overlap import time_overlap
 
 """
 sys.argv[1] is path to csv file for day's schedule
@@ -89,7 +94,7 @@ for i in range(len(URIDs)):
     insert_stats = []
     for run in busRuns_tocheck:
         URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
-        runSchedule = get_busRuns(fullSchedule_windows, run, None)
+        runSchedule = g_bR.get_busRuns(fullSchedule_windows, run, None)
         brokenwindows_dict =Feasibility.insertFeasibility(runSchedule, URID_updated_insertpts)
         insert_stats.append(brokenwindows_dict)
 
@@ -98,8 +103,8 @@ for i in range(len(URIDs)):
     delay_cost += ordered_inserts['total_lag']*(48.09/3600)
 
     #calculate taxi cost
-    taxi_cost = taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
-        URIDs[i].DropOffCoords.LAT, DropOffCoords.LON, wheelchair_present(URIDs[i]))
+    taxi_cost = tc.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
+        URIDs[i].DropOffCoords.LAT, DropOffCoords.LON, tc.wheelchair_present(URIDs[i]))
     #write information about best insertions to text file
     rUp.write_insert_data(URID, ordered_inserts[0:3],
         '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/', taxi_cost)
@@ -108,7 +113,7 @@ for i in range(len(URIDs)):
 
 #Calculate new bus's cost, ONLY IN CASE OF BROKEN BUS:
 if case == 'BROKEN_RUN':
-    newRun_cost = newBusRun_cost(get_busRuns(fS_w_copy, broken_Run, URID):, provider)
+    newRun_cost = tc.newBusRun_cost(get_busRuns(fS_w_copy, broken_Run, URID):, provider)
     # for provider we need to check availability of buses and compare costs---^^^
     print('Cost of sending new bus for broken run {0} is {1}.'.format(brokenRun, newBusRun_cost))
 
