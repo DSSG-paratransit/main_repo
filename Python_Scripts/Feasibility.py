@@ -26,7 +26,7 @@ def insertFeasibility(Run_Schedule, URID):
 	time_matrix_pickup = osrm(uridLoc, inbound, outbound)
 
 	#start picking best pickup insertion:
-	rt_times = sorted(enumerate(np.sum(time_matrix_pickup, 1)), key=operator.itemgetter(1)) #use itemgetter(1) because (0) is index from enumerator!
+	rt_times = sorted(enumerate(time_matrix_pickup), key=operator.itemgetter(1)) #use itemgetter(1) because (0) is index from enumerator!
 
 	#smallest round trip travel time, corresponding rows on bus's schedule:
 	best_rt_time = rt_times[0][1]
