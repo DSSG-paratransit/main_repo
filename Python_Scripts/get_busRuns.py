@@ -3,7 +3,6 @@ def get_busRuns(data, Run, URID, resched_init_time):
       for all scheduled stops for the day, between activity code 4 and the first of either 6, 16, or 3.
       RETURN: busRun pandas.dataframe for specified Run.'''
 
-
       # leave garage (beginning of route index), gas (end of route index)
       # get all rides between/including leave garage and gas indices.
       print("Testing get_busRuns on run " + Run)

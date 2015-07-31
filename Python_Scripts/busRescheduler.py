@@ -33,9 +33,9 @@ except IOError:
     result = None
     while result is None:
         try:
-            qc_file_path = input("Please enter full path to the S3/QC script: ")
-            AWS_ACCESS_KEY = input("Please enter AWS access key: ")
-            AWS_SECRET_KEY = input("Please enter AWS secret key: ")
+            qc_file_path = str(input("Please enter full path to the S3/QC script: "))
+            AWS_ACCESS_KEY = str(input("Please enter AWS access key: "))
+            AWS_SECRET_KEY = str(input("Please enter AWS secret key: "))
             subprocess.call([qc_file_path, AWS_ACCESS_KEY, AWS_SECRET_KEY])
             path_to_data = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/qc_streaming.csv'
             result = pd.read_csv(path_to_data)

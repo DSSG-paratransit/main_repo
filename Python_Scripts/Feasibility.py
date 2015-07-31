@@ -11,7 +11,6 @@ def insertFeasibility(Run_Schedule, URID):
 		Also return 'pickup_insert' and 'dropoff_insert', i.e. indices of the best insertion point of URID on to Run_Schedule.
 	'''
 
-
 	# FEASIBILITY OF PICK UP:
 
 	#location from where we'll pick up given URID.
@@ -121,6 +120,8 @@ def insertFeasibility(Run_Schedule, URID):
 	test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
 	ret = {"score": test.append(dropoff_df), "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
 	           "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0]}
+
+	return(ret)
 
 
 
