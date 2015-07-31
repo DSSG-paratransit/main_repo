@@ -1,9 +1,12 @@
 ### Analysis of Ugly Rides ###
 
+#first half authored by Frank
+#second half authored by Emily
+
 library(timeDate)
 library(ggmap)
 
-
+#############Getting data the first time#########
 #Combine ride cost information with general routing data
 #setwd("/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/")
 #dataToMerge <- read.csv("matchedMatrix.csv")
@@ -11,13 +14,10 @@ library(ggmap)
 #dataToMerge$Ugly[which(dataToMerge$ClientCost <= ugly_cost)] <- 0
 #dataToMerge$Ugly[which(dataToMerge$ClientCost > ugly_cost)] <- 1
 #data <- cbind(format(read.csv("UW_Trip_Data_QC.csv"), digits = 9), dataToMerge[,2:4])
-
+#################################################
 
 #This should be equivalent to commented block above
 data <- read.csv("QC4mo_and_cost.csv")
-
-library(timeDate)
-library(ggmap)
 
 data$ServiceDate <- as.timeDate(as.character(data$ServiceDate))
 data$Run <- as.character(data$Run)
@@ -134,6 +134,7 @@ ugRidePrevalence = 100*sum(ugYN)/length(ugYN)
 #Ask Emily with questions about code after here
 
 #Using northwest, $4.00 per mile (most expensive ambulatory taxi)
+#This could be made more accurate by using diff taxi costs, see travelCosts.py for ideas
 taxAm <- 4
 
 
@@ -151,7 +152,9 @@ for(i in 1:length(ug_ind)){
   indx <- ug_ind[i]
   #need to get pickup and dropoff lat lons
   #currently just finds first pickup and first dropoff, and doubles that, assuming client only
-  #goes to one location and then back home
+  #goes to one location and then back home, 
+  #another more thorough version can be found in the next section, this is preferable
+  #when you need fas
   lats <- data$LAT[which(data$ClientId == data$ClientId[indx] & data$ServiceDate == data$ServiceDate[indx])]
   lons <- data$LON[which(data$ClientId == data$ClientId[indx] & data$ServiceDate == data$ServiceDate[indx])]
   
@@ -225,10 +228,62 @@ test <- data[which(data$ClientCost==weird$ug_cpb[1]),]
 
 as.character(test$ServiceDate) == weird$dates[1]
 
+
+#################################Trying to correct zeros only ########################################
+for(i in 1:length(ug_ind)){
+  indx <- ug_ind[i]
+  lats <- data$LAT[which(data$ClientId == data$ClientId[indx] & data$ServiceDate == data$ServiceDate[indx])]
+  lons <- data$LON[which(data$ClientId == data$ClientId[indx] & data$ServiceDate == data$ServiceDate[indx])]
+  #only call osrm for $0 taxi rides
+  if (ug_cost$taxi_cost[i]==0){
+    #check through all lat, lon pairs to find total distMi
+    for(i in 1:length(lats)-1){
+      #when the location doesn't change
+      if(lats[i]==lats[i+1] && lons[i]==lons[i+1])
+      {
+        #get rid of one of the locations
+        lats <- lats[-i]
+        lons <- lons[-i]
+      }
+      else{
+        dist <- system(paste('python', 'mileage1.py', lats[i], lons[i], lats[i+1], lons[i+1]), intern= T)
+        dist <-  unlist(as.numeric(dist))
+        
+        #Osm output is in meters, so convert it to miles for cost
+        distMi <- distMi + (dist * 0.00062137119223733)
+      }
+    }
+    
+  } 
+  #with 18mo want to use wheelchair if statement to get more accurate cost
+  taxiCost <- distMi * taxAm 
+  ug_cost$taxi_cost[i] <- taxiCost  
+  ug_cost$cost_diff[i] <- ug_cost$ug_cpb[i]-ug_cost$taxi_cost[i]
+}
+########################Combining taxi costs with full data #################################
+ug_cost <- read.csv("./ugly_rides_cost_compare.csv")
+full_data <- read.csv("./QC4mo_and_cost.csv")
+full_data$ServiceDate <- as.timeDate(as.character(full_data$ServiceDate))
+ug_cost$ServiceDate <- as.timeDate(as.character(ug_cost$dates))
+
+
+#add TaxiCost and CostDiff column to full_data
+TaxiCost <- rep(0, length(full_data$X))
+CostDiff <- TaxiCost
+full_data <- cbind(full_data, TaxiCost, CostDiff)
+
+for(i in 1:length(ug_cost$ug_clients))
+{
+  indx <- which(as.character(full_data$ServiceDate)==paste(c(as.character("00"),as.character(ug_cost$dates[1])), collapse="") && full_data$ClientId==ug_cost$ug_clients[i] && full_data$ClientCost==ug_cost$ug_cpb[i])
+  full_data$TaxiCost[indx] <- ug_cost$taxi_cost[i]
+  full_data$CostDiff[indx] <- ug_cost$cost_diff[i]
+}
+
 ######################save the df that has the cost comparison###############################
 write.table(x = ug_cost, file = "./data/ugly_rides_cost_compare.csv", sep = ",")
+write.table(x = full_data, file = "./data/ugly_rides_Tableau.csv", sep = ",")
 
-ug_cost <- read.csv("./data/ugly_rides_cost_compare.csv")
+ug_cost <- read.csv("./ugly_rides_cost_compare.csv")
 
 
 
