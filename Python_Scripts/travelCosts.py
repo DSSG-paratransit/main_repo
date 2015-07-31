@@ -2,15 +2,24 @@ import travelData
 import math
 import sys
 
+'''
+@params: takes two lat/lon pairs (start and end points)
+		 wheelchair = True if passenger is needs accomodations
+@returns: the maximum possible taxi cost for a trip with specified 
+		  params in dollars 
+'''
+
+def wheelchair_present(URID):
+	#check if URID has a wheelchair, returns Boolean True/False:
+
+	mobaids = URID.SpaceOn.tolist()[0]
+	WC = False
+	if type(mobaids) == str:
+        WC = any(['W' in x for x in mobaids.split(',')])
+    return WC
+
 
 def taxi(lat1, lon1, lat2, lon2, wheelchair):
-	'''
-	@params: takes two lat/lon pairs (start and end points)
-			 wheelchair = True if passenger is needs accomodations
-	@returns: the maximum possible taxi cost for a trip with specified 
-			  params in dollars 
-	'''
-	
 	# converts from miles to meters and ceilings to nearest decimal
 	miles = math.ceil(travelData.mileage(lat1, lon1, lat2, lon2) / 160.934) / 10
 
@@ -30,13 +39,13 @@ def taxi(lat1, lon1, lat2, lon2, wheelchair):
 			cost = miles * 4
 	return cost
 
-def newBusRun(busRun, provider):
-	'''
-	@params: busRun: a clean busRun starting with activity code 0 and ending with 1
-			 provider: the provider ID
-	@returns: the cost of sending a new bus to handle unhandled trip
-	'''
-	
+'''
+@params: busRun: a clean busRun starting with activity code 0 and ending with 1
+		 provider: the provider ID. That is, busRun should be abbreviated to begin
+		 at the first URID.
+@returns: the cost of sending a new bus to handle unhandled trip
+'''
+def newBusRun_cost(busRun, provider):
 	baselat, baselon = None, None
 	costPH = None
 	if provider == 6:

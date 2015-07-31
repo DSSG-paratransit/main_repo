@@ -8,39 +8,31 @@ def osrm (URID_location, inbound, outbound):
     #lists for inbound and outbound matrices
     # inbound/outbound: 2-column np.arrays storing inbound/outbound node latitude/longitude
     # and inbound (from scheduled location to urid location) 
-    out_total_time = []
+    total_times = []
     out_start_points = []
     out_end_points = []
     in_total_time = []
     in_start_points = []
     in_end_points = []
-    out_osrm_url = "http://router.project-osrm.org/viaroute?"
-    in_osrm_url = "http://router.project-osrm.org/viaroute?"
+    osrm_url = "http://router.project-osrm.org/viaroute?"
     urid_LAT = URID_location[0]; urid_LON = URID_location[1]
 
     # outbound
-    for lat_cord,lon_cord in outbound: 
-        out_route_url = out_osrm_url+ "loc=" + str(lat_cord) + "," + str(lon_cord)
-        out_route_url = out_route_url + "&loc=" + str(urid_LAT) + "," + str(urid_LON) + "&instructions=false"
-        out_route_requests = requests.get(out_route_url)
-        out_route_results = out_route_requests.json()
-        out_total_time += [out_route_results[u'route_summary'][u'total_time']]
-        out_start_points += [out_route_results[u'route_summary'][u'start_point']]
-        out_end_points += [out_route_results[u'route_summary'][u'end_point']]
+    for k in outbound.shape[0]: 
+        lat_cord_O = outbound[k, 0]; lon_cord_O = outbound[k, 1]
+        lat_cord_I = inbound[k, 0]; lon_cord_I = inbound[k, 1]
+        
+        route_url = osrm_url+ "loc=" + str(lat_cord_O) + "," + str(lon_cord_O)
+                         + "&loc=" + str(urid_LAT) + "," + str(urid_LON) + "&loc=" + str(lat_cord_I) + "," + str(lon_cord_I) +
+                         "&instructions=false"
+        
+        route_requests = requests.get(route_url)
+        route_results = route_requests.json()
+        total_times += [route_results[u'route_summary'][u'total_time']]
 
-    # inbound
-    for lat_cord,lon_cord in inbound: 
-        in_route_url = in_osrm_url + "loc=" + str(urid_LAT) + "," + str(urid_LON) 
-        in_route_url = in_route_url+ "&loc=" + str(lat_cord) + "," + str(lon_cord) + "&instructions=false"
-        in_route_requests = requests.get(in_route_url)
-        in_route_results = in_route_requests.json()
-        in_total_time += [in_route_results[u'route_summary'][u'total_time']]
-        in_start_points += [in_route_results[u'route_summary'][u'start_point']]
-        in_end_points += [in_route_results[u'route_summary'][u'end_point']]
-
-    a = np.array([in_total_time]); b = np.array([out_total_time])
+    a = np.array([total_times])
     
-    return(np.hstack((a.T, b.T)))
+    return(a.T)
 
 
 
