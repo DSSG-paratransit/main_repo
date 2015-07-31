@@ -2,13 +2,15 @@ import travelData
 import math
 import sys
 
-'''
-@params: takes two lat/lon pairs (start and end points)
-		 wheelchair = True if passenger is needs accomodations
-@returns: the maximum possible taxi cost for a trip with specified 
-		  params in dollars 
-'''
+
 def taxi(lat1, lon1, lat2, lon2, wheelchair):
+	'''
+	@params: takes two lat/lon pairs (start and end points)
+			 wheelchair = True if passenger is needs accomodations
+	@returns: the maximum possible taxi cost for a trip with specified 
+			  params in dollars 
+	'''
+	
 	# converts from miles to meters and ceilings to nearest decimal
 	miles = math.ceil(travelData.mileage(lat1, lon1, lat2, lon2) / 160.934) / 10
 
@@ -28,12 +30,13 @@ def taxi(lat1, lon1, lat2, lon2, wheelchair):
 			cost = miles * 4
 	return cost
 
-'''
-@params: busRun: a clean busRun starting with activity code 0 and ending with 1
-		 provider: the provider ID
-@returns: the cost of sending a new bus to handle unhandled trip
-'''
 def newBusRun(busRun, provider):
+	'''
+	@params: busRun: a clean busRun starting with activity code 0 and ending with 1
+			 provider: the provider ID
+	@returns: the cost of sending a new bus to handle unhandled trip
+	'''
+	
 	baselat, baselon = None, None
 	costPH = None
 	if provider == 6:
