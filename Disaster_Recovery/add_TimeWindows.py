@@ -6,7 +6,7 @@ def add_TimeWindows(data, windowsz):
     
     etas = data.loc[:,"ETA"]
     schtime =data.loc[:,"SchTime"]
-    schtime.loc[np.where(schtime<0)] = np.nan
+    schtime.ix[np.where(schtime<0)] = np.nan
     schtime.head()
     windowsz = 60*30
     sLength = data.shape[0]

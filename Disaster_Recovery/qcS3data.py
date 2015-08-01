@@ -13,6 +13,7 @@ import re
 import time
 import os
 import pandas as pd
+import read_fwf
 
 def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, path_to_fwf_file, qc_file_name = 'qc_streaming.csv'):
 
@@ -44,19 +45,17 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, path_to_fwf_fi
 
 
     #STEP 2: change this file from fixed width formatted to tab delimitted
-    sys.argv = ['read_fwf.py','real_time_data.csv', 'real_time_tab.csv']
-    execfile(path_to_fwf_file)
+    data = read_fwf.read('real_time_data.csv')
 
     #STEP 3: QC this file a la the R QCing script
-    data = pd.read_csv('real_time_tab.csv', sep = '\t')
 
-    data56 = data.loc[(data.ProviderId == 5) | (data.ProviderId == 6)]
+    data56 = data.loc[(data.ProviderId == '5') | (data.ProviderId == '6')]
     rides = data56.Run.unique()
     data56.loc[:,'Activity'] = data56.loc[:,'Activity'].astype('int')
 
     #lat/lon constraints:
-    upper_right <- [49.020430, -116.998768]
-    lower_left <- [45.606961, -124.974842]
+    upper_right = [49.020430, -116.998768]
+    lower_left = [45.606961, -124.974842]
     minlat = lower_left[0]; maxlat = upper_right[0]
     minlon = lower_left[1]; maxlon = upper_right[1]
 
