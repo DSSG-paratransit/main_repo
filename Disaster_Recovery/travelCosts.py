@@ -15,8 +15,8 @@ def wheelchair_present(URID):
 	mobaids = URID.SpaceOn.tolist()[0]
 	WC = False
 	if type(mobaids) == str:
-		WC = any(['W' in x for x in mobaids.split(',')])
-	return WC
+        WC = any(['W' in x for x in mobaids.split(',')])
+    return WC
 
 
 def taxi(lat1, lon1, lat2, lon2, wheelchair):
