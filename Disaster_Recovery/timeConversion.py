@@ -72,7 +72,11 @@ def main():
 			print(secondsToHuman(input('Enter a number of seconds to convert to 24h time: ')))
 		elif option == '3':
 			print(secondsFactorization(input('Enter a positive number of seconds: ')))
-		option = raw_input('\nagain? ')
+		again = raw_input('\nagain? ')
+		if again[0] == 'y':
+			pass
+		else:
+			option = again
 		print('')
 
 
