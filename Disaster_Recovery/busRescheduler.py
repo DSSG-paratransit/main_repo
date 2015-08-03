@@ -63,6 +63,7 @@ if resched_init_time is None:
 sched_obj = af.aTWC.TimeWindowsCapacity(fullSchedule)
 fullSchedule_windows = sched_obj.addtoRun_TimeCapacity(1800.)
 fS_w_copy = fullSchedule_windows.copy()
+if type(fS_w_copy.index[0])~= str: fS_w_copy.index = range(0, fS_w_copy.shape[0])
 
 # this gets us all the URIDs for the broken run given the initial rescheduling time
 # OR it will get us URIDs given specific bookingIds to be rescheduled
@@ -89,7 +90,7 @@ for i in range(len(URIDs)):
 
     #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
     ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
-    delay_cost += ordered_inserts[0]['total_lag'][0]*(48.09/3600)
+    delay_cost += ordered_inserts[0]['total_lag'][0]*(48.09/3600) #total dollars
 
     #calculate taxi cost
     taxi_cost = af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
@@ -99,15 +100,15 @@ for i in range(len(URIDs)):
         '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/', taxi_cost)
     
     #update whole day's schedule:
-    fullSchedule_windows = rUp.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
+    fullSchedule_windows = af.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
 
 #Calculate new bus's cost, ONLY IN CASE OF BROKEN BUS:
 if case == 'BROKEN_RUN':
-    newRun_cost = tc.newBusRun_cost(get_busRuns(fS_w_copy, broken_Run, URID):, provider)
+    newRun_cost = af.newBusRun_cost(af.get_busRuns(fS_w_copy, broken_Run, URIDs[0]), provider)
     # for provider we need to check availability of buses and compare costs---^^^
-    print('Cost of sending new bus for broken run {0} is {1}.'.format(brokenRun, newBusRun_cost))
+    print('Cost of sending new bus for broken run {0} is {1}.'.format(broken_Run, newBusRun_cost))
 
-print('Cost of rerouting all URIDs is {0}'.format(delay_cost*(48.09/3600)))
+print('Cost of rerouting all URIDs is {0}'.format(delay_cost))
 
 fullSchedule_windows.to_csv('/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/newSchedule.csv', index = False)
 

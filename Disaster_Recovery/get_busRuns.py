@@ -1,4 +1,4 @@
-def get_busRuns(data, Run, URID, resched_init_time):
+def get_busRuns(data, Run, URID):
       ''' take pd.DataFrame from add_Time_Windows.py and create busRun object for specified Run number,
       for all scheduled stops for the day, between activity code 4 and the first of either 6, 16, or 3.
       RETURN: busRun pandas.dataframe for specified Run.'''
