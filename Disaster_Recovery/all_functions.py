@@ -3,9 +3,12 @@ import numpy as np
 import haversine
 import operator
 import math
+import os
 import requests
 import sys
 import re
+import time
+import read_fwf
 from boto.s3.connection import S3Connection
 
 
@@ -39,19 +42,17 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, path_to_fwf_fi
 
 
     #STEP 2: change this file from fixed width formatted to tab delimitted
-    sys.argv = ['read_fwf.py','real_time_data.csv', 'real_time_tab.csv']
-    execfile(path_to_fwf_file)
+    # NOTE: datatypes are screwed up.
+    data = read_fwf.read('real_time_data.csv')
 
     #STEP 3: QC this file a la the R QCing script
-    data = pd.read_csv('real_time_tab.csv', sep = '\t')
-
-    data56 = data.loc[(data.ProviderId == 5) | (data.ProviderId == 6)]
+    data56 = data.loc[(data.ProviderId == '5') | (data.ProviderId == '6')]
     rides = data56.Run.unique()
     data56.loc[:,'Activity'] = data56.loc[:,'Activity'].astype('int')
 
     #lat/lon constraints:
-    upper_right <- [49.020430, -116.998768]
-    lower_left <- [45.606961, -124.974842]
+    upper_right = [49.020430, -116.998768]
+    lower_left = [45.606961, -124.974842]
     minlat = lower_left[0]; maxlat = upper_right[0]
     minlon = lower_left[1]; maxlon = upper_right[1]
 
@@ -116,36 +117,40 @@ def add_TimeWindows(data, windowsz):
         from SchTime and ETA.
         data is subsetted schedule data from a day.
         windowsz is size of pickup/dropoff window in seconds'''
-    
-    etas = data.loc[:,"ETA"]
-    schtime =data.loc[:,"SchTime"]
-    schtime.loc[np.where(schtime<0)] = np.nan
-    schtime.head()
-    windowsz = 60*30
-    sLength = data.shape[0]
-    data.insert(len(data.columns), 'PickupStart',  pd.Series(np.zeros(sLength), index=data.index))
-    data.insert(len(data.columns), 'PickupEnd',  pd.Series(np.zeros(sLength), index=data.index))
-    data.insert(len(data.columns), 'DropoffStart',  pd.Series(np.zeros(sLength), index=data.index))
-    data.insert(len(data.columns), 'DropoffEnd',  pd.Series(np.zeros(sLength), index=data.index))
-    data.head(10)
-    for x in range(0, sLength):
 
-        #make dropoff window when there's no required drop off time
-        if (data.Activity.loc[x] == 1) & (data.ReqLate.loc[x] <0):
-            data.DropoffStart.loc[x] = data.ETA.loc[x]-3600
-            data.DropoffEnd.loc[x] = data.ETA.loc[x]+3600
+    etas = data.ix[:,"ETA"]
+    schtime =data.ix[:,"SchTime"]
+    Activity = data.ix[:, "Activity"]
+    ReqLate = data.ix[:, "ReqLate"]
+
+    schtime_arr = np.array(schtime.tolist())
+    nrow = data.shape[0]
+    PickupStart = np.zeros(nrow); PickupEnd = np.zeros(nrow)
+    DropoffStart = np.zeros(nrow); DropoffEnd = np.zeros(nrow)
+
+    for x in range(0, nrow):
+
+    #make dropoff window when there's no required drop off time
+        if (Activity[x] == 1) & (ReqLate[x] <0):
+            DropoffStart[x] = etas[x]-3600
+            DropoffEnd[x] = etas[x]+3600
 
         #make dropoff window when there IS a required drop off time: 1hr before ReqLate time
-        if (data["Activity"].loc[x] == 1) & (data["ReqLate"].loc[x] >0):
-            data["DropoffStart"].loc[x] = data["ETA"].loc[x]-3600
-            data["DropoffEnd"].loc[x] = data["ReqLate"].loc[x]  
+        if (Activity[x] == 1) & (ReqLate[x] >0):
+            DropoffStart[x] = etas[x]-3600
+            DropoffEnd[x] = ReqLate[x]  
 
         #schtime is in the middle of the pick up window
-        if data["Activity"].loc[x] == 0:
-            data["PickupStart"].loc[x] = schtime.loc[x]-(windowsz/2)
-            data["PickupEnd"].loc[x] = schtime.loc[x]+(windowsz/2)
+        if Activity[x] == 0:
+            PickupStart[x] = schtime[x]-(windowsz/2)
+            PickupEnd[x] = schtime[x]+(windowsz/2)
+        
+    data.insert(len(data.columns), 'PickupStart',  pd.Series((PickupStart), index=data.index))
+    data.insert(len(data.columns), 'PickupEnd',  pd.Series((PickupEnd), index=data.index))
+    data.insert(len(data.columns), 'DropoffStart',  pd.Series(DropoffStart, index=data.index))
+    data.insert(len(data.columns), 'DropoffEnd',  pd.Series(DropoffEnd, index=data.index))
 
-    return data
+    return data.copy()
 
 
 class URID:
@@ -162,7 +167,7 @@ class URID:
         self.MobAids = MobAids
 
 
-def get_URID_Bus(data, broken_Run, resched_init_time):
+def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREAKDOWN_LOC = None):
     '''get unscheduled request id's from broken bus,
         based on when we're allowed to first start rescheduling.
         resched_init_time is in seconds, marks the point in time we can begin considering reinserting new requests.
@@ -176,14 +181,12 @@ def get_URID_Bus(data, broken_Run, resched_init_time):
     leftover = leftover[(leftover["Activity"] != 6) & (leftover["Activity"] != 16) & (leftover["Activity"] != 3)]
     
     #rides that were scheduled to be on broken bus past resched_init_time
-    pickmeup = leftover[leftover["Run"]==broken_Run]
-    clients = pickmeup["ClientId"].unique()
-    clients = clients[~(np.isnan(clients))]
-    unsched = pickmeup
+    unsched = leftover[leftover["Run"]==broken_Run]
+    diffIDs = unsched.BookingId.unique()
+    diffIDs = diffIDs[~np.isnan(diffIDs)]
 
     print("There are %s rides left to be scheduled on broken run %s" % (unsched.shape[0], broken_Run))
 
-    diffIDs = unsched.BookingId.unique()
     saveme = []
 
     #save separate URID's in a list
@@ -191,29 +194,29 @@ def get_URID_Bus(data, broken_Run, resched_init_time):
         my_info = unsched[unsched["BookingId"]==ID]
         #if person is already on bus when breakdown occurs,
         #need to handle URID differently:
-        if(my_info.shape[0] == 1):
+        if(my_info.shape[0] == 1 & add_stranded):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
                 #if person is stranded on bus, their PickUpCoords are the BREAKDOWN_LOC (global var)
                 PickUpCoords = pd.Series(data = np.array(BREAKDOWN_LOC), index = ["LAT", "LON"]),
-                DropOffCoords = my_info[["LAT", "LON"]].iloc[0,],
+                DropOffCoords = my_info[["LAT", "LON"]].ix[0,],
                 PickupStart = resched_init_time,
                 PickupEnd = resched_init_time+30*60,
-                DropoffStart = int(my_info[["DropoffStart"]].iloc[0,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[0,]),
-                SpaceOn = my_info[["SpaceOn"]].iloc[0,],
-                MobAids = my_info[["MobAids"]].iloc[0,])
-        else:
+                DropoffStart = int(my_info[["DropoffStart"]].ix[0,]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].ix[0,]),
+                SpaceOn = my_info[["SpaceOn"]].ix[0,],
+                MobAids = my_info[["MobAids"]].ix[0,])
+        if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
-                PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
-                DropOffCoords = my_info[["LAT", "LON"]].iloc[1,],
-                PickupStart = int(my_info[["PickupStart"]].iloc[0,]),
-                PickupEnd = int(my_info[["PickupEnd"]].iloc[0,]),
-                DropoffStart = int(my_info[["DropoffStart"]].iloc[1,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[1,]),
-                SpaceOn = my_info[["SpaceOn"]].iloc[0,],
-                MobAids = my_info[["MobAids"]].iloc[0,])
+                PickUpCoords = my_info[["LAT", "LON"]].ix[0,],
+                DropOffCoords = my_info[["LAT", "LON"]].ix[1,],
+                PickupStart = int(my_info[["PickupStart"]].ix[0,]),
+                PickupEnd = int(my_info[["PickupEnd"]].ix[0,]),
+                DropoffStart = int(my_info[["DropoffStart"]].ix[1,]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].ix[1,]),
+                SpaceOn = my_info[["SpaceOn"]].ix[0,],
+                MobAids = my_info[["MobAids"]].ix[0,])
         
         saveme.append(temp)
 
@@ -590,7 +593,7 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output):
         text_file.write('OPTION 1:\n')
         text_file.write('Put {0} onto bus {1} \n'.format(int(URID.BookingId), option['RunID']) )
         text_file.write('Total lag: {0} \n'.format(int(option['total_lag'])))
-        text_file.write('Number of exceeded time windows: {0} \n'.format()
+        text_file.write('Number of exceeded time windows: {0} \n'.format())
         text_file.write('Average lateness: {0} \n\n\n'.format(avg_late))
 
     text_file.write('Taxi cost: {0}'.format(taxi_cost))
