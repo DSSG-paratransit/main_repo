@@ -4,6 +4,8 @@ def add_TimeWindows(data, windowsz):
         data is subsetted schedule data from a day.
         windowsz is size of pickup/dropoff window in seconds'''
 
+    data.index = range(0, data.shape[0])
+
     etas = data.ix[:,"ETA"]
     schtime =data.ix[:,"SchTime"]
     Activity = data.ix[:, "Activity"]

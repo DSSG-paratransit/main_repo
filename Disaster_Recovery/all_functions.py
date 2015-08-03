@@ -9,6 +9,8 @@ import sys
 import re
 import time
 import read_fwf
+import itertools
+import operator
 from boto.s3.connection import S3Connection
 
 
@@ -254,6 +256,7 @@ def time_overlap(Run_Schedule, URID):
     '''URID: of class URID, has bookingId, pickUpLocation, dropOffLocation, etc.
         Run_Schedule: Schedule (pd.Data.Frame) of the run on which we're trying to insert the URID. Should be
                     output from get_busRuns.
+
         RETURN: dictionary containing indices of schedule-outbound and -inbound nodes that we need
         to get distance between w/r/t URID location.'''
 
@@ -337,13 +340,17 @@ def radius_Elimination(data, URID, radius):
 
         RETURN: LIST of runs within radius-miles of URID.'''
 
+    #first, resolve indexing issues if index column is type timedate
+    if type(data.index[0]) != int:
+        data.index = range(0, data.shape[0])
+
     #obviously, broken bus can't be in the list of nearby buses.
-    data = data[data.Run != URID.Run]
+    data_copy = data[data.Run != URID.Run]
 
     URID_loc = ([URID.PickUpCoords["LAT"], URID.PickUpCoords["LON"]])
         
     #get pd.Data.Frame of nodes that have overlap with URID's pickup or dropoff window
-    overlap_data = time_overlap(data, URID)
+    overlap_data = time_overlap(data_copy, URID)
 
     #get row index of nodes that may have either inbound/outbound overlap with URID TW.
     overlap_data = data.loc[overlap_data['all_nodes']]
@@ -354,16 +361,19 @@ def radius_Elimination(data, URID, radius):
     okBuses = []
     for k in range(len(overlap_LAT)):
         point = (overlap_LAT[k], overlap_LON[k])
-        dist = haversine(point, URID_loc, miles=True)
+        dist = haversine.haversine(point, URID_loc, miles=True)
         if(dist < radius):
             okBuses.append(overlap_data.Run.iloc[k])
 
-    return set(okBuses)
+    return list(set(okBuses))
 
 
 def get_busRuns(data, Run, URID, resched_init_time):
-      ''' take pd.DataFrame from add_Time_Windows.py and create busRun object for specified Run number,
-      for all scheduled stops for the day, between activity code 4 and the first of either 6, 16, or 3.
+      '''
+      data (pd.DataFrame): output from add_Time_Windows.py
+      Run (str): Run number
+      URID (class.URID): URID class object
+      resched_init_time (int): number of seconds in day we allow first rescheduling
       RETURN: busRun pandas.dataframe for specified Run.'''
 
       # leave garage (beginning of route index), gas (end of route index)
