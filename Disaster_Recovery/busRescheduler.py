@@ -80,12 +80,12 @@ else:
 
 delay_cost = 0
 for i in range(len(URIDs)):
-    busRuns_tocheck = radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
+    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
     insert_stats = []
     for run in busRuns_tocheck:
         URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
-        runSchedule = g_bR.get_busRuns(fullSchedule_windows, run, None)
-        brokenwindows_dict =Feasibility.insertFeasibility(runSchedule, URID_updated_insertpts)
+        runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
+        brokenwindows_dict =af.insertFeasibility(runSchedule, URID_updated_insertpts)
         insert_stats.append(brokenwindows_dict)
 
     #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
