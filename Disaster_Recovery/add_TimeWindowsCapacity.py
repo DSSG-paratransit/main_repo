@@ -280,7 +280,8 @@ if __name__ == "__main__":
     
 else:
     print "Importing add_TimeWindowsCapacity"
-    # call in the following way: 
+    # call in the following way:
+    # from addTimeWindowsCapacity import TimeWindowsCapacity
     # df = pd.DataFrame.from_csv(sys.argv[1], header=0, sep=',')
     # df_obj = TimeWindowsCapacity(df)
     # df_updated = df_obj.addtoRun_TimeCapacity(sys.argv[2])
