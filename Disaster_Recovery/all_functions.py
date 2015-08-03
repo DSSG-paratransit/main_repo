@@ -232,7 +232,7 @@ def get_URID_BookingIds(data, BookingId_list):
     diffIDs = BookingId_list
     saveme = []
     for ID in diffIDs:
-        my_info = unsched[unsched["BookingId"]==ID]
+        my_info = data[data["BookingId"]==ID]
         temp = URID(BookingId = ID,
                 Run = broken_Run,
                 PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
