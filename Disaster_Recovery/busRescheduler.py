@@ -1,92 +1,82 @@
-import numpy as np
-import pandas as pd
-import sys
-import get_URIDS as g_u
-import get_busRuns as g_bR
-import Feasibility as Feasibility
-import runUpdater as rUp
-from humanToSeconds import humanToSeconds
-import travelCosts as tc
-from radius_Elimination import radius_Elimination
-from time_overlap import time_overlap
+import all_functions as af
 
 """
-sys.argv[1] is path to csv file for day's schedule
-sys.argv[2] is int for time window in seconds
-sys.argv[3] is str for broken bus run number, OR, it is a list of bookingId's (for single client input)
-sys.argv[4] is int for time in seconds (this should be changed to accept more user friendly input)
+    sys.argv[1] is path to csv file for day's schedule
+    sys.argv[2] is int for time window in seconds
+    sys.argv[3] is str for broken bus run number, OR, it is a list of bookingId's (for single client input)
+    sys.argv[4] is int for time in seconds (this should be changed to accept more user friendly input)
+    
+    eventually make function(?) which makes sure user is passing correct num/type of arguments.
+    For now, enter None when you don't want to input a command line argument.
+    
+    """
 
-eventually make function(?) which makes sure user is passing correct num/type of arguments.
-For now, enter None when you don't want to input a command line argument.
+# all try except statements are prompting the user for the needed input
 
-"""
+#Get data
+#Get data
 
-# all try except statements are prompting the user for the needed input  
 
-#Get data   
 try:
-    fullSchedule = pd.DataFrame.from_csv(sys.argv[1], header=0, sep=',')
+    fullSchedule = af.pd.DataFrame.from_csv(af.sys.argv[1], header=0, sep=',')
 
 except IOError:
     #grab s3 streaming_data/ file if no file specified
     print "File does not exist."
     result = None
-    while result is None:
-        try:
-            qc_file_path = str(input("Please enter full path to the S3/QC script: "))
-            AWS_ACCESS_KEY = str(input("Please enter AWS access key: "))
-            AWS_SECRET_KEY = str(input("Please enter AWS secret key: "))
-            subprocess.call([qc_file_path, AWS_ACCESS_KEY, AWS_SECRET_KEY])
-            path_to_data = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/qc_streaming.csv'
-            result = pd.read_csv(path_to_data)
-            fullSchedule = result
-        except:
-            pass
+    AWS_ACCESS_KEY = raw_input("Please enter AWS access key: ")
+    AWS_SECRET_KEY = raw_input("Please enter AWS secret key: ")
+    path_to_data = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/'
+    path_to_fwf_file = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Python_Scripts/read_fwf.py'
+    
+    try:
+        fullSchedule = af.s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, path_to_fwf_file, qc_file_name = 'qc_streaming.csv')
+    
+    except IOError: #is this the right error if s3_data_acquire fails?
+        print('Could not access streaming data!')
+        quit()
 
 #Get time window size
-windows = sys.argv[2]
+windows = af.sys.argv[2]
 if windows is None:
     windows = 1800
 
 #Determine broken run number, or get list of unhandled requests.
-broken_Run = sys.argv[3]
+broken_Run = af.sys.argv[3]
 if broken_Run is None:
     broken_Run = input("Please enter broken bus ID number as a string, OR, input a list of unhandled BookingIds: ")
-    if type(broken_Run) == str:
-        case = 'BROKEN_RUN' 
-    else:
-        case = 'INDIVIDUAL_REQUESTS'
-        individual_requests = broken_Run
+if type(broken_Run) == str:
+    case = 'BROKEN_RUN'
+else:
+    case = 'INDIVIDUAL_REQUESTS'
+    individual_requests = broken_Run
 
-resched_init_time = sys.argv[4]
+resched_init_time = af.sys.argv[4]
 if resched_init_time is None:
     try:
-        resched_init_time = humanToSeconds(sys.argv[4])
-    except ValueError:
-        print('Please enter a break-down time according to the prompt!\n')
-        resched_init_time = humanToSeconds(sys.argv[4])
+        resched_init_time = af.humanToSeconds(af.sys.argv[4])
+    except:
+        resched_init_time = af.humanToSeconds(raw_input('Enter a 24h time in HH:MM format: '))
 
 
 
 # eventually add_timeWindows should also add capacity columns (not yet integrated)
-# this simply returns full schedule with time windows at the moment 
-fullSchedule_windows = add_TimeWindows(fullSchedule,windows)
+# this simply returns full schedule with time windows at the moment
+fullSchedule_windows = af.add_TimeWindows(fullSchedule,windows)
 fS_w_copy = fullSchedule_windows.copy()
 
-# this gets us all the URIDs for the broken run given the initial rescheduling time 
+# this gets us all the URIDs for the broken run given the initial rescheduling time
 # OR it will get us URIDs given specific bookingIds to be rescheduled
 if case == 'BROKEN_RUN':
-    URIDs = g_u.get_URID_Bus(fullSchedule_windows, broken_Run)
+    URIDs = af.get_URID_Bus(fullSchedule_windows, broken_Run, resched_init_time)
 else:
-    URIDs = g_u.get_URID_BookingIds(individual_requests)
+    URIDs = af.get_URID_BookingIds(individual_requests)
 
 # for each URID we find the bus runs to check through a radius elimination.
 # for each URID for each run we then want to check the capacity in the given time
 # window and return the URID with updated insert points. This URID with updated
 # insert points is fed to the feasibilty function, which we ultimately want to return
 # a minimum cost run for the URID and that run updated with the new URID slotted in.
-cost_dict = {} #dictionary that will store, by BookingId key, the cost for inserting client into
-# new run as well as that run number 
 
 delay_cost = 0
 for i in range(len(URIDs)):
@@ -108,6 +98,7 @@ for i in range(len(URIDs)):
     #write information about best insertions to text file
     rUp.write_insert_data(URID, ordered_inserts[0:3],
         '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/', taxi_cost)
+    
     #update whole day's schedule:
     fullSchedule_windows = rUp.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
 
@@ -122,5 +113,4 @@ print('Cost of rerouting all URIDs is {0}'.format(delay_cost*(48.09/3600)))
 fullSchedule_windows.to_csv('/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/newSchedule.csv', index = False)
 
 return None
-
     

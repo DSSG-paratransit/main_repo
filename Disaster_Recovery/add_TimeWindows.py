@@ -3,36 +3,40 @@ def add_TimeWindows(data, windowsz):
         from SchTime and ETA.
         data is subsetted schedule data from a day.
         windowsz is size of pickup/dropoff window in seconds'''
-    
-    etas = data.loc[:,"ETA"]
-    schtime =data.loc[:,"SchTime"]
-    schtime.loc[np.where(schtime<0)] = np.nan
-    schtime.head()
-    windowsz = 60*30
-    sLength = data.shape[0]
-    data.insert(len(data.columns), 'PickupStart',  pd.Series(np.zeros(sLength), index=data.index))
-    data.insert(len(data.columns), 'PickupEnd',  pd.Series(np.zeros(sLength), index=data.index))
-    data.insert(len(data.columns), 'DropoffStart',  pd.Series(np.zeros(sLength), index=data.index))
-    data.insert(len(data.columns), 'DropoffEnd',  pd.Series(np.zeros(sLength), index=data.index))
-    data.head(10)
-    for x in range(0, sLength):
+
+    etas = data.ix[:,"ETA"]
+    schtime =data.ix[:,"SchTime"]
+    Activity = data.ix[:, "Activity"]
+    ReqLate = data.ix[:, "ReqLate"]
+
+    schtime_arr = np.array(schtime.tolist())
+    nrow = data.shape[0]
+    PickupStart = np.zeros(nrow); PickupEnd = np.zeros(nrow)
+    DropoffStart = np.zeros(nrow); DropoffEnd = np.zeros(nrow)
+
+    for x in range(0, nrow):
 
         #make dropoff window when there's no required drop off time
-        if (data.Activity.loc[x] == 1) & (data.ReqLate.loc[x] <0):
-            data.DropoffStart.loc[x] = data.ETA.loc[x]-3600
-            data.DropoffEnd.loc[x] = data.ETA.loc[x]+3600
+        if (Activity[x] == 1) & (ReqLate[x] <0):
+            DropoffStart[x] = etas[x]-3600
+            DropoffEnd[x] = etas[x]+3600
 
         #make dropoff window when there IS a required drop off time: 1hr before ReqLate time
-        if (data["Activity"].loc[x] == 1) & (data["ReqLate"].loc[x] >0):
-            data["DropoffStart"].loc[x] = data["ETA"].loc[x]-3600
-            data["DropoffEnd"].loc[x] = data["ReqLate"].loc[x]  
+        if (Activity[x] == 1) & (ReqLate[x] >0):
+            DropoffStart[x] = etas[x]-3600
+            DropoffEnd[x] = ReqLate[x]  
 
         #schtime is in the middle of the pick up window
-        if data["Activity"].loc[x] == 0:
-            data["PickupStart"].loc[x] = schtime.loc[x]-(windowsz/2)
-            data["PickupEnd"].loc[x] = schtime.loc[x]+(windowsz/2)
+        if Activity[x] == 0:
+            PickupStart[x] = schtime[x]-(windowsz/2)
+            PickupEnd[x] = schtime[x]+(windowsz/2)
+        
+    data.insert(len(data.columns), 'PickupStart',  pd.Series((PickupStart), index=data.index))
+    data.insert(len(data.columns), 'PickupEnd',  pd.Series((PickupEnd), index=data.index))
+    data.insert(len(data.columns), 'DropoffStart',  pd.Series(DropoffStart, index=data.index))
+    data.insert(len(data.columns), 'DropoffEnd',  pd.Series(DropoffEnd, index=data.index))
 
-    return data
+    return data.copy()
 
 
 

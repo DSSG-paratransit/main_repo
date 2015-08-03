@@ -14,7 +14,7 @@ class URID:
         self.MobAids = MobAids
 
 
-def get_URID_Bus(data, broken_Run, resched_init_time):
+def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREAKDOWN_LOC = None):
     '''get unscheduled request id's from broken bus,
         based on when we're allowed to first start rescheduling.
         resched_init_time is in seconds, marks the point in time we can begin considering reinserting new requests.
@@ -28,14 +28,12 @@ def get_URID_Bus(data, broken_Run, resched_init_time):
     leftover = leftover[(leftover["Activity"] != 6) & (leftover["Activity"] != 16) & (leftover["Activity"] != 3)]
     
     #rides that were scheduled to be on broken bus past resched_init_time
-    pickmeup = leftover[leftover["Run"]==broken_Run]
-    clients = pickmeup["ClientId"].unique()
-    clients = clients[~(np.isnan(clients))]
-    unsched = pickmeup
+    unsched = leftover[leftover["Run"]==broken_Run]
+    diffIDs = unsched.BookingId.unique()
+    diffIDs = diffIDs[~np.isnan(diffIDs)]
 
     print("There are %s rides left to be scheduled on broken run %s" % (unsched.shape[0], broken_Run))
 
-    diffIDs = unsched.BookingId.unique()
     saveme = []
 
     #save separate URID's in a list
@@ -43,29 +41,29 @@ def get_URID_Bus(data, broken_Run, resched_init_time):
         my_info = unsched[unsched["BookingId"]==ID]
         #if person is already on bus when breakdown occurs,
         #need to handle URID differently:
-        if(my_info.shape[0] == 1):
+        if(my_info.shape[0] == 1 & add_stranded):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
                 #if person is stranded on bus, their PickUpCoords are the BREAKDOWN_LOC (global var)
                 PickUpCoords = pd.Series(data = np.array(BREAKDOWN_LOC), index = ["LAT", "LON"]),
-                DropOffCoords = my_info[["LAT", "LON"]].iloc[0,],
+                DropOffCoords = my_info[["LAT", "LON"]].ix[0,],
                 PickupStart = resched_init_time,
                 PickupEnd = resched_init_time+30*60,
-                DropoffStart = int(my_info[["DropoffStart"]].iloc[0,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[0,]),
-                SpaceOn = my_info[["SpaceOn"]].iloc[0,],
-                MobAids = my_info[["MobAids"]].iloc[0,])
-        else:
+                DropoffStart = int(my_info[["DropoffStart"]].ix[0,]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].ix[0,]),
+                SpaceOn = my_info[["SpaceOn"]].ix[0,],
+                MobAids = my_info[["MobAids"]].ix[0,])
+        if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
-                PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
-                DropOffCoords = my_info[["LAT", "LON"]].iloc[1,],
-                PickupStart = int(my_info[["PickupStart"]].iloc[0,]),
-                PickupEnd = int(my_info[["PickupEnd"]].iloc[0,]),
-                DropoffStart = int(my_info[["DropoffStart"]].iloc[1,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[1,]),
-                SpaceOn = my_info[["SpaceOn"]].iloc[0,],
-                MobAids = my_info[["MobAids"]].iloc[0,])
+                PickUpCoords = my_info[["LAT", "LON"]].ix[0,],
+                DropOffCoords = my_info[["LAT", "LON"]].ix[1,],
+                PickupStart = int(my_info[["PickupStart"]].ix[0,]),
+                PickupEnd = int(my_info[["PickupEnd"]].ix[0,]),
+                DropoffStart = int(my_info[["DropoffStart"]].ix[1,]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].ix[1,]),
+                SpaceOn = my_info[["SpaceOn"]].ix[0,],
+                MobAids = my_info[["MobAids"]].ix[0,])
         
         saveme.append(temp)
 
