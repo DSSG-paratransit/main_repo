@@ -11,7 +11,6 @@ def insertFeasibility(Run_Schedule, URID):
 		Also return 'pickup_insert' and 'dropoff_insert', i.e. indices of the best insertion point of URID on to Run_Schedule.
 	'''
 
-
 	# FEASIBILITY OF PICK UP:
 
 	#location from where we'll pick up given URID.
@@ -26,7 +25,7 @@ def insertFeasibility(Run_Schedule, URID):
 	time_matrix_pickup = osrm(uridLoc, inbound, outbound)
 
 	#start picking best pickup insertion:
-	rt_times = sorted(enumerate(np.sum(time_matrix_pickup, 1)), key=operator.itemgetter(1)) #use itemgetter(1) because (0) is index from enumerator!
+	rt_times = sorted(enumerate(time_matrix_pickup), key=operator.itemgetter(1)) #use itemgetter(1) because (0) is index from enumerator!
 
 	#smallest round trip travel time, corresponding rows on bus's schedule:
 	best_rt_time = rt_times[0][1]
@@ -120,7 +119,9 @@ def insertFeasibility(Run_Schedule, URID):
 	dropoff_df = pd.DataFrame({"nodes": range(comeback2,Run_Schedule.index.max()+1), "break_TW": dropoff_score[:,0], "late": dropoff_score[:,1]})
 	test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
 	ret = {"score": test.append(dropoff_df), "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
-	           "total_lag" : total_lag}
+	           "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0]}
+
+	return(ret)
 
 
 
