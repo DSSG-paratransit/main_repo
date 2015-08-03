@@ -7,9 +7,9 @@ def get_busRuns(data, Run, URID, resched_init_time):
       # get all rides between/including leave garage and gas indices.
       print("Testing get_busRuns on run " + Run)
 
-      dataSub = data[(data["Run"] == Run) & data['ETA'] >= resched_init_time]
+      dataSub = data[(data["Run"] == Run)] # & (data['ETA'] >= resched_init_time)]
 
-      # if full busRun or partial
+      # get full bus's schedule for day
       if URID is None:
             #subset only the rides that aren't 6, 16, or 3:
             leaveIndex = dataSub.index.min()
@@ -20,7 +20,7 @@ def get_busRuns(data, Run, URID, resched_init_time):
             leaveIndex = leave.index.min()
 
       baseIndex = dataSub[(dataSub["Activity"]==6)|(dataSub["Activity"]==16)|(dataSub["Activity"]==3)].index.min()
-      busRun = dataSub.iloc[leaveIndex:baseIndex]
+      busRun = data.iloc[leaveIndex:baseIndex]
 
       return busRun
 

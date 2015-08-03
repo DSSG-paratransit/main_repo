@@ -56,13 +56,12 @@ if resched_init_time is None:
     try:
         resched_init_time = af.humanToSeconds(af.sys.argv[4])
     except:
-        resched_init_time = af.humanToSeconds(raw_input('Enter a 24h time in HH:MM format: '))
+        resched_init_time = af.humanToSeconds(raw_input('Enter a 24h time in HH:MM format\nfor initial time when buses can be rescheduled: '))
 
 
-
-# eventually add_timeWindows should also add capacity columns (not yet integrated)
 # this simply returns full schedule with time windows at the moment
-fullSchedule_windows = af.add_TimeWindows(fullSchedule,windows)
+sched_obj = af.aTWC.TimeWindowsCapacity(fullSchedule)
+fullSchedule_windows = sched_obj.addtoRun_TimeCapacity(1800.)
 fS_w_copy = fullSchedule_windows.copy()
 
 # this gets us all the URIDs for the broken run given the initial rescheduling time
@@ -89,14 +88,14 @@ for i in range(len(URIDs)):
         insert_stats.append(brokenwindows_dict)
 
     #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
-    ordered_inserts = sorted(insert_stats.items(), key = operator.itemgetter('total_lag'))
-    delay_cost += ordered_inserts['total_lag']*(48.09/3600)
+    ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
+    delay_cost += ordered_inserts[0]['total_lag'][0]*(48.09/3600)
 
     #calculate taxi cost
-    taxi_cost = tc.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
-        URIDs[i].DropOffCoords.LAT, DropOffCoords.LON, tc.wheelchair_present(URIDs[i]))
+    taxi_cost = af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
+        URIDs[i].DropOffCoords.LAT, DropOffCoords.LON, af.wheelchair_present(URIDs[i]))
     #write information about best insertions to text file
-    rUp.write_insert_data(URID, ordered_inserts[0:3],
+    af.write_insert_data(URID, ordered_inserts[0:3],
         '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/', taxi_cost)
     
     #update whole day's schedule:
