@@ -70,7 +70,7 @@ if type(fS_w_copy.index[0])~= str: fS_w_copy.index = range(0, fS_w_copy.shape[0]
 if case == 'BROKEN_RUN':
     URIDs = af.get_URID_Bus(fullSchedule_windows, broken_Run, resched_init_time)
 else:
-    URIDs = af.get_URID_BookingIds(individual_requests)
+    URIDs = af.get_URID_BookingIds(fullSchedule_windows, individual_requests)
 
 # for each URID we find the bus runs to check through a radius elimination.
 # for each URID for each run we then want to check the capacity in the given time
