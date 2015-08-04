@@ -76,7 +76,7 @@ if type(fS_w_copy.index[0]) != int:
 if case == 'BROKEN_RUN':
     URIDs = af.get_URID_Bus(fullSchedule_windows, broken_Run, resched_init_time)
 else:
-    URIDs = af.get_URID_BookingIds(fullSchedule_windows, individual_requests)
+    URIDs = af.get_URID_BookingIds(individual_requests)
 
 # for each URID we find the bus runs to check through a radius elimination.
 # for each URID for each run we then want to check the capacity in the given time
@@ -86,12 +86,13 @@ else:
 
 delay_cost = 0
 for i in range(len(URIDs)):
+    print('')
     busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
     insert_stats = []
     for run in busRuns_tocheck:
         URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
         runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
-        print("Testing feasibility for run " + run)
+        print('Testing feasibility for run ' + run)
         brokenwindows_dict =af.insertFeasibility(runSchedule, URID_updated_insertpts)
         if not brokenwindows_dict:
             print('Run {0} infeasible without moving the Activity 16 row.'.format(run))
