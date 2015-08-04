@@ -1,10 +1,21 @@
 class CapacityInsertPts():
     """
-
+    Assumes that busRun df has wcCapacity, amCapacity columns, and that URID
+    has amOn/Off and wcOn/Off columns added so it can return capacity insert points. 
+    
+    **Currently not implemented: apparently 2 WC + PK + AM is allowed (how often does 
+    this occur in 18 month data?), so we need a check for this. Perhaps make PK 
+    count as 0.9xWC?**
+    Args:
+    Returns:
+    URID.PickupInsert, URID.DropoffInsert
     """
+
 
     def __init__(self, busRun):
         """
+        Args:
+        busRun (dataframe): single bus run from day's data 
 
         """
 
@@ -12,18 +23,53 @@ class CapacityInsertPts():
 
     def amCapacity(self,window):
         """
+        Quick function to do something 
+        like switch statements in python.
+        
+        Args: 
+        wcCapacityTotal (string): str(max_wcCapacity + URID.wcOn), basically total wc capacity 
+        given max wc capacity in that time window and URID wc capacity in string form 
+        
+        Returns:
+        appropriate am capacity given this total wc capacity, else -1000 if wc capacity entered is not in 
+        dictionary. need to catch cases where wc capacity is over 3 but am capacity is otherwise acceptably low 
+
+        **Currently not implemented: cases where package is added and more am passengers are thus allowed**
+        
 
         """
 
         wcCapacityTotal = str(np.max(self.busRun['wcCapacity'].iloc[window]) + URID.wcOn)
         return {
-            '0': 12,
-            '1': 8,
-            '2': 4,
-            '3': 0}.get(wcCapacityTotal,-1000)
+            '0': 14,
+            '1': 10,
+            '2': 6,
+            '3': 2}.get(wcCapacityTotal,-1000)
 
     def checkWindow(self, window, dropoffpickupiloc, dropoffpickupindx):
         """
+        
+        Check max capacity + URID capacity in windows between
+        PUStart & PUEnd or DOStart & DOEnd. If these are okay then return insert points 
+        as PUStart and DOEnd. If either of these other windows are NOT okay  
+        then look at timestep right after (pickup) or right before (dropoff) where
+        max capacity occurs. Repeat if still full. 
+
+        **Currently not implemented: check on
+        the edge case, i.e. looking between end of time window and PUEnd or DOStart and 
+        last checked time window. The returned value in these cases is just beginning or 
+        end of time window itself.**
+
+        Args: 
+        busRun (dataframe): contains all info for single bus run to check 
+        URID (class instance): contains all info for unscheduled request 
+        window (array): window in which to check capacity, i.e. PickupWindow/DropoffWindow
+        dropoffpickupiloc (int): used for indexing window array. For pickups we want closest to PickupEnd, i.e. + 1. For dropoffs we want closest to DropoffStart, i.e. -1.
+        dropoffpickupindx (int): used for indexing bool array in the event of non-unique max capacity. For pickups
+        we want closest to PickupEnd, i.e. -1. For dropoffs we want closest to DropoffStart, i.e. 0.
+        
+        Returns:
+        URID.PickupInsert or URID.DropoffInsert depending on how it's called 
 
 
         """
@@ -113,10 +159,10 @@ if __name__ == "__main__":
     full = (max_wcCapacity + URID.wcOn > 3) & (max_amCapacity + URID.wcOn > capacity_obj.amCapacity(str(max_wcCapacity + URID.wcOn)))
     if full:
         # URID.PickupInsert, URID.DropoffInsert
-        return np.nan, np.nan 
+        URID.PickupInsert, URID.DropoffInsert =  np.nan, np.nan 
     elif not full:
         # URID.PickUpInsert, URID.DropoffInsert
-        return capacity_obj.checkWindow(PickupWindow,1,-1), capacity_obj.checkWindow(DropoffWindow,-1,0)
+        URID.PickupInsert, URID.DropoffInsert = capacity_obj.checkWindow(PickupWindow,1,-1), capacity_obj.checkWindow(DropoffWindow,-1,0)
 
 else:
     print "Importing checkCapacityInsertPts"
