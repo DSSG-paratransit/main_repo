@@ -5,6 +5,7 @@ import all_functions as af
     sys.argv[2] is int for time window in seconds
     sys.argv[3] is str for broken bus run number, OR, it is a list of bookingId's (for single client input)
     sys.argv[4] is int for time in seconds (this should be changed to accept more user friendly input)
+    sys.argv[5] is str for path to directory where you want the output .txt/.csv files to go
     
     eventually make function(?) which makes sure user is passing correct num/type of arguments.
     For now, enter None when you don't want to input a command line argument.
@@ -58,12 +59,17 @@ if resched_init_time is None:
     except:
         resched_init_time = af.humanToSeconds(raw_input('Enter a 24h time in HH:MM format\nfor initial time when buses can be rescheduled: '))
 
+path_to_outdir = af.sys.argv[5]
+if not af.os.path.isdir(path_to_outdir):
+    print(path_to_outdir + ' is not a directory. Making that directory now...')
+    af.os.mkdir(path_to_outdir)
 
 # this simply returns full schedule with time windows at the moment
 sched_obj = af.aTWC.TimeWindowsCapacity(fullSchedule)
 fullSchedule_windows = sched_obj.addtoRun_TimeCapacity(1800.)
 fS_w_copy = fullSchedule_windows.copy()
-if type(fS_w_copy.index[0])~= str: fS_w_copy.index = range(0, fS_w_copy.shape[0])
+if type(fS_w_copy.index[0]) != int:
+    fS_w_copy.index = range(0, fS_w_copy.shape[0])
 
 # this gets us all the URIDs for the broken run given the initial rescheduling time
 # OR it will get us URIDs given specific bookingIds to be rescheduled
@@ -85,8 +91,12 @@ for i in range(len(URIDs)):
     for run in busRuns_tocheck:
         URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
         runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
+        print("Testing feasibility for run " + run)
         brokenwindows_dict =af.insertFeasibility(runSchedule, URID_updated_insertpts)
-        insert_stats.append(brokenwindows_dict)
+        if not brokenwindows_dict:
+            print('Run {0} infeasible without moving the Activity 16 row.'.format(run))
+        else:
+            insert_stats.append(brokenwindows_dict)
 
     #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
     ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
@@ -94,23 +104,26 @@ for i in range(len(URIDs)):
 
     #calculate taxi cost
     taxi_cost = af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
-        URIDs[i].DropOffCoords.LAT, DropOffCoords.LON, af.wheelchair_present(URIDs[i]))
+        URIDs[i].DropOffCoords.LAT, URIDs[i].DropOffCoords.LON, af.wheelchair_present(URIDs[i]))
     #write information about best insertions to text file
-    af.write_insert_data(URID, ordered_inserts[0:3],
-        '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/', taxi_cost)
+    af.write_insert_data(URIDs[i], ordered_inserts[0:3],
+        path_to_outdir, taxi_cost)
     
     #update whole day's schedule:
     fullSchedule_windows = af.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
 
 #Calculate new bus's cost, ONLY IN CASE OF BROKEN BUS:
+tfile_pathname = path_to_outdir+'/assocbus_costs.txt'
+tfile = open(tfile_pathname, 'w')
 if case == 'BROKEN_RUN':
-    newRun_cost = af.newBusRun_cost(af.get_busRuns(fS_w_copy, broken_Run, URIDs[0]), provider)
+    nrun_cost = af.newBusRun_cost(af.get_busRuns(fS_w_copy, broken_Run, URIDs[0]), provider = 6)
     # for provider we need to check availability of buses and compare costs---^^^
-    print('Cost of sending new bus for broken run {0} is {1}.'.format(broken_Run, newBusRun_cost))
+    tfile.write('New bus cost for broken run {0} is {1}.'.format(broken_Run, nrun_cost))
+else:
+    tfile.write('New bus cost for list of URIDs is N/A.')
 
-print('Cost of rerouting all URIDs is {0}'.format(delay_cost))
+tfile.write('Cost of rerouting all URIDs is {0}'.format(delay_cost))
+tfile.close()
 
-fullSchedule_windows.to_csv('/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/newSchedule.csv', index = False)
-
-return None
+fullSchedule_windows.to_csv(path_to_outdir + '/'+ 'newSchedule.csv', index = False)
     

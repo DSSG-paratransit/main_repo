@@ -40,7 +40,6 @@ def insertFeasibility(Run_Schedule, URID):
 	bound = max(Run_Schedule.PickupEnd.loc[comeback1], Run_Schedule.DropoffEnd.loc[comeback1])
 
 	#is the next time window broken?
-	print(newETA < bound)
 	leftover = bound - newETA
 	lag1 = newETA - Run_Schedule.ETA.loc[comeback1]
 
@@ -78,6 +77,7 @@ def insertFeasibility(Run_Schedule, URID):
 	outbound = np.column_stack((np.array(outbound.LAT), np.array(outbound.LON)))
 	inbound = Run_Schedule_Lag.loc[dropoff_inbound]
 	inbound = np.column_stack((np.array(inbound.LAT), np.array(inbound.LON)))
+	print(outbound, inbound)
 
 	uridLoc = [URID.DropOffCoords[0], URID.DropOffCoords[1]]
 	#second iteration of distance matrix, for drop off routing:
