@@ -53,6 +53,8 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 DropoffEnd = int(my_info[["DropoffEnd"]].ix[0,]),
                 SpaceOn = my_info[["SpaceOn"]].ix[0,],
                 MobAids = my_info[["MobAids"]].ix[0,])
+            saveme.append(temp)
+            
         if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
@@ -64,8 +66,8 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 DropoffEnd = int(my_info[["DropoffEnd"]].ix[1,]),
                 SpaceOn = my_info[["SpaceOn"]].ix[0,],
                 MobAids = my_info[["MobAids"]].ix[0,])
+            saveme.append(temp)
         
-        saveme.append(temp)
 
     return saveme
 
