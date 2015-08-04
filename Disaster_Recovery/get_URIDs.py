@@ -1,7 +1,7 @@
 import operator
 
 class URID:
-    def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids):
+    def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids, wcOn, wcOff, amOn, amOff):
         self.BookingId= BookingId
         self.Run = Run
         self.PickUpCoords = PickUpCoords
@@ -12,6 +12,10 @@ class URID:
         self.DropoffEnd = DropoffEnd
         self.SpaceOn = SpaceOn
         self.MobAids = MobAids
+        self.wcOn = wcOn
+        self.wcOff = wcOff
+        self.amOn = amOn
+        self.amOff = amOff 
 
 
 def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREAKDOWN_LOC = None):
@@ -52,7 +56,11 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 DropoffStart = int(my_info[["DropoffStart"]].ix[0,]),
                 DropoffEnd = int(my_info[["DropoffEnd"]].ix[0,]),
                 SpaceOn = my_info[["SpaceOn"]].ix[0,],
-                MobAids = my_info[["MobAids"]].ix[0,])
+                MobAids = my_info[["MobAids"]].ix[0,],
+                wcOn = my_info["wcOn"].ix[0,],
+                wcOff = my_info["wcOff"].ix[0,],
+                amOn = my_info["amOn"].ix[0,],
+                amOff = my_info["amOff"].ix[0,]))
         if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
@@ -63,7 +71,11 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 DropoffStart = int(my_info[["DropoffStart"]].ix[1,]),
                 DropoffEnd = int(my_info[["DropoffEnd"]].ix[1,]),
                 SpaceOn = my_info[["SpaceOn"]].ix[0,],
-                MobAids = my_info[["MobAids"]].ix[0,])
+                MobAids = my_info[["MobAids"]].ix[0,],
+                wcOn = my_info["wcOn"].ix[0,],
+                wcOff = my_info["wcOff"].ix[0,],
+                amOn = my_info["amOn"].ix[0,],
+                amOff = my_info["amOff"].ix[0,]))
         
         saveme.append(temp)
 
@@ -100,7 +112,12 @@ def get_URID_BookingIds(data, BookingId_list):
                 DropoffStart = int(my_info[["DropoffStart"]].iloc[1,]),
                 DropoffEnd = int(my_info[["DropoffEnd"]].iloc[1,]),
                 SpaceOn = my_info[["SpaceOn"]].iloc[0,],
-                MobAids = my_info[["MobAids"]].iloc[0,])
+                MobAids = my_info[["MobAids"]].iloc[0,],
+                wcOn = my_info["wcOn"].ix[0,],
+                wcOff = my_info["wcOff"].ix[0,],
+                amOn = my_info["amOn"].ix[0,],
+                amOff = my_info["amOff"].ix[0,])
+)
         
         saveme.append(temp)
 
