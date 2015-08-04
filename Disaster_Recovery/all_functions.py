@@ -326,8 +326,6 @@ def time_overlap(Run_Schedule, URID, pudo = True):
     
     outbound, inbound = map(sorted, [outbound, inbound])
     all_nodes = sorted(np.union1d(outbound, inbound))
-    print("Need to service URID within %s sec to %s sec" % (Start, End))
-    print("...%s nodes fall within this criteria." % len(all_nodes))
     #print("These indices of Run_Schedule will need to have distances calculated:\n%s" % np.union1d(outbound, inbound))
 
     retDict = {"outbound": outbound, "inbound": inbound, "all_nodes" : all_nodes}
@@ -386,8 +384,6 @@ def get_busRuns(data, Run, URID):
 
       # leave garage (beginning of route index), gas (end of route index)
       # get all rides between/including leave garage and gas indices.
-      print("Testing get_busRuns on run " + Run)
-
       dataSub = data[(data["Run"] == Run)]# & (data['ETA'] >= resched_init_time)]
 
       # if full busRun or partial
@@ -510,6 +506,11 @@ def insertFeasibility(Run_Schedule, URID):
     dropoff_outbound = filter(lambda x: x >= comeback1, dropoff_inserts["outbound"])
     # can't return to first outbound node:
     dropoff_inbound = filter(lambda x: x > comeback1, dropoff_inserts["inbound"])
+
+    #corner cases: we pick up and there's no way to drop off before activity code 16:
+    if (not dropoff_inbound) | (not dropoff_inbound):
+        return {}
+
     if dropoff_outbound[0] == dropoff_inbound[0]:
         print('First outbound and first inbound for drop off are the same.')
         dropoff_inbound.pop(0)

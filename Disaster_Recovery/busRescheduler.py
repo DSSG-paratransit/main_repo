@@ -91,7 +91,11 @@ for i in range(len(URIDs)):
     for run in busRuns_tocheck:
         URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
         runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
+        print("Testing feasibility for run " + run)
         brokenwindows_dict =af.insertFeasibility(runSchedule, URID_updated_insertpts)
+        if not brokenwindows_dict:
+            pass
+            print('Run {0} infeasible without moving the Activity 16 row.'.format(run))
         insert_stats.append(brokenwindows_dict)
 
     #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
