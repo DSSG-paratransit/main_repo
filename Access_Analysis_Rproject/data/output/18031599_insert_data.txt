@@ -1,0 +1,8 @@
+OPTION 1:
+Put 18031599 onto bus 5043TRC 
+Total lag: 386 
+Number of exceeded time windows: 0.0 
+Average lateness: nan 
+
+
+Taxi cost: 34.8
