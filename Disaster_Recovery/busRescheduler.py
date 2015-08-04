@@ -94,9 +94,9 @@ for i in range(len(URIDs)):
         print("Testing feasibility for run " + run)
         brokenwindows_dict =af.insertFeasibility(runSchedule, URID_updated_insertpts)
         if not brokenwindows_dict:
-            pass
             print('Run {0} infeasible without moving the Activity 16 row.'.format(run))
-        insert_stats.append(brokenwindows_dict)
+        else:
+            insert_stats.append(brokenwindows_dict)
 
     #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
     ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
@@ -116,7 +116,7 @@ for i in range(len(URIDs)):
 tfile_pathname = path_to_outdir+'/assocbus_costs.txt'
 tfile = open(tfile_pathname, 'w')
 if case == 'BROKEN_RUN':
-    nrun_cost = af.newBusRun_cost(af.get_busRuns(fS_w_copy, broken_Run, URIDs[0]), provider)
+    nrun_cost = af.newBusRun_cost(af.get_busRuns(fS_w_copy, broken_Run, URIDs[0]), provider = 6)
     # for provider we need to check availability of buses and compare costs---^^^
     tfile.write('New bus cost for broken run {0} is {1}.'.format(broken_Run, nrun_cost))
 else:

@@ -1,8 +1,0 @@
-OPTION 1:
-Put 18029651 onto bus 601R 
-Total lag: -252 
-Number of exceeded time windows: 0.0 
-Average lateness: nan 
-
-
-Taxi cost: 54.6
