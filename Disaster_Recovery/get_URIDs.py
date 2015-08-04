@@ -1,7 +1,7 @@
 import operator
 
 class URID:
-    def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids, wcOn, wcOff, amOn, amOff):
+    def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids, wcOn, wcOff, amOn, amOff, PickupInsert, DropoffInsert):
         self.BookingId= BookingId
         self.Run = Run
         self.PickUpCoords = PickUpCoords
@@ -15,7 +15,9 @@ class URID:
         self.wcOn = wcOn
         self.wcOff = wcOff
         self.amOn = amOn
-        self.amOff = amOff 
+        self.amOff = amOff
+        self.PickupInsert = PickupInsert
+        self.DropoffInsert = DropoffInsert 
 
 
 def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREAKDOWN_LOC = None):
@@ -60,7 +62,9 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 wcOn = my_info["wcOn"].ix[0,],
                 wcOff = my_info["wcOff"].ix[0,],
                 amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,]))
+                amOff = my_info["amOff"].ix[0,],
+                PickupInsert = 0,
+                DropoffInsert = 0)
         if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
@@ -75,7 +79,9 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 wcOn = my_info["wcOn"].ix[0,],
                 wcOff = my_info["wcOff"].ix[0,],
                 amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,]))
+                amOff = my_info["amOff"].ix[0,],
+                PickupInsert = 0,
+                DropoffInsert = 0)
         
         saveme.append(temp)
 
@@ -116,7 +122,9 @@ def get_URID_BookingIds(data, BookingId_list):
                 wcOn = my_info["wcOn"].ix[0,],
                 wcOff = my_info["wcOff"].ix[0,],
                 amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,])
+                amOff = my_info["amOff"].ix[0,],
+                PickupInsert = 0,
+                DropoffInsert = 0)
 )
         
         saveme.append(temp)
