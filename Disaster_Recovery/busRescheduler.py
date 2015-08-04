@@ -56,21 +56,21 @@ if resched_init_time is None:
     try:
         resched_init_time = af.humanToSeconds(af.sys.argv[4])
     except:
-        resched_init_time = af.humanToSeconds(raw_input('Enter a 24h time in HH:MM format: '))
+        resched_init_time = af.humanToSeconds(raw_input('Enter a 24h time in HH:MM format\nfor initial time when buses can be rescheduled: '))
 
 
-
-# eventually add_timeWindows should also add capacity columns (not yet integrated)
 # this simply returns full schedule with time windows at the moment
-fullSchedule_windows = af.add_TimeWindows(fullSchedule,windows)
+sched_obj = af.aTWC.TimeWindowsCapacity(fullSchedule)
+fullSchedule_windows = sched_obj.addtoRun_TimeCapacity(1800.)
 fS_w_copy = fullSchedule_windows.copy()
+if type(fS_w_copy.index[0])~= str: fS_w_copy.index = range(0, fS_w_copy.shape[0])
 
 # this gets us all the URIDs for the broken run given the initial rescheduling time
 # OR it will get us URIDs given specific bookingIds to be rescheduled
 if case == 'BROKEN_RUN':
     URIDs = af.get_URID_Bus(fullSchedule_windows, broken_Run, resched_init_time)
 else:
-    URIDs = af.get_URID_BookingIds(individual_requests)
+    URIDs = af.get_URID_BookingIds(fullSchedule_windows, individual_requests)
 
 # for each URID we find the bus runs to check through a radius elimination.
 # for each URID for each run we then want to check the capacity in the given time
@@ -80,35 +80,35 @@ else:
 
 delay_cost = 0
 for i in range(len(URIDs)):
-    busRuns_tocheck = radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
+    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
     insert_stats = []
     for run in busRuns_tocheck:
         URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
-        runSchedule = g_bR.get_busRuns(fullSchedule_windows, run, None)
-        brokenwindows_dict =Feasibility.insertFeasibility(runSchedule, URID_updated_insertpts)
+        runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
+        brokenwindows_dict =af.insertFeasibility(runSchedule, URID_updated_insertpts)
         insert_stats.append(brokenwindows_dict)
 
     #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
-    ordered_inserts = sorted(insert_stats.items(), key = operator.itemgetter('total_lag'))
-    delay_cost += ordered_inserts['total_lag']*(48.09/3600)
+    ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
+    delay_cost += ordered_inserts[0]['total_lag'][0]*(48.09/3600) #total dollars
 
     #calculate taxi cost
-    taxi_cost = tc.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
-        URIDs[i].DropOffCoords.LAT, DropOffCoords.LON, tc.wheelchair_present(URIDs[i]))
+    taxi_cost = af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
+        URIDs[i].DropOffCoords.LAT, DropOffCoords.LON, af.wheelchair_present(URIDs[i]))
     #write information about best insertions to text file
-    rUp.write_insert_data(URID, ordered_inserts[0:3],
+    af.write_insert_data(URID, ordered_inserts[0:3],
         '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/', taxi_cost)
     
     #update whole day's schedule:
-    fullSchedule_windows = rUp.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
+    fullSchedule_windows = af.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
 
 #Calculate new bus's cost, ONLY IN CASE OF BROKEN BUS:
 if case == 'BROKEN_RUN':
-    newRun_cost = tc.newBusRun_cost(get_busRuns(fS_w_copy, broken_Run, URID):, provider)
+    newRun_cost = af.newBusRun_cost(af.get_busRuns(fS_w_copy, broken_Run, URIDs[0]), provider)
     # for provider we need to check availability of buses and compare costs---^^^
-    print('Cost of sending new bus for broken run {0} is {1}.'.format(brokenRun, newBusRun_cost))
+    print('Cost of sending new bus for broken run {0} is {1}.'.format(broken_Run, newBusRun_cost))
 
-print('Cost of rerouting all URIDs is {0}'.format(delay_cost*(48.09/3600)))
+print('Cost of rerouting all URIDs is {0}'.format(delay_cost))
 
 fullSchedule_windows.to_csv('/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/newSchedule.csv', index = False)
 

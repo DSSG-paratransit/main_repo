@@ -18,7 +18,7 @@ def osrm (URID_location, inbound, outbound):
     urid_LAT = URID_location[0]; urid_LON = URID_location[1]
 
     # outbound
-    for k in outbound.shape[0]: 
+    for k in range(outbound.shape[0]): 
         lat_cord_O = outbound[k, 0]; lon_cord_O = outbound[k, 1]
         lat_cord_I = inbound[k, 0]; lon_cord_I = inbound[k, 1]
         
