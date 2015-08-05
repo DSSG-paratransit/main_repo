@@ -90,7 +90,7 @@ for i in range(len(URIDs)):
     busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
     insert_stats = []
     for run in busRuns_tocheck:
-        URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
+        URID_updated_insertpts = af.checkCap.checkCapacityInsertPts(URIDs[i],run)
         runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
         print('Testing feasibility for run ' + run)
         brokenwindows_dict =af.insertFeasibility(runSchedule, URID_updated_insertpts)

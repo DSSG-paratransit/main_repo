@@ -18,6 +18,7 @@ import read_fwf
 def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name = 'qc_streaming.csv'):
 
     os.chdir(path_to_data)
+    print(os.getcwd())
 
     #For establishing connection, use access and secret keys sent by Valentina.
 
@@ -38,11 +39,10 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
         if re.search("streaming_data/Schedules_"+ time.strftime('%Y%m%d'),key.name.encode('ascii')):
             file_ls.append(key.name.encode('ascii'))
 
-    #select relevant streaming_data file:
+    #select relevant streaming_data file: watch out, hopefully the [-1] file isn't zero bytes!
     data_key = bucket.get_key(file_ls[-1])
     move_to_me = 'real_time_data.csv'
     data_key.get_contents_to_filename(move_to_me)
-
 
     #STEP 2: change this file from fixed width formatted to tab delimitted
     data = read_fwf.read('real_time_data.csv')
@@ -91,6 +91,18 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
     return pd.read_csv(read_me)
 
 
+def main():
+    AWS_ACCESS_KEY = raw_input('Please enter AWS access key: ')
+    AWS_SECRET_KEY = raw_input('Please enter AWS secret access key: ')
+    path_to_data = raw_input('Please enter path to data output directory: ')
+    test_data = s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name = 'qc_streaming.csv')
+    print('Successfully downloaded and QCed streaming_data.')
+
+if __name__ == "__main__":
+    main()
+
+else:
+    print('Importing qcS3data')
 
 
 
