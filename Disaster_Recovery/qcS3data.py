@@ -15,7 +15,7 @@ import os
 import pandas as pd
 import read_fwf
 
-def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, path_to_fwf_file, qc_file_name = 'qc_streaming.csv'):
+def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name = 'qc_streaming.csv'):
 
     os.chdir(path_to_data)
 

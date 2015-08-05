@@ -65,6 +65,7 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 amOff = my_info["amOff"].ix[0,],
                 PickupInsert = 0,
                 DropoffInsert = 0)
+            saveme.append(temp)
         if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
@@ -82,8 +83,7 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 amOff = my_info["amOff"].ix[0,],
                 PickupInsert = 0,
                 DropoffInsert = 0)
-        
-        saveme.append(temp)
+            saveme.append(temp)
 
     return saveme
 
@@ -110,7 +110,7 @@ def get_URID_BookingIds(data, BookingId_list):
     for ID in diffIDs:
         my_info = data[data["BookingId"]==ID]
         temp = URID(BookingId = ID,
-                Run = broken_Run,
+                Run = my_info['Run'].ix[0,],
                 PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
                 DropOffCoords = my_info[["LAT", "LON"]].iloc[1,],
                 PickupStart = int(my_info[["PickupStart"]].iloc[0,]),
@@ -125,7 +125,6 @@ def get_URID_BookingIds(data, BookingId_list):
                 amOff = my_info["amOff"].ix[0,],
                 PickupInsert = 0,
                 DropoffInsert = 0)
-)
         
         saveme.append(temp)
 
