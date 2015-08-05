@@ -1,7 +1,8 @@
 '''Upon finding a decent fit for a URID onto a Run,
 	we need to update the whole day's schedule reflecting the URID's insertion,
 	and we should also write out the modified Run's new schedule.'''
-
+import pandas as pd
+import numpy as np
 
 def write_insert_data(URID, list_Feasibility_output, path_to_output):
 	'''
@@ -50,16 +51,32 @@ def day_schedule_Update(data, top_Feasibility, URID, taxi_cost):
 	pickup_new = ret['pickup_insert'][1] #THIS IS OVERWRITING NEXT NODE
 	dropoff_new = ret['dropoff_insert'][1] #THIS WILL OVERWRITE NEXT NODE
 
-
 	ind = test.index.tolist()
 	ind.pop(pickup_old)
 	ind.pop(dropoff_old-1)
 	ind.insert(ind.index(pickup_new), pickup_old)
 	ind.insert(ind.index(dropoff_new), dropoff_old)
-	
-	return tmp.reindex(ind)
+
+	#move the URID into correct position in schedule
+	new_data = tmp.reindex(ind)
+
+	#update the inserted bus's ETAs!
+	run_inserted = new_data[new_data['Run'] == URID.Run]
+	run_inserted.ix[pickup_new:dropoff_new, 'ETA'] = etas + top_Feasibility['pickup_lag']
+	run_inserted.ix[dropoff_new:, 'ETA'] = etas + top_Feasibility['total_lag']
+	new_data.ix[run_inserted.index, 'ETA'] =  run_inserted.ix[:, 'ETA']
+
+	return new_data
 
 
+if __name__ == '__main__':
+	import get_URIDs as gU
+	broken_bus = '403R'
+	resched_init_time = 63500
+
+	data = pd.read_csv('/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/single_day_TimeWindows.csv')
+	URID = gU.get_URIDs(data, broken_bus, resched_init_time)
+	tF = {'total_lag': 1500, 'pickup_lag':600, 'RunID': 376}
 
 
 

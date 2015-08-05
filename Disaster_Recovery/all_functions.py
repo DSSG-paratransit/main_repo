@@ -218,35 +218,35 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 Run = broken_Run,
                 #if person is stranded on bus, their PickUpCoords are the BREAKDOWN_LOC (global var)
                 PickUpCoords = pd.Series(data = np.array(BREAKDOWN_LOC), index = ["LAT", "LON"]),
-                DropOffCoords = my_info[["LAT", "LON"]].ix[0,],
+                DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
                 PickupStart = resched_init_time,
                 PickupEnd = resched_init_time+30*60,
-                DropoffStart = int(my_info[["DropoffStart"]].ix[0,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].ix[0,]),
-                SpaceOn = my_info[["SpaceOn"]].ix[0,],
-                MobAids = my_info[["MobAids"]].ix[0,],
-                wcOn = my_info["wcOn"].ix[0,],
-                wcOff = my_info["wcOff"].ix[0,],
-                amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,],
+                DropoffStart = int(my_info[["DropoffStart"]].as_matrix()[0,:]), #my_info is only one row...
+                DropoffEnd = int(my_info[["DropoffEnd"]].as_matrix()[0,:]),
+                SpaceOn = my_info[["SpaceOn"]].as_matrix()[0][0],
+                MobAids = my_info[["MobAids"]].as_matrix()[0][0],
+                wcOn = my_info["wcOn"].as_matrix()[0],
+                wcOff = my_info["wcOff"].as_matrix()[1],
+                amOn = my_info["amOn"].as_matrix()[0],
+                amOff = my_info["amOff"].as_matrix()[1],
                 PickupInsert = 0,
                 DropoffInsert = 0)
             saveme.append(temp)
         if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
-                PickUpCoords = my_info[["LAT", "LON"]].ix[0,],
-                DropOffCoords = my_info[["LAT", "LON"]].ix[1,],
-                PickupStart = int(my_info[["PickupStart"]].ix[0,]),
-                PickupEnd = int(my_info[["PickupEnd"]].ix[0,]),
-                DropoffStart = int(my_info[["DropoffStart"]].ix[1,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].ix[1,]),
-                SpaceOn = my_info[["SpaceOn"]].ix[0,],
-                MobAids = my_info[["MobAids"]].ix[0,],
-                wcOn = my_info["wcOn"].ix[0,],
-                wcOff = my_info["wcOff"].ix[0,],
-                amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,],
+                PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
+                DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[1,:],
+                PickupStart = int(my_info[["PickupStart"]].as_matrix()[0,:]),
+                PickupEnd = int(my_info[["PickupEnd"]].as_matrix()[0,:]),
+                DropoffStart = int(my_info[["DropoffStart"]].as_matrix()[1,:]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].as_matrix()[1,:]),
+                SpaceOn = my_info[["SpaceOn"]].as_matrix()[0][0],
+                MobAids = my_info[["MobAids"]].as_matrix()[0][0],
+                wcOn = my_info["wcOn"].as_matrix()[0],
+                wcOff = my_info["wcOff"].as_matrix()[1],
+                amOn = my_info["amOn"].as_matrix()[0],
+                amOff = my_info["amOff"].as_matrix()[1],
                 PickupInsert = 0,
                 DropoffInsert = 0)
             saveme.append(temp)
@@ -266,18 +266,18 @@ def get_URID_BookingIds(data, BookingId_list):
         my_info = data[data["BookingId"]==ID]
         temp = URID(BookingId = ID,
                 Run = my_info['Run'].ix[0,],
-                PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
-                DropOffCoords = my_info[["LAT", "LON"]].iloc[1,],
-                PickupStart = int(my_info[["PickupStart"]].iloc[0,]),
-                PickupEnd = int(my_info[["PickupEnd"]].iloc[0,]),
-                DropoffStart = int(my_info[["DropoffStart"]].iloc[1,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[1,]),
-                SpaceOn = my_info[["SpaceOn"]].iloc[0,],
-                MobAids = my_info[["MobAids"]].iloc[0,],
-                wcOn = my_info["wcOn"].ix[0,],
-                wcOff = my_info["wcOff"].ix[0,],
-                amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,],
+                PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
+                DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[1,:],
+                PickupStart = int(my_info[["PickupStart"]].as_matrix()[0,:]),
+                PickupEnd = int(my_info[["PickupEnd"]].as_matrix()[0,:]),
+                DropoffStart = int(my_info[["DropoffStart"]].as_matrix()[1,:]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].as_matrix()[1,:]),
+                SpaceOn = my_info[["SpaceOn"]].as_matrix()[0][0],
+                MobAids = my_info[["MobAids"]].as_matrix()[0][0],
+                wcOn = my_info["wcOn"].as_matrix()[0],
+                wcOff = my_info["wcOff"].as_matrix()[1],
+                amOn = my_info["amOn"].as_matrix()[0],
+                amOff = my_info["amOff"].as_matrix()[1],
                 PickupInsert = 0,
                 DropoffInsert = 0)
         
@@ -285,6 +285,7 @@ def get_URID_BookingIds(data, BookingId_list):
 
     #return sorted URIDs based on PickupStart time
     return sorted(saveme, key = operator.attrgetter('PickupStart'))
+
 
 
 def time_overlap(Run_Schedule, URID, pudo = True):
@@ -301,13 +302,6 @@ def time_overlap(Run_Schedule, URID, pudo = True):
 
     retDict (dict): dictionary containing indices of schedule-outbound and -inbound nodes that we need
         to get distance between w/r/t URID location.'''
-
-    #How it works: first, find all nodes that have time overlap with the URID's (pickup or dropoff) window
-    # second, notice any gaps in the order of these nodes from the original bus ride.
-    # For the first chunk of overlapping nodes, add the lower-time bound node in, given that the first node
-    # even exists in the Run_Schedule.
-    # For every chunk of contiguous overlap nodes, add in the upper-time bound node, because there can potentially
-    # be an inbound ride from the URID node to the upper-time bound node. There can't be an outbound ride.
 
     if pudo:
         Start = URID.PickupStart

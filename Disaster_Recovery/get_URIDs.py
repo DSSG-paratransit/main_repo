@@ -1,4 +1,5 @@
 import operator
+import numpy as np
 
 class URID:
     def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids, wcOn, wcOff, amOn, amOff, PickupInsert, DropoffInsert):
@@ -52,35 +53,35 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 Run = broken_Run,
                 #if person is stranded on bus, their PickUpCoords are the BREAKDOWN_LOC (global var)
                 PickUpCoords = pd.Series(data = np.array(BREAKDOWN_LOC), index = ["LAT", "LON"]),
-                DropOffCoords = my_info[["LAT", "LON"]].ix[0,],
+                DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
                 PickupStart = resched_init_time,
                 PickupEnd = resched_init_time+30*60,
-                DropoffStart = int(my_info[["DropoffStart"]].ix[0,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].ix[0,]),
-                SpaceOn = my_info[["SpaceOn"]].ix[0,],
-                MobAids = my_info[["MobAids"]].ix[0,],
-                wcOn = my_info["wcOn"].ix[0,],
-                wcOff = my_info["wcOff"].ix[0,],
-                amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,],
+                DropoffStart = int(my_info[["DropoffStart"]].as_matrix()[0,:]), #my_info is only one row...
+                DropoffEnd = int(my_info[["DropoffEnd"]].as_matrix()[0,:]),
+                SpaceOn = my_info[["SpaceOn"]].as_matrix()[0][0],
+                MobAids = my_info[["MobAids"]].as_matrix()[0][0],
+                wcOn = my_info["wcOn"].as_matrix()[0],
+                wcOff = my_info["wcOff"].as_matrix()[1],
+                amOn = my_info["amOn"].as_matrix()[0],
+                amOff = my_info["amOff"].as_matrix()[1],
                 PickupInsert = 0,
                 DropoffInsert = 0)
             saveme.append(temp)
         if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
-                PickUpCoords = my_info[["LAT", "LON"]].ix[0,],
-                DropOffCoords = my_info[["LAT", "LON"]].ix[1,],
-                PickupStart = int(my_info[["PickupStart"]].ix[0,]),
-                PickupEnd = int(my_info[["PickupEnd"]].ix[0,]),
-                DropoffStart = int(my_info[["DropoffStart"]].ix[1,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].ix[1,]),
-                SpaceOn = my_info[["SpaceOn"]].ix[0,],
-                MobAids = my_info[["MobAids"]].ix[0,],
-                wcOn = my_info["wcOn"].ix[0,],
-                wcOff = my_info["wcOff"].ix[0,],
-                amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,],
+                PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
+                DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[1,:],
+                PickupStart = int(my_info[["PickupStart"]].as_matrix()[0,:]),
+                PickupEnd = int(my_info[["PickupEnd"]].as_matrix()[0,:]),
+                DropoffStart = int(my_info[["DropoffStart"]].as_matrix()[1,:]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].as_matrix()[1,:]),
+                SpaceOn = my_info[["SpaceOn"]].as_matrix()[0][0],
+                MobAids = my_info[["MobAids"]].as_matrix()[0][0],
+                wcOn = my_info["wcOn"].as_matrix()[0],
+                wcOff = my_info["wcOff"].as_matrix()[1],
+                amOn = my_info["amOn"].as_matrix()[0],
+                amOff = my_info["amOff"].as_matrix()[1],
                 PickupInsert = 0,
                 DropoffInsert = 0)
             saveme.append(temp)
@@ -111,18 +112,18 @@ def get_URID_BookingIds(data, BookingId_list):
         my_info = data[data["BookingId"]==ID]
         temp = URID(BookingId = ID,
                 Run = my_info['Run'].ix[0,],
-                PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
-                DropOffCoords = my_info[["LAT", "LON"]].iloc[1,],
-                PickupStart = int(my_info[["PickupStart"]].iloc[0,]),
-                PickupEnd = int(my_info[["PickupEnd"]].iloc[0,]),
-                DropoffStart = int(my_info[["DropoffStart"]].iloc[1,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[1,]),
-                SpaceOn = my_info[["SpaceOn"]].iloc[0,],
-                MobAids = my_info[["MobAids"]].iloc[0,],
-                wcOn = my_info["wcOn"].ix[0,],
-                wcOff = my_info["wcOff"].ix[0,],
-                amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,],
+                PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
+                DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[1,:],
+                PickupStart = int(my_info[["PickupStart"]].as_matrix()[0,:]),
+                PickupEnd = int(my_info[["PickupEnd"]].as_matrix()[0,:]),
+                DropoffStart = int(my_info[["DropoffStart"]].as_matrix()[1,:]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].as_matrix()[1,:]),
+                SpaceOn = my_info[["SpaceOn"]].as_matrix()[0][0],
+                MobAids = my_info[["MobAids"]].as_matrix()[0][0],
+                wcOn = my_info["wcOn"].as_matrix()[0],
+                wcOff = my_info["wcOff"].as_matrix()[1],
+                amOn = my_info["amOn"].as_matrix()[0],
+                amOff = my_info["amOff"].as_matrix()[1],
                 PickupInsert = 0,
                 DropoffInsert = 0)
         
