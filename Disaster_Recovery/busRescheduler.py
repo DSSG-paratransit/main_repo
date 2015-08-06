@@ -163,7 +163,7 @@ for i in range(len(URIDs)):
             else:
                 insert_stats.append(brokenwindows_dict)
 
-    #CHECK if there are feasible buses.
+    #ASSEMBLE and ORDER transit options.
     if insert_stats:
       #ORDER buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
       ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
