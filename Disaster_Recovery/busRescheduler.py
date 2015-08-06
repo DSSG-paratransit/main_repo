@@ -83,11 +83,12 @@ else:
 # window and return the URID with updated insert points. This URID with updated
 # insert points is fed to the feasibilty function, which we ultimately want to return
 # a minimum cost run for the URID and that run updated with the new URID slotted in.
-
-delay_cost = 0
+taxi_costs = []
+delay_costs = []
+best_buses = []
 for i in range(len(URIDs)):
-    print('')
-    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
+    print('Rescheduling URID {0}'.format(i))
+    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=4.)
     insert_stats = []
     for run in busRuns_tocheck:
         URID_updated_insertpts = af.checkCap.checkCapacityInsertPts(URIDs[i],run)
@@ -99,32 +100,38 @@ for i in range(len(URIDs)):
         else:
             insert_stats.append(brokenwindows_dict)
 
-    #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
+    #ORDER buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
     ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
-    delay_cost += ordered_inserts[0]['total_lag'][0]*(48.09/3600) #total dollars
+    delay_costs.append(ordered_inserts[0]['total_lag'][0]*(48.09/3600)) #total dollars
+    best_buses.append(ordered_inserts[0]['RunID'])
 
-    #calculate taxi cost
-    taxi_cost = af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
-        URIDs[i].DropOffCoords.LAT, URIDs[i].DropOffCoords.LON, af.wheelchair_present(URIDs[i]))
-    #write information about best insertions to text file
+    #CALCULATE taxi cost
+    taxi_costs.append(af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
+        URIDs[i].DropOffCoords.LAT, URIDs[i].DropOffCoords.LON, af.wheelchair_present(URIDs[i])))
+
+    #WRITE information about best insertions to text file
     af.write_insert_data(URIDs[i], ordered_inserts[0:3],
         path_to_outdir, taxi_cost)
     
-    #update whole day's schedule:
+    #UPDATE whole day's schedule:
     fullSchedule_windows = af.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
+    
+    #SAVE just the updated run for each URID
+    fullSchedule_windows[fullSchedule_windows['Run'] == ordered_inserts[0]['RunID']].to_csv(af.os.path.join(path_to_outdir, str(str(int(URID.BookingId))+'_schedule.csv')), index = False)
+    
 
-#Calculate new bus's cost, ONLY IN CASE OF BROKEN BUS:
-tfile_pathname = path_to_outdir+'/assocbus_costs.txt'
-tfile = open(tfile_pathname, 'w')
+
+#WRITE csv of PREFERRED OPTIONS:
 if case == 'BROKEN_RUN':
     nrun_cost = af.newBusRun_cost(af.get_busRuns(fS_w_copy, broken_Run, URIDs[0]), provider = 6)
-    # for provider we need to check availability of buses and compare costs---^^^
-    tfile.write('New bus cost for broken run {0} is {1}.'.format(broken_Run, nrun_cost))
 else:
-    tfile.write('New bus cost for list of URIDs is N/A.')
+    nrun_cost = None
+pref_opt = af.preferred_options(URIDs, best_buses, delay_costs, taxi_costs, nrun_cost)
+pref_opt.to_csv(af.os.path.join(path_to_outdir, 'preferred_costs.csv'), index = False)
 
-tfile.write('Cost of rerouting all URIDs is {0}'.format(delay_cost))
-tfile.close()
+#WRITE whole day's new schedule
+if case == 'BROKEN_RUN':
+    fullSchedule_windows = fullSchedule_windows[fullSchedule_windows['Run'] != broken_Run]
 
-fullSchedule_windows.to_csv(path_to_outdir + '/'+ 'newSchedule.csv', index = False)
+fullSchedule_windows.to_csv(af.os.path.join(path_to_outdir,'newSchedule.csv'), index = False)
     

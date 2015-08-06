@@ -592,7 +592,7 @@ def insertFeasibility(Run_Schedule, URID):
     dropoff_df = pd.DataFrame({"nodes": range(comeback2,Run_Schedule.index.max()+1), "break_TW": dropoff_score[:,0], "late": dropoff_score[:,1]})
     test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
     ret = {"score": test.append(dropoff_df), "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
-               "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'URID_pickup_ETA': }
+               "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1}
 
     return(ret)
 
@@ -700,15 +700,44 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
     return None
 
 
-def day_schedule_Update(data, top_Feasibility, URID):
+def preferred_options(URID_list, best_bus, delay_costs, taxi_costs, new_run_cost = None):
     '''
     Args:
+
+    - URID_list ([]): list of all URIDs, like as outputted by get_URID_bus
+
+    - best_bus ([]): list of buses onto which each URID would be cheapest to insert
+
+    - delay_costs ([]]): vector of delay costs, each corresponding URID (same index as URID_list)
+
+    - taxi_costs ([]): vector of taxi_costs, each corresponding URID (same index as URID_list)
+
+    - new_run_cost (float): cost of sending new bus out to service all URIDs.
+
+    WRITES: pd.DataFrame.to_csv(matrix of preferred option, per URID)'''
+
+    bId = []; pref = []
+    for i in range(len(URID)):
+        bId.append(str(int(URID[i].BookingId)))
+        if delay_costs[i] <= taxi_costs[i]:
+            pref.append(best_bus[i])
+        else:
+            pref.append('taxi')
+
+    if new_run_cost is not None:
+        bId.append('New bus option')
+        pref.append('$' + str(nb_cost))
+
+    return(pd.DataFrame(np.array([bId, pref]).T, columns = ['BookingId', 'Lowest Cost Option']))
+
+
+def day_schedule_Update(data, top_Feasibility, URID, taxi_cost):
+    '''
     data (pd.DataFrame): current schedule for all day's operations
 
     top_Feasibility (dict): insertion of URID on to bus resulting in min. lag.
         should be [0] element of ordered_inserts
 
-    Returns:
     return (pd.DataFrame): updated (re-arranged) schedule URID properly
         put on to new bus from old bus'''
 
@@ -717,18 +746,27 @@ def day_schedule_Update(data, top_Feasibility, URID):
     #make sure we change the RunID of the URID when placed on new bus!
     tmp.ix[my_rows.index[:], 'Run'] = top_Feasibility['RunID']
 
-    old_pickup_index = my_rows.index[0]
-    old_dropoff_index = my_rows.index[1]
-    new_pickup_index = top_Feasibility['pickup_insert'][1]
-    new_dropoff_index = top_Feasibility['dropoff_insert'][1]
+    pickup_old = my_rows.index[0]
+    dropoff_old = my_rows.index[1]
+    pickup_new = top_Feasibility['pickup_insert'][1] #THIS IS OVERWRITING NEXT NODE
+    dropoff_new = top_Feasibility['dropoff_insert'][1] #THIS WILL OVERWRITE NEXT NODE
 
     ind = tmp.index.tolist()
-    ind.pop(old_pickup_index)
-    ind.pop(old_dropoff_index-1)
-    ind.insert(ind.index(new_pickup_index), old_pickup_index)
-    ind.insert(ind.index(new_dropoff_index), old_dropoff_index)
-    
-    return tmp.reindex(ind)
+    ind.pop(pickup_old)
+    ind.pop(dropoff_old-1)
+    ind.insert(ind.index(pickup_new), pickup_old)
+    ind.insert(ind.index(dropoff_new), dropoff_old)
+
+    #move the URID into correct position in schedule
+    new_data = tmp.reindex(ind)
+
+    #update the inserted bus's ETAs!
+    run_inserted = new_data[new_data['Run'] == URID.Run]
+    run_inserted.ix[pickup_new:dropoff_new, 'ETA'] += top_Feasibility['pickup_lag']
+    run_inserted.ix[dropoff_new:, 'ETA']  += top_Feasibility['total_lag']
+    new_data.ix[run_inserted.index, 'ETA'] =  run_inserted.ix[:, 'ETA']
+
+    return new_data
 
 
 def newBusRun_cost(busRun, provider):
