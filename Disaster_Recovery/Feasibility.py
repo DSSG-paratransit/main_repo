@@ -40,7 +40,6 @@ def insertFeasibility(Run_Schedule, URID):
 	bound = max(Run_Schedule.PickupEnd.loc[comeback1], Run_Schedule.DropoffEnd.loc[comeback1])
 
 	#is the next time window broken?
-	print(newETA < bound)
 	leftover = bound - newETA
 	lag1 = newETA - Run_Schedule.ETA.loc[comeback1]
 
@@ -78,6 +77,7 @@ def insertFeasibility(Run_Schedule, URID):
 	outbound = np.column_stack((np.array(outbound.LAT), np.array(outbound.LON)))
 	inbound = Run_Schedule_Lag.loc[dropoff_inbound]
 	inbound = np.column_stack((np.array(inbound.LAT), np.array(inbound.LON)))
+	print(outbound, inbound)
 
 	uridLoc = [URID.DropOffCoords[0], URID.DropOffCoords[1]]
 	#second iteration of distance matrix, for drop off routing:
@@ -119,7 +119,7 @@ def insertFeasibility(Run_Schedule, URID):
 	dropoff_df = pd.DataFrame({"nodes": range(comeback2,Run_Schedule.index.max()+1), "break_TW": dropoff_score[:,0], "late": dropoff_score[:,1]})
 	test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
 	ret = {"score": test.append(dropoff_df), "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
-	           "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0]}
+	           "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1}
 
 	return(ret)
 
