@@ -44,5 +44,6 @@ getLegTimeDist <- function(data) {
   # adds new vector to dataframe and returns
   data$Dist <- dist_vector
   data$Time <- time_vector
+  data<-data
   return(data)
 }
