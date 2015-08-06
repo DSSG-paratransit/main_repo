@@ -111,31 +111,31 @@ for i in range(len(URIDs)):
              # check pick up window and then all associated cases  
              if full_PU:
                   print "full somehere in pick up window "
-                  tmpPU = capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1)
+                  tmpPU = int(capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1))
                   if tmpPU == URIDs[i].PickupEnd:
                       print "not enough time for pick up "
                       URIDs[i].PickupInsert, URIDs[i].DropoffInsert = af.np.nan, af.np.nan
                   elif (tmpPU < URIDs[i].PickupEnd) and (full_DO):
                       print "pick up okay, full somewhere in drop off window"
-                      tmpDO = capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+                      tmpDO = int(capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0))
                       if tmpDO == URIDs[i].DropoffEnd:
                           print "not enough time for drop off"
                           URIDs[i].PickupInsert, URIDs[i].DropoffInsert = af.np.nan, af.np.nan
                       elif tmpDO < URIDs[i].DropoffEnd:
                           print "returning pick up and drop off inserts"
-                          URIDs[i].PickupInsert, URIDs[i].DropoffInsert = capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1), capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+                          URIDs[i].PickupInsert, URIDs[i].DropoffInsert = int(capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1)), int(capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0))
                   elif (tmpPU < URIDs[i].PickupEnd) and not (full_DO):
                       print "returning pick up and drop off inserts, drop off never full"
-                      URIDs[i].PickupInsert, URIDs[i].DropoffInsert = capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1), URIDs[i].DropoffEnd
+                      URIDs[i].PickupInsert, URIDs[i].DropoffInsert = int(capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1)), URIDs[i].DropoffEnd
              elif not (full_PU) and (full_DO):
                  print "pick up never full, drop off full somewhere"
-                 tmpDO = capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+                 tmpDO = int(capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0))
                  if tmpDO == URIDs[i].DropoffEnd:
                      print "not enough time for drop off"
                      URIDs[i].PickupInsert, URIDs[i].DropoffInsert = af.np.nan, af.np.nan
                  elif tmpDO < URIDs[i].DropoffEnd:
                      print "returning pick up and drop off inserts, pick up never full "
-                     URIDs[i].PickupInsert, URIDs[i].DropoffInsert = URIDs[i].PickupStart, capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+                     URIDs[i].PickupInsert, URIDs[i].DropoffInsert = URIDs[i].PickupStart, int(capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0))
              elif not full_PU and not full_DO:
                      print "entire window available!"
                      URIDs[i].PickupInsert, URIDs[i].DropoffInsert = URIDs[i].PickupStart, URIDs[i].DropoffEnd
@@ -145,10 +145,10 @@ for i in range(len(URIDs)):
                 # URID.PickupInsert, URID.DropoffInsert
                 URIDs[i].PickupInsert, URIDs[i].DropoffInsert =  af.np.nan, af.np.nan 
             elif not full:
-                if af.np.isnan(capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1)):
+                if af.np.isnan(int(capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1))):
                     URIDs[i].PickupInsert, URIDs[i].DropoffInsert = af.np.nan, af.np.nan
                 else:
-                    URIDs[i].PickupInsert, URIDs[i].DropoffInsert = capacity_obj.checkWindow(URIDs[i], PickupWindow,1,-1), capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+                    URIDs[i].PickupInsert, URIDs[i].DropoffInsert = int(capacity_obj.checkWindow(URIDs[i], PickupWindow,1,-1)), int(capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0))
 
         # IF THERE'S ROOM: TEST FEASIBILITY
         if not af.np.isnan(URIDs[i].PickupInsert):
