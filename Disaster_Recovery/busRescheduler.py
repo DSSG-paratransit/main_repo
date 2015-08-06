@@ -180,8 +180,8 @@ for i in range(len(URIDs)):
       
       #UPDATE whole day's schedule:
       fullSchedule_windows = af.day_schedule_Update(data = fullSchedule_windows, top_Feasibility = ordered_inserts[0], URID = URIDs[i])
-      #sched_obj_update = af.aTWC.TimeWindowsCapacity(fullSchedule_windows)
-      #fullSchedule_windows = sched_obj_update.add_Capacity()
+      sched_obj_update = af.aTWC.TimeWindowsCapacity(fullSchedule_windows)
+      fullSchedule_windows = sched_obj_update.add_Capacity(update = True)
 
       #SAVE just the updated run for each URID
       fullSchedule_windows[fullSchedule_windows['Run'] == ordered_inserts[0]['RunID']].to_csv(af.os.path.join(path_to_outdir, str(str(int(URIDs[i].BookingId))+'_schedule.csv')), index = False)
@@ -190,7 +190,7 @@ for i in range(len(URIDs)):
       delay_costs.append(40000)
       taxi_costs.append(af.taxi(URIDs[i].PickUpCoords[0], URIDs[i].PickUpCoords[1],
           URIDs[i].DropOffCoords[0], URIDs[i].DropOffCoords[1], af.wheelchair_present(URIDs[i])))
-
+      best_buses.append('NA')
 
 #WRITE csv of PREFERRED OPTIONS:
 if case == 'BROKEN_RUN':
