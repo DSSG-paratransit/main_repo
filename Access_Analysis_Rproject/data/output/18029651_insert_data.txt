@@ -1,0 +1,22 @@
+OPTION 1:
+Put 18029651 onto bus 688DEB 
+Total lag: -2101 
+Number of exceeded time windows: 0.0 
+Average lateness: nan 
+
+
+OPTION 2:
+Put 18029651 onto bus 5045TRC 
+Total lag: -1474 
+Number of exceeded time windows: 0.0 
+Average lateness: nan 
+
+
+OPTION 3:
+Put 18029651 onto bus 5038 
+Total lag: -1137 
+Number of exceeded time windows: 1.0 
+Average lateness: 198.0 
+
+
+Taxi cost: 54.6

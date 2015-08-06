@@ -1,0 +1,22 @@
+OPTION 1:
+Put 18032950 onto bus 5038 
+Total lag: -1137 
+Number of exceeded time windows: 1.0 
+Average lateness: 198.0 
+
+
+OPTION 2:
+Put 18032950 onto bus 369 
+Total lag: -503 
+Number of exceeded time windows: 0.0 
+Average lateness: nan 
+
+
+OPTION 3:
+Put 18032950 onto bus 5050TRC 
+Total lag: -153 
+Number of exceeded time windows: 4.0 
+Average lateness: 414.75 
+
+
+Taxi cost: 32.0
