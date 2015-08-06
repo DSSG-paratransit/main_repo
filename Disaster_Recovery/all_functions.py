@@ -11,7 +11,7 @@ import time
 import read_fwf
 import itertools
 import operator
-import add_TimeWindowsCapacity as 
+import add_TimeWindowsCapacity as aTWC
 import checkCapacityInsertPts as checkCap
 from boto.s3.connection import S3Connection
 
@@ -204,8 +204,6 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
     diffIDs = unsched.BookingId.unique()
     diffIDs = diffIDs[~np.isnan(diffIDs)]
 
-    print("There are %s rides left to be scheduled on broken run %s" % (unsched.shape[0], broken_Run))
-
     saveme = []
 
     #save separate URID's in a list
@@ -235,7 +233,7 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
         if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
-                PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
+                PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:], #[0] is LAT, [1] is LON
                 DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[1,:],
                 PickupStart = int(my_info[["PickupStart"]].as_matrix()[0,:]),
                 PickupEnd = int(my_info[["PickupEnd"]].as_matrix()[0,:]),
@@ -251,6 +249,7 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 DropoffInsert = 0)
             saveme.append(temp)
 
+    print("There are %s rides left to be scheduled on broken run %s" % (len(saveme), broken_Run))
     return saveme
 
 
@@ -385,7 +384,7 @@ def radius_Elimination(data, URID, radius):
     #obviously, broken bus can't be in the list of nearby buses.
     data_copy = data[data.Run != URID.Run]
 
-    URID_loc = ([URID.PickUpCoords["LAT"], URID.PickUpCoords["LON"]])
+    URID_loc = ([URID.PickUpCoords[0], URID.PickUpCoords[1]])
         
     #get pd.Data.Frame of nodes that have overlap with URID's pickup or dropoff window
     overlap_data = time_overlap(data_copy, URID)
@@ -423,8 +422,8 @@ def get_busRuns(data, Run, URID):
             #subset only the rides that aren't 6, 16, or 3:
             leaveIndex = dataSub.index.min()
       else:
-            leave = dataSub[(dataSub['LAT'] == URID.PickUpCoords.LAT) 
-                  & (dataSub['LON'] == URID.PickUpCoords.LON) 
+            leave = dataSub[(dataSub['LAT'] == URID.PickUpCoords[0]) 
+                  & (dataSub['LON'] == URID.PickUpCoords[1]) 
                   & (dataSub['BookingId'] == URID.BookingId)]
             leaveIndex = leave.index.min()
 
@@ -600,7 +599,7 @@ def insertFeasibility(Run_Schedule, URID):
 def wheelchair_present(URID):
     #check if URID has a wheelchair, returns Boolean True/False:
 
-    mobaids = URID.SpaceOn.tolist()[0]
+    mobaids = URID.SpaceOn
     WC = False
     if type(mobaids) == str:
         WC = any(['W' in x for x in mobaids.split(',')])
@@ -681,7 +680,7 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
     if not os.path.isdir(path_to_output):
         os.mkdir(path_to_output)
 
-    file_name = path_to_output + '/' + str(int(URID.BookingId)) + '_insert_data.txt'
+    file_name = os.path.join(path_to_output, str(str(int(URID.BookingId))+'_insert_data.txt'))
     text_file = open(file_name, "w")
     ctr = 1;
     for option in list_Feasibility_output:
@@ -717,8 +716,8 @@ def preferred_options(URID_list, best_bus, delay_costs, taxi_costs, new_run_cost
     WRITES: pd.DataFrame.to_csv(matrix of preferred option, per URID)'''
 
     bId = []; pref = []
-    for i in range(len(URID)):
-        bId.append(str(int(URID[i].BookingId)))
+    for i in range(len(URID_list)):
+        bId.append(str(int(URID_list[i].BookingId)))
         if delay_costs[i] <= taxi_costs[i]:
             pref.append(best_bus[i])
         else:
@@ -726,12 +725,12 @@ def preferred_options(URID_list, best_bus, delay_costs, taxi_costs, new_run_cost
 
     if new_run_cost is not None:
         bId.append('New bus option')
-        pref.append('$' + str(nb_cost))
+        pref.append('$' + str(new_run_cost))
 
     return(pd.DataFrame(np.array([bId, pref]).T, columns = ['BookingId', 'Lowest Cost Option']))
 
 
-def day_schedule_Update(data, top_Feasibility, URID, taxi_cost):
+def day_schedule_Update(data, top_Feasibility, URID):
     '''
     data (pd.DataFrame): current schedule for all day's operations
 
@@ -761,7 +760,7 @@ def day_schedule_Update(data, top_Feasibility, URID, taxi_cost):
     new_data = tmp.reindex(ind)
 
     #update the inserted bus's ETAs!
-    run_inserted = new_data[new_data['Run'] == URID.Run]
+    run_inserted = new_data[new_data['Run'] == top_Feasibility['RunID']]
     run_inserted.ix[pickup_new:dropoff_new, 'ETA'] += top_Feasibility['pickup_lag']
     run_inserted.ix[dropoff_new:, 'ETA']  += top_Feasibility['total_lag']
     new_data.ix[run_inserted.index, 'ETA'] =  run_inserted.ix[:, 'ETA']
