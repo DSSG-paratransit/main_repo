@@ -5,6 +5,7 @@ import all_functions as af
     sys.argv[2] is int for time window in seconds
     sys.argv[3] is str for broken bus run number, OR, it is a list of bookingId's (for single client input)
     sys.argv[4] is int for time in seconds (this should be changed to accept more user friendly input)
+    sys.argv[5] is str for path to directory where you want the output .txt/.csv files to go
     
     eventually make function(?) which makes sure user is passing correct num/type of arguments.
     For now, enter None when you don't want to input a command line argument.
@@ -58,59 +59,79 @@ if resched_init_time is None:
     except:
         resched_init_time = af.humanToSeconds(raw_input('Enter a 24h time in HH:MM format\nfor initial time when buses can be rescheduled: '))
 
+path_to_outdir = af.sys.argv[5]
+if not af.os.path.isdir(path_to_outdir):
+    print(path_to_outdir + ' is not a directory. Making that directory now...')
+    af.os.mkdir(path_to_outdir)
 
 # this simply returns full schedule with time windows at the moment
 sched_obj = af.aTWC.TimeWindowsCapacity(fullSchedule)
 fullSchedule_windows = sched_obj.addtoRun_TimeCapacity(1800.)
 fS_w_copy = fullSchedule_windows.copy()
-if type(fS_w_copy.index[0])~= str: fS_w_copy.index = range(0, fS_w_copy.shape[0])
+if type(fS_w_copy.index[0]) != int:
+    fS_w_copy.index = range(0, fS_w_copy.shape[0])
 
 # this gets us all the URIDs for the broken run given the initial rescheduling time
 # OR it will get us URIDs given specific bookingIds to be rescheduled
 if case == 'BROKEN_RUN':
     URIDs = af.get_URID_Bus(fullSchedule_windows, broken_Run, resched_init_time)
 else:
-    URIDs = af.get_URID_BookingIds(fullSchedule_windows, individual_requests)
+    URIDs = af.get_URID_BookingIds(individual_requests)
 
 # for each URID we find the bus runs to check through a radius elimination.
 # for each URID for each run we then want to check the capacity in the given time
 # window and return the URID with updated insert points. This URID with updated
 # insert points is fed to the feasibilty function, which we ultimately want to return
 # a minimum cost run for the URID and that run updated with the new URID slotted in.
-
-delay_cost = 0
+taxi_costs = []
+delay_costs = []
+best_buses = []
 for i in range(len(URIDs)):
-    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=5.)
+    print('Rescheduling URID {0}'.format(i))
+    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=4.)
     insert_stats = []
     for run in busRuns_tocheck:
-        URID_updated_insertpts = checkCapacityInsertPts(URIDs[i],run)
+        URID_updated_insertpts = af.checkCap.checkCapacityInsertPts(URIDs[i],run)
         runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
+        print('Testing feasibility for run ' + run)
         brokenwindows_dict =af.insertFeasibility(runSchedule, URID_updated_insertpts)
-        insert_stats.append(brokenwindows_dict)
+        if not brokenwindows_dict:
+            print('Run {0} infeasible without moving the Activity 16 row.'.format(run))
+        else:
+            insert_stats.append(brokenwindows_dict)
 
-    #order buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
+    #ORDER buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
     ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
-    delay_cost += ordered_inserts[0]['total_lag'][0]*(48.09/3600) #total dollars
+    delay_costs.append(ordered_inserts[0]['total_lag'][0]*(48.09/3600)) #total dollars
+    best_buses.append(ordered_inserts[0]['RunID'])
 
-    #calculate taxi cost
-    taxi_cost = af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
-        URIDs[i].DropOffCoords.LAT, DropOffCoords.LON, af.wheelchair_present(URIDs[i]))
-    #write information about best insertions to text file
-    af.write_insert_data(URID, ordered_inserts[0:3],
-        '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/', taxi_cost)
+    #CALCULATE taxi cost
+    taxi_costs.append(af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
+        URIDs[i].DropOffCoords.LAT, URIDs[i].DropOffCoords.LON, af.wheelchair_present(URIDs[i])))
+
+    #WRITE information about best insertions to text file
+    af.write_insert_data(URIDs[i], ordered_inserts[0:3],
+        path_to_outdir, taxi_cost)
     
-    #update whole day's schedule:
+    #UPDATE whole day's schedule:
     fullSchedule_windows = af.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
+    
+    #SAVE just the updated run for each URID
+    fullSchedule_windows[fullSchedule_windows['Run'] == ordered_inserts[0]['RunID']].to_csv(af.os.path.join(path_to_outdir, str(str(int(URID.BookingId))+'_schedule.csv')), index = False)
+    
 
-#Calculate new bus's cost, ONLY IN CASE OF BROKEN BUS:
+
+#WRITE csv of PREFERRED OPTIONS:
 if case == 'BROKEN_RUN':
-    newRun_cost = af.newBusRun_cost(af.get_busRuns(fS_w_copy, broken_Run, URIDs[0]), provider)
-    # for provider we need to check availability of buses and compare costs---^^^
-    print('Cost of sending new bus for broken run {0} is {1}.'.format(broken_Run, newBusRun_cost))
+    nrun_cost = af.newBusRun_cost(af.get_busRuns(fS_w_copy, broken_Run, URIDs[0]), provider = 6)
+else:
+    nrun_cost = None
+pref_opt = af.preferred_options(URIDs, best_buses, delay_costs, taxi_costs, nrun_cost)
+pref_opt.to_csv(af.os.path.join(path_to_outdir, 'preferred_costs.csv'), index = False)
 
-print('Cost of rerouting all URIDs is {0}'.format(delay_cost))
+#WRITE whole day's new schedule
+if case == 'BROKEN_RUN':
+    fullSchedule_windows = fullSchedule_windows[fullSchedule_windows['Run'] != broken_Run]
 
-fullSchedule_windows.to_csv('/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output/newSchedule.csv', index = False)
-
-return None
+fullSchedule_windows.to_csv(af.os.path.join(path_to_outdir,'newSchedule.csv'), index = False)
     
