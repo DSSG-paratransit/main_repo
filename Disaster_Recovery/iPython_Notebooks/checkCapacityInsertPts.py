@@ -226,31 +226,31 @@ if __name__ == "__main__":
          # check pick up window and then all associated cases  
          if full_PU:
               print "full somehere in pick up window "
-              tmpPU = capacity_obj.checkWindow(URID,PickupWindow,1,-1)
+              tmpPU = int(capacity_obj.checkWindow(URID,PickupWindow,1,-1))
               if tmpPU == URID.PickupEnd:
                   print "not enough time for pick up "
                   URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
               elif (tmpPU < URID.PickupEnd) and (full_DO):
                   print "pick up okay, full somewhere in drop off window"
-                  tmpDO = capacity_obj.checkWindow(URID, DropoffWindow,-1,0)
+                  tmpDO = int(capacity_obj.checkWindow(URID, DropoffWindow,-1,0))
                   if tmpDO == URID.DropoffEnd:
                       print "not enough time for drop off"
                       URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
                   elif tmpDO < URID.DropoffEnd:
                       print "returning pick up and drop off inserts"
-                      URID.PickupInsert, URID.DropoffInsert = capacity_obj.checkWindow(URID,PickupWindow,1,-1), capacity_obj.checkWindow(URID, DropoffWindow,-1,0)
+                      URID.PickupInsert, URID.DropoffInsert = int(capacity_obj.checkWindow(URID,PickupWindow,1,-1)), int(capacity_obj.checkWindow(URID, DropoffWindow,-1,0))
               elif (tmpPU < URID.PickupEnd) and not (full_DO):
                   print "returning pick up and drop off inserts, drop off never full"
-                  URID.PickupInsert, URID.DropoffInsert = capacity_obj.checkWindow(URID,PickupWindow,1,-1), URID.DropoffEnd
+                  URID.PickupInsert, URID.DropoffInsert = int(capacity_obj.checkWindow(URID,PickupWindow,1,-1)), URID.DropoffEnd
          elif not (full_PU) and (full_DO):
              print "pick up never full, drop off full somewhere"
-             tmpDO = capacity_obj.checkWindow(URID, DropoffWindow,-1,0)
+             tmpDO = int(capacity_obj.checkWindow(URID, DropoffWindow,-1,0))
              if tmpDO == URID.DropoffEnd:
                  print "not enough time for drop off"
                  URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
              elif tmpDO < URID.DropoffEnd:
                  print "returning pick up and drop off inserts, pick up never full "
-                 URID.PickupInsert, URID.DropoffInsert = URID.PickupStart, capacity_obj.checkWindow(URID, DropoffWindow,-1,0)
+                 URID.PickupInsert, URID.DropoffInsert = URID.PickupStart, int(capacity_obj.checkWindow(URID, DropoffWindow,-1,0))
          elif not full_PU and not full_DO:
                  print "entire window available!"
                  URID.PickupInsert, URID.DropoffInsert = URID.PickupStart, URID.DropoffEnd
@@ -260,10 +260,10 @@ if __name__ == "__main__":
             # URID.PickupInsert, URID.DropoffInsert
             URID.PickupInsert, URID.DropoffInsert =  np.nan, np.nan 
         elif not full:
-            if np.isnan(capacity_obj.checkWindow(URID.PickupWindow,1,-1)):
+            if np.isnan(int(capacity_obj.checkWindow(URID.PickupWindow,1,-1))):
                 URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
             else:
-                URID.PickupInsert, URID.DropoffInsert = capacity_obj.checkWindow(URID, PickupWindow,1,-1), capacity_obj.checkWindow(URID, DropoffWindow,-1,0)
+                URID.PickupInsert, URID.DropoffInsert = int(capacity_obj.checkWindow(URID, PickupWindow,1,-1)), int(capacity_obj.checkWindow(URID, DropoffWindow,-1,0))
 
 else:
     print "Importing checkCapacityInsertPts"
