@@ -9,19 +9,23 @@ def radius_Elimination(data, URID, radius):
         NOTE: you need to "> pip install haversine"
 
         INPUT:  data - pd.Data.Frame returned from add_TimeWindows.py
-                URID - URID object from get_URIDS.py	
+                URID - URID object from get_URIDS.py    
                 radius - float, number of miles
                 pickUpDropOff - boolean True/False for PickUp (True) or Dropoff (False)
 
         RETURN: LIST of runs within radius-miles of URID.'''
 
-    #obviously, broken bus can't be in the list of nearby buses.
-    data = data[data.Run != URID.Run]
+    #first, resolve indexing issues if index column is type timedate
+    if type(data.index[0]) != int:
+        data.index = range(0, data.shape[0])
 
-    URID_loc = ([URID.PickUpCoords["LAT"], URID.PickUpCoords["LON"]])
+    #obviously, broken bus can't be in the list of nearby buses.
+    data_copy = data[data.Run != URID.Run]
+
+    URID_loc = ([URID.PickUpCoords[0], URID.PickUpCoords[1]])
         
     #get pd.Data.Frame of nodes that have overlap with URID's pickup or dropoff window
-    overlap_data = time_overlap(data, URID)
+    overlap_data = time_overlap(data_copy, URID)
 
     #get row index of nodes that may have either inbound/outbound overlap with URID TW.
     overlap_data = data.loc[overlap_data['all_nodes']]
@@ -32,11 +36,11 @@ def radius_Elimination(data, URID, radius):
     okBuses = []
     for k in range(len(overlap_LAT)):
         point = (overlap_LAT[k], overlap_LON[k])
-        dist = haversine(point, URID_loc, miles=True)
+        dist = haversine.haversine(point, URID_loc, miles=True)
         if(dist < radius):
             okBuses.append(overlap_data.Run.iloc[k])
 
-    return set(okBuses)
+    return list(set(okBuses))
 
 
 

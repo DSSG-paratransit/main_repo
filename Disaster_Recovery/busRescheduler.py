@@ -12,12 +12,7 @@ import all_functions as af
     
     """
 
-# all try except statements are prompting the user for the needed input
-
-#Get data
-#Get data
-
-
+#get data
 try:
     fullSchedule = af.pd.DataFrame.from_csv(af.sys.argv[1], header=0, sep=',')
 
@@ -88,8 +83,9 @@ delay_costs = []
 best_buses = []
 for i in range(len(URIDs)):
     print('Rescheduling URID {0}'.format(i))
-    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=4.)
+    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=3.)
     insert_stats = []
+
     for run in busRuns_tocheck:
         URID_updated_insertpts = af.checkCap.checkCapacityInsertPts(URIDs[i],run)
         runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
@@ -106,18 +102,18 @@ for i in range(len(URIDs)):
     best_buses.append(ordered_inserts[0]['RunID'])
 
     #CALCULATE taxi cost
-    taxi_costs.append(af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
-        URIDs[i].DropOffCoords.LAT, URIDs[i].DropOffCoords.LON, af.wheelchair_present(URIDs[i])))
+    taxi_costs.append(af.taxi(URIDs[i].PickUpCoords[0], URIDs[i].PickUpCoords[1],
+        URIDs[i].DropOffCoords[0], URIDs[i].DropOffCoords[1], af.wheelchair_present(URIDs[i])))
 
     #WRITE information about best insertions to text file
     af.write_insert_data(URIDs[i], ordered_inserts[0:3],
-        path_to_outdir, taxi_cost)
+        path_to_outdir, taxi_costs[i])
     
     #UPDATE whole day's schedule:
-    fullSchedule_windows = af.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
+    fullSchedule_windows = af.day_schedule_Update(data = fullSchedule_windows, top_Feasibility = ordered_inserts[0], URID = URIDs[i])
     
     #SAVE just the updated run for each URID
-    fullSchedule_windows[fullSchedule_windows['Run'] == ordered_inserts[0]['RunID']].to_csv(af.os.path.join(path_to_outdir, str(str(int(URID.BookingId))+'_schedule.csv')), index = False)
+    fullSchedule_windows[fullSchedule_windows['Run'] == ordered_inserts[0]['RunID']].to_csv(af.os.path.join(path_to_outdir, str(str(int(URIDs[i].BookingId))+'_schedule.csv')), index = False)
     
 
 
@@ -132,6 +128,5 @@ pref_opt.to_csv(af.os.path.join(path_to_outdir, 'preferred_costs.csv'), index = 
 #WRITE whole day's new schedule
 if case == 'BROKEN_RUN':
     fullSchedule_windows = fullSchedule_windows[fullSchedule_windows['Run'] != broken_Run]
-
-fullSchedule_windows.to_csv(af.os.path.join(path_to_outdir,'newSchedule.csv'), index = False)
+fullSchedule_windows.to_csv(af.os.path.join(path_to_outdir,'ALL_HANDLED_new_schedule.csv'), index = False)
     
