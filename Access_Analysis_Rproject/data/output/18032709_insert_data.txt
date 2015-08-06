@@ -1,20 +1,20 @@
 OPTION 1:
-Put 18032709 onto bus 5048 
-Total lag: -3255 
+Put 18032709 onto bus 5042TRC 
+Total lag: -577 
 Number of exceeded time windows: 0.0 
 Average lateness: nan 
 
 
-OPTION 1:
-Put 18032709 onto bus 5037 
-Total lag: -2357 
+OPTION 2:
+Put 18032709 onto bus 571SHO 
+Total lag: -11 
 Number of exceeded time windows: 0.0 
 Average lateness: nan 
 
 
-OPTION 1:
-Put 18032709 onto bus 590TRN 
-Total lag: -579 
+OPTION 3:
+Put 18032709 onto bus 311 
+Total lag: 18 
 Number of exceeded time windows: 0.0 
 Average lateness: nan 
 

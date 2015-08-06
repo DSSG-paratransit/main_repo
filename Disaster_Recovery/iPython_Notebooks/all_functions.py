@@ -11,7 +11,7 @@ import time
 import read_fwf
 import itertools
 import operator
-import add_TimeWindowsCapacity as 
+import add_TimeWindowsCapacity as aTWC
 import checkCapacityInsertPts as checkCap
 from boto.s3.connection import S3Connection
 
@@ -204,8 +204,6 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
     diffIDs = unsched.BookingId.unique()
     diffIDs = diffIDs[~np.isnan(diffIDs)]
 
-    print("There are %s rides left to be scheduled on broken run %s" % (unsched.shape[0], broken_Run))
-
     saveme = []
 
     #save separate URID's in a list
@@ -218,39 +216,40 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 Run = broken_Run,
                 #if person is stranded on bus, their PickUpCoords are the BREAKDOWN_LOC (global var)
                 PickUpCoords = pd.Series(data = np.array(BREAKDOWN_LOC), index = ["LAT", "LON"]),
-                DropOffCoords = my_info[["LAT", "LON"]].ix[0,],
+                DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
                 PickupStart = resched_init_time,
                 PickupEnd = resched_init_time+30*60,
-                DropoffStart = int(my_info[["DropoffStart"]].ix[0,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].ix[0,]),
-                SpaceOn = my_info[["SpaceOn"]].ix[0,],
-                MobAids = my_info[["MobAids"]].ix[0,],
-                wcOn = my_info["wcOn"].ix[0,],
-                wcOff = my_info["wcOff"].ix[0,],
-                amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,],
+                DropoffStart = int(my_info[["DropoffStart"]].as_matrix()[0,:]), #my_info is only one row...
+                DropoffEnd = int(my_info[["DropoffEnd"]].as_matrix()[0,:]),
+                SpaceOn = my_info[["SpaceOn"]].as_matrix()[0][0],
+                MobAids = my_info[["MobAids"]].as_matrix()[0][0],
+                wcOn = my_info["wcOn"].as_matrix()[0],
+                wcOff = my_info["wcOff"].as_matrix()[1],
+                amOn = my_info["amOn"].as_matrix()[0],
+                amOff = my_info["amOff"].as_matrix()[1],
                 PickupInsert = 0,
                 DropoffInsert = 0)
             saveme.append(temp)
         if(my_info.shape[0] != 1):
             temp = URID(BookingId = ID,
                 Run = broken_Run,
-                PickUpCoords = my_info[["LAT", "LON"]].ix[0,],
-                DropOffCoords = my_info[["LAT", "LON"]].ix[1,],
-                PickupStart = int(my_info[["PickupStart"]].ix[0,]),
-                PickupEnd = int(my_info[["PickupEnd"]].ix[0,]),
-                DropoffStart = int(my_info[["DropoffStart"]].ix[1,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].ix[1,]),
-                SpaceOn = my_info[["SpaceOn"]].ix[0,],
-                MobAids = my_info[["MobAids"]].ix[0,],
-                wcOn = my_info["wcOn"].ix[0,],
-                wcOff = my_info["wcOff"].ix[0,],
-                amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,],
+                PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:], #[0] is LAT, [1] is LON
+                DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[1,:],
+                PickupStart = int(my_info[["PickupStart"]].as_matrix()[0,:]),
+                PickupEnd = int(my_info[["PickupEnd"]].as_matrix()[0,:]),
+                DropoffStart = int(my_info[["DropoffStart"]].as_matrix()[1,:]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].as_matrix()[1,:]),
+                SpaceOn = my_info[["SpaceOn"]].as_matrix()[0][0],
+                MobAids = my_info[["MobAids"]].as_matrix()[0][0],
+                wcOn = my_info["wcOn"].as_matrix()[0],
+                wcOff = my_info["wcOff"].as_matrix()[1],
+                amOn = my_info["amOn"].as_matrix()[0],
+                amOff = my_info["amOff"].as_matrix()[1],
                 PickupInsert = 0,
                 DropoffInsert = 0)
             saveme.append(temp)
 
+    print("There are %s rides left to be scheduled on broken run %s" % (len(saveme), broken_Run))
     return saveme
 
 
@@ -266,18 +265,18 @@ def get_URID_BookingIds(data, BookingId_list):
         my_info = data[data["BookingId"]==ID]
         temp = URID(BookingId = ID,
                 Run = my_info['Run'].ix[0,],
-                PickUpCoords = my_info[["LAT", "LON"]].iloc[0,],
-                DropOffCoords = my_info[["LAT", "LON"]].iloc[1,],
-                PickupStart = int(my_info[["PickupStart"]].iloc[0,]),
-                PickupEnd = int(my_info[["PickupEnd"]].iloc[0,]),
-                DropoffStart = int(my_info[["DropoffStart"]].iloc[1,]),
-                DropoffEnd = int(my_info[["DropoffEnd"]].iloc[1,]),
-                SpaceOn = my_info[["SpaceOn"]].iloc[0,],
-                MobAids = my_info[["MobAids"]].iloc[0,],
-                wcOn = my_info["wcOn"].ix[0,],
-                wcOff = my_info["wcOff"].ix[0,],
-                amOn = my_info["amOn"].ix[0,],
-                amOff = my_info["amOff"].ix[0,],
+                PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
+                DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[1,:],
+                PickupStart = int(my_info[["PickupStart"]].as_matrix()[0,:]),
+                PickupEnd = int(my_info[["PickupEnd"]].as_matrix()[0,:]),
+                DropoffStart = int(my_info[["DropoffStart"]].as_matrix()[1,:]),
+                DropoffEnd = int(my_info[["DropoffEnd"]].as_matrix()[1,:]),
+                SpaceOn = my_info[["SpaceOn"]].as_matrix()[0][0],
+                MobAids = my_info[["MobAids"]].as_matrix()[0][0],
+                wcOn = my_info["wcOn"].as_matrix()[0],
+                wcOff = my_info["wcOff"].as_matrix()[1],
+                amOn = my_info["amOn"].as_matrix()[0],
+                amOff = my_info["amOff"].as_matrix()[1],
                 PickupInsert = 0,
                 DropoffInsert = 0)
         
@@ -285,6 +284,7 @@ def get_URID_BookingIds(data, BookingId_list):
 
     #return sorted URIDs based on PickupStart time
     return sorted(saveme, key = operator.attrgetter('PickupStart'))
+
 
 
 def time_overlap(Run_Schedule, URID, pudo = True):
@@ -301,13 +301,6 @@ def time_overlap(Run_Schedule, URID, pudo = True):
 
     retDict (dict): dictionary containing indices of schedule-outbound and -inbound nodes that we need
         to get distance between w/r/t URID location.'''
-
-    #How it works: first, find all nodes that have time overlap with the URID's (pickup or dropoff) window
-    # second, notice any gaps in the order of these nodes from the original bus ride.
-    # For the first chunk of overlapping nodes, add the lower-time bound node in, given that the first node
-    # even exists in the Run_Schedule.
-    # For every chunk of contiguous overlap nodes, add in the upper-time bound node, because there can potentially
-    # be an inbound ride from the URID node to the upper-time bound node. There can't be an outbound ride.
 
     if pudo:
         Start = URID.PickupStart
@@ -391,7 +384,7 @@ def radius_Elimination(data, URID, radius):
     #obviously, broken bus can't be in the list of nearby buses.
     data_copy = data[data.Run != URID.Run]
 
-    URID_loc = ([URID.PickUpCoords["LAT"], URID.PickUpCoords["LON"]])
+    URID_loc = ([URID.PickUpCoords[0], URID.PickUpCoords[1]])
         
     #get pd.Data.Frame of nodes that have overlap with URID's pickup or dropoff window
     overlap_data = time_overlap(data_copy, URID)
@@ -429,8 +422,8 @@ def get_busRuns(data, Run, URID):
             #subset only the rides that aren't 6, 16, or 3:
             leaveIndex = dataSub.index.min()
       else:
-            leave = dataSub[(dataSub['LAT'] == URID.PickUpCoords.LAT) 
-                  & (dataSub['LON'] == URID.PickUpCoords.LON) 
+            leave = dataSub[(dataSub['LAT'] == URID.PickUpCoords[0]) 
+                  & (dataSub['LON'] == URID.PickUpCoords[1]) 
                   & (dataSub['BookingId'] == URID.BookingId)]
             leaveIndex = leave.index.min()
 
@@ -598,7 +591,7 @@ def insertFeasibility(Run_Schedule, URID):
     dropoff_df = pd.DataFrame({"nodes": range(comeback2,Run_Schedule.index.max()+1), "break_TW": dropoff_score[:,0], "late": dropoff_score[:,1]})
     test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
     ret = {"score": test.append(dropoff_df), "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
-               "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'URID_pickup_ETA': }
+               "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1}
 
     return(ret)
 
@@ -606,7 +599,7 @@ def insertFeasibility(Run_Schedule, URID):
 def wheelchair_present(URID):
     #check if URID has a wheelchair, returns Boolean True/False:
 
-    mobaids = URID.SpaceOn.tolist()[0]
+    mobaids = URID.SpaceOn
     WC = False
     if type(mobaids) == str:
         WC = any(['W' in x for x in mobaids.split(',')])
@@ -687,7 +680,7 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
     if not os.path.isdir(path_to_output):
         os.mkdir(path_to_output)
 
-    file_name = path_to_output + '/' + str(int(URID.BookingId)) + '_insert_data.txt'
+    file_name = os.path.join(path_to_output, str(str(int(URID.BookingId))+'_insert_data.txt'))
     text_file = open(file_name, "w")
     ctr = 1;
     for option in list_Feasibility_output:
@@ -706,15 +699,44 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
     return None
 
 
-def day_schedule_Update(data, top_Feasibility, URID):
+def preferred_options(URID_list, best_bus, delay_costs, taxi_costs, new_run_cost = None):
     '''
     Args:
+
+    - URID_list ([]): list of all URIDs, like as outputted by get_URID_bus
+
+    - best_bus ([]): list of buses onto which each URID would be cheapest to insert
+
+    - delay_costs ([]]): vector of delay costs, each corresponding URID (same index as URID_list)
+
+    - taxi_costs ([]): vector of taxi_costs, each corresponding URID (same index as URID_list)
+
+    - new_run_cost (float): cost of sending new bus out to service all URIDs.
+
+    WRITES: pd.DataFrame.to_csv(matrix of preferred option, per URID)'''
+
+    bId = []; pref = []
+    for i in range(len(URID_list)):
+        bId.append(str(int(URID_list[i].BookingId)))
+        if delay_costs[i] <= taxi_costs[i]:
+            pref.append(best_bus[i])
+        else:
+            pref.append('taxi')
+
+    if new_run_cost is not None:
+        bId.append('New bus option')
+        pref.append('$' + str(new_run_cost))
+
+    return(pd.DataFrame(np.array([bId, pref]).T, columns = ['BookingId', 'Lowest Cost Option']))
+
+
+def day_schedule_Update(data, top_Feasibility, URID):
+    '''
     data (pd.DataFrame): current schedule for all day's operations
 
     top_Feasibility (dict): insertion of URID on to bus resulting in min. lag.
         should be [0] element of ordered_inserts
 
-    Returns:
     return (pd.DataFrame): updated (re-arranged) schedule URID properly
         put on to new bus from old bus'''
 
@@ -723,18 +745,27 @@ def day_schedule_Update(data, top_Feasibility, URID):
     #make sure we change the RunID of the URID when placed on new bus!
     tmp.ix[my_rows.index[:], 'Run'] = top_Feasibility['RunID']
 
-    old_pickup_index = my_rows.index[0]
-    old_dropoff_index = my_rows.index[1]
-    new_pickup_index = top_Feasibility['pickup_insert'][1]
-    new_dropoff_index = top_Feasibility['dropoff_insert'][1]
+    pickup_old = my_rows.index[0]
+    dropoff_old = my_rows.index[1]
+    pickup_new = top_Feasibility['pickup_insert'][1] #THIS IS OVERWRITING NEXT NODE
+    dropoff_new = top_Feasibility['dropoff_insert'][1] #THIS WILL OVERWRITE NEXT NODE
 
     ind = tmp.index.tolist()
-    ind.pop(old_pickup_index)
-    ind.pop(old_dropoff_index-1)
-    ind.insert(ind.index(new_pickup_index), old_pickup_index)
-    ind.insert(ind.index(new_dropoff_index), old_dropoff_index)
-    
-    return tmp.reindex(ind)
+    ind.pop(pickup_old)
+    ind.pop(dropoff_old-1)
+    ind.insert(ind.index(pickup_new), pickup_old)
+    ind.insert(ind.index(dropoff_new), dropoff_old)
+
+    #move the URID into correct position in schedule
+    new_data = tmp.reindex(ind)
+
+    #update the inserted bus's ETAs!
+    run_inserted = new_data[new_data['Run'] == top_Feasibility['RunID']]
+    run_inserted.ix[pickup_new:dropoff_new, 'ETA'] += top_Feasibility['pickup_lag']
+    run_inserted.ix[dropoff_new:, 'ETA']  += top_Feasibility['total_lag']
+    new_data.ix[run_inserted.index, 'ETA'] =  run_inserted.ix[:, 'ETA']
+
+    return new_data
 
 
 def newBusRun_cost(busRun, provider):

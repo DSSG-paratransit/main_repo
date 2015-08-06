@@ -12,12 +12,7 @@ import all_functions as af
     
     """
 
-# all try except statements are prompting the user for the needed input
-
-#Get data
-#Get data
-
-
+#get data
 try:
     fullSchedule = af.pd.DataFrame.from_csv(af.sys.argv[1], header=0, sep=',')
 
@@ -88,17 +83,85 @@ delay_costs = []
 best_buses = []
 for i in range(len(URIDs)):
     print('Rescheduling URID {0}'.format(i))
-    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=4.)
+    busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=3.)
     insert_stats = []
+
+    #iterate over all runs, find best one!
     for run in busRuns_tocheck:
-        URID_updated_insertpts = af.checkCap.checkCapacityInsertPts(URIDs[i],run)
-        runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
-        print('Testing feasibility for run ' + run)
-        brokenwindows_dict =af.insertFeasibility(runSchedule, URID_updated_insertpts)
-        if not brokenwindows_dict:
-            print('Run {0} infeasible without moving the Activity 16 row.'.format(run))
-        else:
-            insert_stats.append(brokenwindows_dict)
+
+        this_run = fullSchedule_windows[fullSchedule_windows['Run']==run]
+        capacity_obj = af.checkCap.CapacityInsertPts(this_run)
+
+        # KRISTEN'S MAIN FUNC
+        restrictive_window, = af.np.where((this_run['ETA'] > URIDs[i].PickupEnd ) & (this_run['ETA'] < URIDs[i].DropoffStart))
+        PickupWindow, = af.np.where((this_run['ETA'] >= URIDs[i].PickupStart) & (this_run['ETA'] <= URIDs[i].PickupEnd))
+        DropoffWindow, = af.np.where((this_run['ETA'] >= URIDs[i].DropoffStart) & (this_run['ETA'] <= URIDs[i].DropoffEnd))
+
+        max_wcCapacity = this_run['wcCapacity'].iloc[restrictive_window].max()
+        max_amCapacity = this_run['amCapacity'].iloc[restrictive_window].max()
+        full = (max_wcCapacity + URIDs[i].wcOn > 3) & (max_amCapacity + URIDs[i].wcOn > capacity_obj.amCapacitySwitch(str(max_wcCapacity + URIDs[i].wcOn)))
+        # likely to be most common case
+        if URIDs[i].DropoffStart <= URIDs[i].PickupEnd:
+             max_wcCapacity_PU = this_run['wcCapacity'].iloc[PickupWindow].max()
+             max_amCapacity_PU = this_run['amCapacity'].iloc[PickupWindow].max()
+             full_PU = (max_wcCapacity_PU + URIDs[i].wcOn > 3) & (max_amCapacity_PU + URIDs[i].wcOn > capacity_obj.amCapacitySwitch(str(max_wcCapacity_PU + URIDs[i].wcOn)))
+             max_wcCapacity_DO = this_run['wcCapacity'].iloc[DropoffWindow].max()
+             max_amCapacity_DO = this_run['amCapacity'].iloc[DropoffWindow].max()
+             full_DO = (max_wcCapacity_DO + URIDs[i].wcOn > 3) & (max_amCapacity_DO + URIDs[i].wcOn > capacity_obj.amCapacitySwitch(str(max_wcCapacity_DO + URIDs[i].wcOn)))
+             # check pick up window and then all associated cases  
+             if full_PU:
+                  print "full somehere in pick up window "
+                  tmpPU = capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1)
+                  if tmpPU == URIDs[i].PickupEnd:
+                      print "not enough time for pick up "
+                      URIDs[i].PickupInsert, URIDs[i].DropoffInsert = af.np.nan, af.np.nan
+                  elif (tmpPU < URIDs[i].PickupEnd) and (full_DO):
+                      print "pick up okay, full somewhere in drop off window"
+                      tmpDO = capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+                      if tmpDO == URIDs[i].DropoffEnd:
+                          print "not enough time for drop off"
+                          URIDs[i].PickupInsert, URIDs[i].DropoffInsert = af.np.nan, af.np.nan
+                      elif tmpDO < URIDs[i].DropoffEnd:
+                          print "returning pick up and drop off inserts"
+                          URIDs[i].PickupInsert, URIDs[i].DropoffInsert = capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1), capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+                  elif (tmpPU < URIDs[i].PickupEnd) and not (full_DO):
+                      print "returning pick up and drop off inserts, drop off never full"
+                      URIDs[i].PickupInsert, URIDs[i].DropoffInsert = capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1), URIDs[i].DropoffEnd
+             elif not (full_PU) and (full_DO):
+                 print "pick up never full, drop off full somewhere"
+                 tmpDO = capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+                 if tmpDO == URIDs[i].DropoffEnd:
+                     print "not enough time for drop off"
+                     URIDs[i].PickupInsert, URIDs[i].DropoffInsert = af.np.nan, af.np.nan
+                 elif tmpDO < URIDs[i].DropoffEnd:
+                     print "returning pick up and drop off inserts, pick up never full "
+                     URIDs[i].PickupInsert, URIDs[i].DropoffInsert = URIDs[i].PickupStart, capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+             elif not full_PU and not full_DO:
+                     print "entire window available!"
+                     URIDs[i].PickupInsert, URIDs[i].DropoffInsert = URIDs[i].PickupStart, URIDs[i].DropoffEnd
+                 
+        if URIDs[i].DropoffStart > URIDs[i].PickupEnd:
+            if full:
+                # URID.PickupInsert, URID.DropoffInsert
+                URIDs[i].PickupInsert, URIDs[i].DropoffInsert =  af.np.nan, af.np.nan 
+            elif not full:
+                if af.np.isnan(capacity_obj.checkWindow(URIDs[i],PickupWindow,1,-1)):
+                    URIDs[i].PickupInsert, URIDs[i].DropoffInsert = af.np.nan, af.np.nan
+                else:
+                    URIDs[i].PickupInsert, URIDs[i].DropoffInsert = capacity_obj.checkWindow(URIDs[i], PickupWindow,1,-1), capacity_obj.checkWindow(URIDs[i], DropoffWindow,-1,0)
+
+        # IF THERE'S ROOM: TEST FEASIBILITY
+        if not af.np.isnan(URIDs[i].PickupInsert):
+            URIDs[i].PickupStart = URIDs[i].PickupInsert
+            URIDs[i].DropoffStart = URIDs[i].DropoffInsert
+        
+            runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
+            print('Testing feasibility for run ' + run)
+            brokenwindows_dict =af.insertFeasibility(runSchedule, URIDs[i])
+            if not brokenwindows_dict:
+                print('Run {0} infeasible without moving the Activity 16 row.'.format(run))
+            else:
+                insert_stats.append(brokenwindows_dict)
 
     #ORDER buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
     ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
@@ -106,18 +169,18 @@ for i in range(len(URIDs)):
     best_buses.append(ordered_inserts[0]['RunID'])
 
     #CALCULATE taxi cost
-    taxi_costs.append(af.taxi(URIDs[i].PickUpCoords.LAT, URIDs[i].PickUpCoords.LON,
-        URIDs[i].DropOffCoords.LAT, URIDs[i].DropOffCoords.LON, af.wheelchair_present(URIDs[i])))
+    taxi_costs.append(af.taxi(URIDs[i].PickUpCoords[0], URIDs[i].PickUpCoords[1],
+        URIDs[i].DropOffCoords[0], URIDs[i].DropOffCoords[1], af.wheelchair_present(URIDs[i])))
 
     #WRITE information about best insertions to text file
     af.write_insert_data(URIDs[i], ordered_inserts[0:3],
-        path_to_outdir, taxi_cost)
+        path_to_outdir, taxi_costs[i])
     
     #UPDATE whole day's schedule:
-    fullSchedule_windows = af.day_schedule_Update(fullSchedule_windows, ordered_inserts[0], URIDs[i])
+    fullSchedule_windows = af.day_schedule_Update(data = fullSchedule_windows, top_Feasibility = ordered_inserts[0], URID = URIDs[i])
     
     #SAVE just the updated run for each URID
-    fullSchedule_windows[fullSchedule_windows['Run'] == ordered_inserts[0]['RunID']].to_csv(af.os.path.join(path_to_outdir, str(str(int(URID.BookingId))+'_schedule.csv')), index = False)
+    fullSchedule_windows[fullSchedule_windows['Run'] == ordered_inserts[0]['RunID']].to_csv(af.os.path.join(path_to_outdir, str(str(int(URIDs[i].BookingId))+'_schedule.csv')), index = False)
     
 
 
@@ -132,6 +195,5 @@ pref_opt.to_csv(af.os.path.join(path_to_outdir, 'preferred_costs.csv'), index = 
 #WRITE whole day's new schedule
 if case == 'BROKEN_RUN':
     fullSchedule_windows = fullSchedule_windows[fullSchedule_windows['Run'] != broken_Run]
-
-fullSchedule_windows.to_csv(af.os.path.join(path_to_outdir,'newSchedule.csv'), index = False)
+fullSchedule_windows.to_csv(af.os.path.join(path_to_outdir,'ALL_HANDLED_new_schedule.csv'), index = False)
     
