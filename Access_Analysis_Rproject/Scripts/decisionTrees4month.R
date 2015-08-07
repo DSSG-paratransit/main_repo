@@ -93,6 +93,6 @@ print(fit$cptable[,'xerror'])
 pfit<- prune(fit, cp=   fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"])
 
 plot(pfit, uniform=TRUE, 
-     main="Pruned Classification Tree for Kyphosis")
+     main="Pruned Classification Tree for Ugly Rides")
 text(pfit, use.n=TRUE, all=TRUE, cex=.8)
 
