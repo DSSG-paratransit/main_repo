@@ -81,11 +81,11 @@ treeData$ClientCost <- scale(treeData$ClientCost)
 treeData$TimeOfDay <- treeData$TimeOfDay-min(treeData$TimeOfDay)
 treeData$OnCity <- as.factor(treeData$OnCity)
 treeData$OffCity <- as.factor(treeData$OffCity)
-treeData <- treeData[!is.na(treeData$ClientCost),]
+treeData <- treeData[!is.na(treeData$Ugly),]
 
 # grow tree 
-fit <- rpart(treeData$Ugly ~ treeData$OnCity + treeData$OffCity + treeData$TimeOfDay+ treeData$Wday,
-             method="anova", data=treeData)
+fit <- rpart(Ugly ~ OnCity + OffCity + TimeOfDay+ Wday,
+             method="class", data = treeData)
 
 print(fit$cptable[,'xerror'])
 #No results!!! BOOOOOOOOOOO
