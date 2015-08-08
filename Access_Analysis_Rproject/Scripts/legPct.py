@@ -12,7 +12,7 @@ def legPct(busRun, legTime=True, PctTime=True,
     '''
     # to correct for incorrect indexing from splicing data
     busRun.index = range(0, len(busRun))
-    print(len(busRun))
+    # print(len(busRun))
 
     totalTime = runTime(busRun['ETA'])
     
