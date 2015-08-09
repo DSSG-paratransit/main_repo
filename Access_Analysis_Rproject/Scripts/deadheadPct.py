@@ -22,12 +22,12 @@ def deadheadVsCost(schedule):
     with columns [ServiceDate, Run, ETA, NumOn, TotalPass]
     '''
     uniqueDR = schedule[['ServiceDate', 'Run']].drop_duplicates()
+    toDrop = []
     print(uniqueDR)
     numOfRuns = len(uniqueDR)
     deadhead = []
     cost = []
     loopcount = 0
-    logString = ''
 
     # get deadhead pct for each Date/Run pair
     for row in uniqueDR.iterrows():
@@ -41,6 +41,7 @@ def deadheadVsCost(schedule):
             deadhead.append(deadheadPct(busRun[['ETA', 'TotalPass']]))
         else:
             print 'warning! run ' + str(row[1].Run) + ' on ' + str(row[1].ServiceDate) + ' has no passengers.'
+            toDrop.append([row[1].Run, row[1].ServiceDate])
         
         loopcount = loopcount + 1
         os.system(['clear', 'cls'][os.name == 'nt'])
@@ -51,6 +52,11 @@ def deadheadVsCost(schedule):
     print cost
     print deadhead
 
+    # remove rows with bad data
+    for runDate in toDrop:
+        uniqueDR[(uniqueDR.ServiceDate != runDate[1]) & (uniqueDR.Run != runDate[0])]
+
+    # write results to file
     cost = np.asarray(cost)
     deadhead = np.asarray(deadhead)
     uniqueDR['CostProxy'] = cost
