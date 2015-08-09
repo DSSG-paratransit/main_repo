@@ -33,9 +33,9 @@ print uniqueDR
 print 'Dropping rows...'
 dontDrop = uniqueDR.apply(lambda x: findZeroes(x, len(uniqueDR)), axis = 1)
 dontDrop.columns = ['values']
-print(dontDrop.values) # debug
+# print(dontDrop.values) # debug
 columns = dontDrop[dontDrop.values].index.values
-print(columns) # debug
+# print(columns) # debug
 uniqueDR.drop(columns,1,inplace=True)
 uniqueDR.reset_index(inplace=True)
 

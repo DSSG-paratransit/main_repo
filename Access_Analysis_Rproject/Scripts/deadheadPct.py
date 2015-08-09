@@ -22,7 +22,7 @@ def deadheadVsCost(schedule):
     with columns [ServiceDate, Run, ETA, NumOn, TotalPass]
     '''
     uniqueDR = schedule[['ServiceDate', 'Run']].drop_duplicates()
-    toDrop = []
+    toKeep = []
     print(uniqueDR)
     numOfRuns = len(uniqueDR)
     deadhead = []
@@ -39,9 +39,11 @@ def deadheadVsCost(schedule):
         # approximates average cost per boarding
             cost.append(float(runTime(busRun['ETA'])) / totalPass) 
             deadhead.append(deadheadPct(busRun[['ETA', 'TotalPass']]))
+            toKeep.append(True)
         else:
             print 'warning! run ' + str(row[1].Run) + ' on ' + str(row[1].ServiceDate) + ' has no passengers.'
-            toDrop.append([row[1].Run, row[1].ServiceDate])
+            toKeep.append([row[1].Run, row[1].ServiceDate])
+            toKeep.append(False)
         
         loopcount = loopcount + 1
         os.system(['clear', 'cls'][os.name == 'nt'])
@@ -53,8 +55,7 @@ def deadheadVsCost(schedule):
     print deadhead
 
     # remove rows with bad data
-    for runDate in toDrop:
-        uniqueDR[(uniqueDR.ServiceDate != runDate[1]) & (uniqueDR.Run != runDate[0])]
+    uniqueDR[toKeep]
 
     # write results to file
     cost = np.asarray(cost)
