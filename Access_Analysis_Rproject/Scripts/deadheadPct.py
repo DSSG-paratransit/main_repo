@@ -42,7 +42,6 @@ def deadheadVsCost(schedule):
             toKeep.append(True)
         else:
             print 'warning! run ' + str(row[1].Run) + ' on ' + str(row[1].ServiceDate) + ' has no passengers.'
-            toKeep.append([row[1].Run, row[1].ServiceDate])
             toKeep.append(False)
         
         loopcount = loopcount + 1
