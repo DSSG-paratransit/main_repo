@@ -87,7 +87,7 @@ treeData <- treeData[!is.na(treeData$Ugly),]
 fit <- rpart(Ugly ~ OnCity + OffCity + TimeOfDay+ Wday,
              method="class", data = treeData)
 
-print(fit$cptable[,'xerror'])
+print(fit$cptable[,'rel error'])
 #No results!!! BOOOOOOOOOOO
 
 pfit<- prune(fit, cp=   fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"])

@@ -71,7 +71,7 @@ if type(fS_w_copy.index[0]) != int:
 if case == 'BROKEN_RUN':
     URIDs = af.get_URID_Bus(fullSchedule_windows, broken_Run, resched_init_time)
 else:
-    URIDs = af.get_URID_BookingIds(individual_requests)
+    URIDs = af.get_URID_BookingIds(fullSchedule_windows, individual_requests)
 
 # for each URID we find the bus runs to check through a radius elimination.
 # for each URID for each run we then want to check the capacity in the given time
@@ -187,7 +187,7 @@ for i in range(len(URIDs)):
       fullSchedule_windows[fullSchedule_windows['Run'] == ordered_inserts[0]['RunID']].to_csv(af.os.path.join(path_to_outdir, str(str(int(URIDs[i].BookingId))+'_schedule.csv')), index = False)
       
     else:
-      delay_costs.append(40000)
+      delay_costs.append(400000)
       taxi_costs.append(af.taxi(URIDs[i].PickUpCoords[0], URIDs[i].PickUpCoords[1],
           URIDs[i].DropOffCoords[0], URIDs[i].DropOffCoords[1], af.wheelchair_present(URIDs[i])))
       best_buses.append('NA')
@@ -198,7 +198,7 @@ if case == 'BROKEN_RUN':
 else:
     nrun_cost = None
 pref_opt = af.preferred_options(URIDs, best_buses, delay_costs, taxi_costs, nrun_cost)
-pref_opt.to_csv(af.os.path.join(path_to_outdir, 'preferred_costs.csv'), index = False)
+pref_opt.to_csv(af.os.path.join(path_to_outdir, 'preferred_options.csv'), index = False)
 
 #WRITE whole day's new schedule
 if case == 'BROKEN_RUN':

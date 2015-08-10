@@ -40,7 +40,12 @@ def radius_Elimination(data, URID, radius):
         if(dist < radius):
             okBuses.append(overlap_data.Run.iloc[k])
 
-    return list(set(okBuses))
+    ret = list(set(okBuses))
+    if len(ret) > 30:
+        radius -= 1
+        ret = radius_Elimination(data, URID, radius)
+
+    return ret
 
 
 

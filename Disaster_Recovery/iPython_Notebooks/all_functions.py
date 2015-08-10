@@ -50,6 +50,11 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
         if re.search("streaming_data/Schedules_"+ time.strftime('%Y%m%d'),key.name.encode('ascii')):
             file_ls.append(key.name.encode('ascii'))
 
+    if not file_ls:
+        print('There are no files from '+ str(time.strftime('%Y/%m/%d'))+ '!')
+        return -1
+        quit()
+
     #select relevant streaming_data file:
     data_key = bucket.get_key(file_ls[-1])
     move_to_me = 'real_time_data.csv'
@@ -402,7 +407,13 @@ def radius_Elimination(data, URID, radius):
         if(dist < radius):
             okBuses.append(overlap_data.Run.iloc[k])
 
-    return list(set(okBuses))
+        ret = list(set(okBuses))
+
+    if len(ret) > 30:
+        radius -= 1
+        ret = radius_Elimination(data, URID, radius)
+
+    return ret
 
 
 def get_busRuns(data, Run, URID):
