@@ -1,7 +1,3 @@
-1. Set up a new branch and put code into github
-2. Do input form
-3. Do Preferred Options output
-4. Put dummy links into Preferred options
 5. Look at code to see how to refactor
    a. Options class: bus/taxi, busid (if bus), cost
       - has public attributes for busid, taxi, cost

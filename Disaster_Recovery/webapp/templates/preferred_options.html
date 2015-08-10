@@ -10,14 +10,17 @@
 {% endif %}
 
 <table border="1">
-  {% for header in headers %}
-    <th>{{ header }}</th>
-  {% endfor %}
+    <th>Booking ID</th>
+    <th>Lowest Cost Option</th>
   {% for n in row_range %}
     <tr>
     {% for fld in data_rows[n] %}
       <td>
-        <a href="http:/link/{{ parameters[n] }}/xx"> {{ fld }} </a>
+      {% if n < last_data_row %}
+        <a href="http:/link/{{ n }}"> {{ fld }} </a>
+      {% else %}
+        {{ fld }}
+      {% endif %}
       </td>
 
     {% endfor %}
