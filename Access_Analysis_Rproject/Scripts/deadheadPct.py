@@ -27,6 +27,8 @@ def deadheadVsCost(schedule):
     numOfRuns = len(uniqueDR)
     deadhead = []
     cost = []
+    breakdownDate = []
+    breakdownRun = []
     loopcount = 0
     numDropped = 0
 
@@ -36,9 +38,11 @@ def deadheadVsCost(schedule):
                  (schedule['Run'] == row[1].Run)]
 
         totalPass = sum(busRun.NumOn)
-        if 8 in busRun.Activity:
+        if 8 in busRun.Activity.unique():
             print 'warning! run ' + str(row[1].Run) + ' on ' + str(row[1].ServiceDate) + ' breaks down.'
             toKeep.append(False)
+            breakdownRun.append(row[1].Run)
+            breakdownDate.append(row[1].ServiceDate)
         elif totalPass > 0:
         # approximates average cost per boarding
             cost.append(float(runTime(busRun['ETA'])) / totalPass) 
@@ -67,6 +71,10 @@ def deadheadVsCost(schedule):
     # remove rows with bad data
     uniqueDR = uniqueDR[toKeep]
     print('Number dropped: ' + str(uniqueDRLen - len(uniqueDR)))
+
+    # write breakdowns to file
+    pd.DataFrame({'ServiceDate' : breakdownDate,
+                 'Run' : breakdownRun}).to_csv('../../data/4mo_broken_buses_test.csv')
 
     # write results to file
     cost = np.asarray(cost)
@@ -98,8 +106,8 @@ def main():
     #data.columns.values[24] = 'TotalPass'
     busRun = data[(data.Run == data.Run[0]) & (data.ServiceDate == data.ServiceDate[0])]    
     print str(deadheadPct(busRun)) + '\n'
-    deadheadVsCost(data[['ServiceDate', 'Run', 'Activity', 'ETA', 'NumOn', 'TotalPass']])
-    #[data.ServiceDate == '0015-04-07'] ^insert this before the [ for a single day
+    deadheadVsCost(data[data.ServiceDate == '0015-04-13'][['ServiceDate', 'Run', 'Activity', 'ETA', 'NumOn', 'TotalPass']])
+    #[data.ServiceDate == '0015-04-13'] ^insert this before the [ for a single day
 
 if __name__ == '__main__':
       main()
