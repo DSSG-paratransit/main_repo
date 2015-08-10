@@ -1,22 +1,22 @@
 library(stringi)
 
-#data <- read.csv("../data/UW_Trip_Data_18mo_QC_b.csv", stringsAsFactors=FALSE)
+#data <- read.csv("../data/UW_Trip_Data_18mo_QC_a.csv", stringsAsFactors=FALSE)
 comm_df <- read.csv("../data/communities.csv", stringsAsFactors=FALSE)
 comm_df$replace_str <- tolower(paste(comm_df$neighborhoods,comm_df$places,
                                      comm_df$misspellings,sep=";"))
 comm_df$replace <- stri_split(comm_df$replace_str, fixed=";")
 city_replacements <- list()
 for(i in seq(1,nrow(comm_df))) {
-    replacements <- comm_df$replace[[i]]
-    for(r in replacements) {
-        if(r == "") next
-        # make sure replacement is in expected format
-        stopifnot(grepl("^[a-z][a-z -/]*[a-z]$", r))
-        # make sure we don't have any clashes
-        stopifnot(!(r %in% city_replacements))
-        # construct the dictionary
-        city_replacements[[r]] <- tolower(comm_df[i, "name"])
-    }
+  replacements <- comm_df$replace[[i]]
+  for(r in replacements) {
+    if(r == "") next
+    # make sure replacement is in expected format
+    stopifnot(grepl("^[a-z][a-z -/]*[a-z]$", r))
+    # make sure we don't have any clashes
+    stopifnot(!(r %in% city_replacements))
+    # construct the dictionary
+    city_replacements[[r]] <- tolower(comm_df[i, "name"])
+  }
 }
 # these strings can't be matched to a known community name
 unrecognizable <- c("s", "city")
@@ -24,7 +24,7 @@ for(ustr in unrecognizable) city_replacements[[ustr]] <- ""
 city_replacements <- unlist(city_replacements)
 
 
-city1 <- data[,16]
+city1 <- data$City
 u_city1 <- sort(unique(tolower(stri_trim_both(city1))))
 
 city2 <- tolower(as.character(city1))
