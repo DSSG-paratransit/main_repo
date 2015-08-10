@@ -14,7 +14,7 @@ options(digits = 8)
 
 ################### Initial cleaning step: remove obviously bad rides ############################
 #loading data
-#setwd('./data')
+setwd('../data')
 AD = read.csv("UW_Trip_Data_FullHeaders.csv")
 
 AD_56 = AD[which(AD$ProviderId==5 | AD$ProviderId==6),]
@@ -72,7 +72,7 @@ for (ride in rides){ #iterate over every instance of a route
     
     for (leg in 2:nrow(this_ride)){
       lat = c(this_ride$LAT[leg-1], this_ride$LAT[leg]); lon = c(this_ride$LON[leg-1], this_ride$LON[leg])
-     
+      
     }
     
     if(this_ride$Activity[1]!=4 | this_ride$Activity[nrow(this_ride)]!=3){
@@ -103,14 +103,14 @@ for (ride in rides){ #iterate over every instance of a route
 }
 
 ############ Second cleaning step: consolidate city names, remove runs in excess of 24hrs ####################
-if (!("data" %in% ls())){data = read.csv("UW_Trip_Data_18mo_QC_a.csv", header = F)}
+if (!("data" %in% ls())){data = read.csv("../data/UW_Trip_Data_18mo_QC_a.csv", header = F)}
 
 headers = c("Rownum", "ServiceDate", "Run", "ProviderId", "EvOrder", "EvId", 
             "ReqTime", "SchTime", "ReqLate", "Activity", "ETA", "DwellTime", 
             "StreetNo", "OnStreet", "City", "LON", "LAT", "BookingId", "SchedStatus", "SubtypeAbbr", 
             "FundingsourceId1", "PassOn", "Spaceon", "PassOff", "SpaceOff", "ClientID","MobAids",
             "NumOn", "NumOff", "TotalPass"
-            )
+)
 colnames(data) <- headers
 
 data$ServiceDate <- as.timeDate(as.character(data$ServiceDate))
@@ -119,11 +119,12 @@ dates <- unique(data$ServiceDate)
 runs <- unique(data$Run)
 
 # fix city names. Takes a minute...
-source('../R/canonicalize_city.R')
+source('../Access_Analysis_Rproject/R/canonicalize_city.R')
 
 #overwrite previously QC'ed data for better quality one.
-write.csv(data, file="UW_Trip_Data_18mo_QC_b.csv")
-
+# remove UW_Trip_Data_18mo_QC_a.csv to save space
+write.csv(data, file="../data/UW_Trip_Data_18mo_QC_b.csv")
+system("rm UW_Trip_Data_18mo_QC_a.csv")
 ######################## Third step: get ride meta data ##############################
 ## Get meta_data about each ride. Use for regression later.
 ## saveme table has runID, date, total elapsed time, maximum number of passengers serviced,
@@ -148,7 +149,6 @@ saveme <- saveme[which(saveme$elapsed_time < 86400),]
 
 #Save file. Don't post on Github!!!!
 write.table(x = saveme, file = "UW_Trip_Data_18mo_QC_c.txt", sep = ",")
-
 
 
 
