@@ -74,7 +74,7 @@ def deadheadVsCost(schedule):
 
     # write breakdowns to file
     pd.DataFrame({'ServiceDate' : breakdownDate,
-                 'Run' : breakdownRun}).to_csv('../../data/4mo_broken_buses_test.csv')
+                 'Run' : breakdownRun}).to_csv('../../data/4mo_broken_buses.csv')
 
     # write results to file
     cost = np.asarray(cost)
@@ -82,7 +82,7 @@ def deadheadVsCost(schedule):
     uniqueDR['CostProxy'] = cost
     uniqueDR['PctDeadhead'] = deadhead
     # IMPORTANT: change file name if not 4mo
-    uniqueDR.to_csv('../../data/4mo_deadhead_results_test.csv', index=False)
+    uniqueDR.to_csv('../../data/4mo_deadhead_results.csv', index=False)
 
     # regressions
     results = smf.ols('cost ~ deadhead', data=uniqueDR).fit()
@@ -102,7 +102,7 @@ def deadheadVsCost(schedule):
 
 
 def main():
-    data = pd.read_csv('../../data/UW_Trip_Data_14mo_QC.csv')
+    data = pd.read_csv('../../data/UW_Trip_Data_4mo_QC_capacity.csv')
     #data.columns.values[24] = 'TotalPass'
     busRun = data[(data.Run == data.Run[0]) & (data.ServiceDate == data.ServiceDate[0])]    
     print str(deadheadPct(busRun)) + '\n'
