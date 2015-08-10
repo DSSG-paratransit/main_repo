@@ -1,0 +1,32 @@
+ <html>
+  <body>
+<h1>Preferred Options for Riders</h1>
+
+{% if busid %}
+<p>Bus identifier is {{ busid }} </p>
+{% endif %}
+{% if bookingid %}
+<p> Booking identifier is {{ bookingid }} </p>
+{% endif %}
+
+<table border="1">
+  {% for header in headers %}
+    <th>{{ header }}</th>
+  {% endfor %}
+  {% for n in row_range %}
+    <tr>
+    {% for fld in data_rows[n] %}
+      <td>
+        <a href="http:/link/{{ parameters[n] }}/xx"> {{ fld }} </a>
+      </td>
+
+    {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
+
+
+</body>
+</html>
+
+
