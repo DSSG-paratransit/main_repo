@@ -91,14 +91,14 @@ def deadheadVsCost(schedule):
     print results.summary()
 
     # plots
-    # plt.hist(deadhead)
-    # plt.savefig('../output/deadheadHist.png')
-    # plt.close()
-    # plt.plot(deadhead, cost, 'ro')
-    # plt.xlabel('Percent Deadhead')
-    # plt.ylabel('Length of Trip / Number of passengers (seconds)')
-    # plt.savefig('../output/figure.png')
-    # plt.close()
+    plt.hist(deadhead)
+    plt.savefig('../output/deadheadHist.png')
+    plt.close()
+    plt.plot(deadhead, cost, 'ro')
+    plt.xlabel('Percent Deadhead')
+    plt.ylabel('Length of Trip / Number of passengers (seconds)')
+    plt.savefig('../output/figure.png')
+    plt.close()
 
 
 def main():
