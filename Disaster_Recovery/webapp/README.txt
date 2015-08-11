@@ -8,3 +8,4 @@ The application uses flask and wtforms. You can install them using:
 To run the application: 
   cd main_repo/Disaster_Recovery/webapp
   python run.py
+  browse to http://localhost:5000/display
