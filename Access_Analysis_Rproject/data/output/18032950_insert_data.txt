@@ -1,6 +1,6 @@
 OPTION 1:
-Put 18032950 onto bus 5037 
-Total lag: -2110 
+Put 18032950 onto bus 5038 
+Total lag: -944 
 Number of exceeded time windows: 0.0 
 Average lateness: nan 
 
@@ -13,8 +13,13 @@ Average lateness: nan
 
 
 OPTION 3:
+<<<<<<< HEAD
 Put 18032950 onto bus 391SEB 
 Total lag: -421 
+=======
+Put 18032950 onto bus 365 
+Total lag: -496 
+>>>>>>> upstream/webapp
 Number of exceeded time windows: 0.0 
 Average lateness: nan 
 

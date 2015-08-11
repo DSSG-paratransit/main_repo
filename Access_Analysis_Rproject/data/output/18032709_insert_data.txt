@@ -1,13 +1,18 @@
 OPTION 1:
-Put 18032709 onto bus 5048 
-Total lag: -3255 
+Put 18032709 onto bus 5037 
+Total lag: -2357 
 Number of exceeded time windows: 0.0 
 Average lateness: nan 
 
 
 OPTION 2:
+<<<<<<< HEAD
 Put 18032709 onto bus 5037 
 Total lag: -2357 
+=======
+Put 18032709 onto bus 311 
+Total lag: -2091 
+>>>>>>> upstream/webapp
 Number of exceeded time windows: 0.0 
 Average lateness: nan 
 

@@ -197,13 +197,14 @@ class TimeWindowsCapacity():
 
         return sum([allcols_On[i].digit for i in range(len(allcols_On))]), sum([allcols_Off[i].digit for i in range(len(allcols_Off))])
 
-    def add_Capacity(self, busDateCol=False, wc=True):
+    def add_Capacity(self, busDateCol=False, wc=True, update=False):
 
         """
 
         Args:
         busDateCol (bool): default False, make True if the dataframe includes different service dates as well as bus runs
         wc (bool): default True, make False if doing am capacity 
+        update (bool): default False, make True if updating schedule with newly inserted URID
 
         Returns:
         original dataframe with WC and AM columns added 
@@ -213,15 +214,20 @@ class TimeWindowsCapacity():
         no_shows = np.where(self.data['SchedStatus'] != 1.)
         self.data['SpaceOn'].iloc[no_shows] = np.NAN
         self.data['SpaceOff'].iloc[no_shows] = np.NAN
-
-        self.data['wcOn'], self.data['wcOff'] = self.create_OnOffcols()
-        self.data['amOn'], self.data['amOff'] = self.create_OnOffcols(wc=False)
-        self.data['wcCapacity'] = ""
-        self.data['amCapacity'] = ""
+        
+        if not update: 
+            self.data['wcOn'], self.data['wcOff'] = self.create_OnOffcols()
+            self.data['amOn'], self.data['amOff'] = self.create_OnOffcols(wc=False)
+            self.data['wcCapacity'] = ""
+            self.data['amCapacity'] = ""
+        elif update: 
+            self.data['wcCapacity'] = ""
+            self.data['amCapacity'] = ""
 
 
         if busDateCol:
-            zipped = np.unique(zip(self.data['ServiceDate'],self.data['Run']))
+            unique_combos = self.data.drop_duplicates(['ServiceDate', 'Run'])
+            zipped = zip(unique_combos)
             for i in range(len(zipped)):
                 this_run = self.data[(self.data['Run'] == zipped[i][1]) & (self.data['ServiceDate'] == zipped[i][0])]
                 on_wc = np.array(this_run['wcOn'])
@@ -248,7 +254,7 @@ class TimeWindowsCapacity():
 
         return self.data
 
-    def addtoRun_TimeCapacity(self, windows):
+    def addtoRun_TimeCapacity(self, windows, busDateCol=False, update=False):
 
         """
         Args:
@@ -260,7 +266,7 @@ class TimeWindowsCapacity():
         """
         
         data_updated = self.add_TimeWindows(windows)
-        data_updated = self.add_Capacity() 
+        data_updated = self.add_Capacity(busDateCol=False, update=False) 
         return data_updated 
 
 

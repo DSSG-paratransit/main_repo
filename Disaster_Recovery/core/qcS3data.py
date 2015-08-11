@@ -42,7 +42,10 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
     #select relevant streaming_data file: watch out, hopefully the [-1] file isn't zero bytes!
     data_key = bucket.get_key(file_ls[-1])
     move_to_me = 'real_time_data.csv'
+    print('Saving {0} from S3 bucket.'.format(file_ls[-1]))
     data_key.get_contents_to_filename(move_to_me)
+    return -1
+    quit()
 
     #STEP 2: change this file from fixed width formatted to tab delimitted
     data = read_fwf.read('real_time_data.csv')
