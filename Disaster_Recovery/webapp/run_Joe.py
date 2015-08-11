@@ -19,16 +19,13 @@ def preferred_options():
     session['data_rows'] = data_rows
     bookingid = None
     busid = None
-    if request.form.get('bookingid', None) is not None and request.form.get('beginTime',None) is not None:
+    if request.form.get('bookingid', None) is not None:
       bookingid = request.form['bookingid']
-      beginTime = request.form['beginTime']
-      
     elif request.form.get('busid', None) is not None:
       busid = request.form['busid']
     row_range = range(len(data_rows))
     return render_template('preferred_options.html', 
         bookingid = bookingid,
-        beginTime = beginTime,
         busid = busid,
         row_range = row_range,
         data_rows = data_rows, 
