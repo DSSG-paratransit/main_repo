@@ -21,10 +21,8 @@ def preferred_options():
     busid = None
     if request.form.get('bookingid', None) is not None:
       bookingid = request.form['bookingid']
-      is_bus = False
     elif request.form.get('busid', None) is not None:
       busid = request.form['busid']
-      is_bus = True
     row_range = range(len(data_rows))
     return render_template('preferred_options.html', 
         bookingid = bookingid,
@@ -57,6 +55,27 @@ def link(row):
     return render_template('alternative_options.html', 
         bookingid = bookingid,
         )
+
+@app.route("/admin", methods=["GET","POST"])
+def admin():
+  # Displays a table
+  if request.method == 'POST':
+    accesskey = None
+    secretkey = None
+    filename = None
+    if request.form.get('accesskey', None) is not None:
+      accesskey = request.form['accesskey']
+      secretkey = request.form['secretkey']
+    elif request.form.get('file', None) is not None:
+      filename = request.form['file']
+    msg = "accesskey is %s. secret key is %s. file is %s" % (
+        accesskey, secretkey, filename)
+    session['accesskey'] = accesskey
+    session['secretkey'] = secretkey
+    session['file'] = filename
+    return msg
+
+  return render_template('admin.html')
 
 
 if __name__ == "__main__":
