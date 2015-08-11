@@ -17,21 +17,12 @@ from boto.s3.connection import S3Connection
 
 
 def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name = 'qc_streaming.csv'):
-    '''
-    Args:
-    AWS_ACCESS_KEY (str): aws access key
-    AWS_SECRET_KEY (str): aws secret key
-    path_to_data (str): where should S3 data be stored to, locally?
-    qc_file_name (str): what should the qc'ed S3 file be called?
-
-    Returns:
-    QC'ed day's schedule (pd.read_csv(read_me))
 
     '''
-
-    os.chdir(path_to_data)
-
-    #For establishing connection, use access and secret keys sent by Valentina.
+    For establishing connection, use access and secret keys sent by Valentina.
+    '''
+    if os.path.isfile(os.path.join(path_to_data, qc_file_name)):
+        os.remove(os.path.join(path_to_data, qc_file_name))
 
     #STEP 1: Access S3 and download relevant streaming data file
     from boto.s3.connection import S3Connection
@@ -47,26 +38,27 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
     #get list of streaming_data files for today's date
     file_ls = []
     for key in rs:
-        if re.search("streaming_data/Schedules_"+ time.strftime('%Y%m%d'),key.name.encode('ascii')):
+        if re.search('streaming_data/Schedules_'+ time.strftime('%Y%m%d'),key.name.encode('ascii')):
             file_ls.append(key.name.encode('ascii'))
 
     if not file_ls:
         print('There are no files from '+ str(time.strftime('%Y/%m/%d'))+ '!')
         return -1
         quit()
-
-    #select relevant streaming_data file:
+        
+    #select relevant streaming_data file: watch out, hopefully the [-1] file isn't zero bytes!
     data_key = bucket.get_key(file_ls[-1])
-    move_to_me = 'real_time_data.csv'
+    move_to_me = os.path.join(path_to_data,'real_time_data.tsv')
     data_key.get_contents_to_filename(move_to_me)
-
+    print('Saving {0} from S3 bucket.'.format(file_ls[-1]))
 
     #STEP 2: change this file from fixed width formatted to tab delimitted
-    # NOTE: datatypes are screwed up.
-    data = read_fwf.read('real_time_data.csv')
+    data = read_fwf.read(move_to_me)
+    print('Successfully converted fwf file.')
 
     #STEP 3: QC this file a la the R QCing script
-    data56 = data.loc[(data.ProviderId == '5') | (data.ProviderId == '6')]
+
+    data56 = data.loc[(data.ProviderId == 5.) | (data.ProviderId == 6.)]
     rides = data56.Run.unique()
     data56.loc[:,'Activity'] = data56.loc[:,'Activity'].astype('int')
 
@@ -79,33 +71,43 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
 
     #Write the cleaned up data:
     ctr = 0
+    qc_file_name = os.path.join(path_to_data, qc_file_name)
     for ride in rides:
         temp_ride = data56.loc[data56.Run == ride]
-        temp_ride.drop(temp_ride.columns[0], axis = 1)
+        if 'ServiceDate' in temp_ride.columns:
+            temp_ride = temp_ride.drop('ServiceDate', axis = 1)
         
         flag = 1 #1 == good, 0 == eliminate.
         lats = temp_ride.LAT; lons = temp_ride.LON
         #eliminate runs from roster that have bad lat/lon data:
         if(any(lats < minlat) | any(lats>maxlat) | any(lons<minlon) | any(lons > maxlon)):
             flag = 0
+        #eliminate runs with just 2 rows of data:
+        if temp_ride.shape[0] == 2:
+            flag = 0
         #eliminate runs that don't move
         if(all(lats == lats.iloc[0]) | all(lons == lons.iloc[0])):
             flag = 0
         #eliminate runs that don't leave a garage and return to a garage
-        if (temp_ride.Activity.iloc[0] != 4.) | (temp_ride.Activity.iloc[-1] != 3.):
+        if (temp_ride.Activity.iloc[0] != 4) | (temp_ride.Activity.iloc[-1] != 3):
             flag = 0
-            
-        temp_ride = temp_ride.drop(temp_ride.columns[0], axis = 1)
-        
-        if (ctr == 0) & (flag == 1):
-            temp_ride.to_csv(qc_file_name, mode = 'a', header = True, index = False)
-            ctr +=1
+
         if (ctr != 0) & (flag == 1) :
             temp_ride.to_csv(qc_file_name, mode = 'a', header = False, index = False)
+        if (ctr == 0) & (flag == 1):
+            temp_ride.to_csv(qc_file_name, mode = 'a', header = True, index = False)
+            ctr = 1
 
-    read_me = path_to_data+qc_file_name
-
-    return pd.read_csv(read_me)
+    read_me = os.path.join(path_to_data, qc_file_name)
+    ret = pd.read_csv(read_me)
+    
+    #resolve indexing issues if index column is type timedate, or something else
+    if not set(ret.index)==set(range(0, ret.shape[0])):
+        ret.index = range(0, ret.shape[0])
+    
+    return ret
+    
+    return ret
 
 '''
 @params: takes a string containing 24h time in HH:MM format 
@@ -269,7 +271,7 @@ def get_URID_BookingIds(data, BookingId_list):
     for ID in diffIDs:
         my_info = data[data["BookingId"]==ID]
         temp = URID(BookingId = ID,
-                Run = my_info['Run'].ix[0,],
+                Run = my_info['Run'].as_matrix()[0],
                 PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
                 DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[1,:],
                 PickupStart = int(my_info[["PickupStart"]].as_matrix()[0,:]),
@@ -382,10 +384,6 @@ def radius_Elimination(data, URID, radius):
 
         RETURN: LIST of runs within radius-miles of URID.'''
 
-    #first, resolve indexing issues if index column is type timedate
-    if type(data.index[0]) != int:
-        data.index = range(0, data.shape[0])
-
     #obviously, broken bus can't be in the list of nearby buses.
     data_copy = data[data.Run != URID.Run]
 
@@ -417,31 +415,35 @@ def radius_Elimination(data, URID, radius):
 
 
 def get_busRuns(data, Run, URID):
-      '''
-      data (pd.DataFrame): output from add_Time_Windows.py
-      Run (str): Run number
-      URID (class.URID): URID class object
-      resched_init_time (int): number of seconds in day we allow first rescheduling
-      RETURN: busRun pandas.dataframe for specified Run.'''
+    '''
+    data (pd.DataFrame): output from add_Time_Windows.py
+    Run (str): Run number
+    URID (class.URID): URID class object
+    resched_init_time (int): number of seconds in day we allow first rescheduling
+    RETURN: busRun pandas.dataframe for specified Run.'''
 
-      # leave garage (beginning of route index), gas (end of route index)
-      # get all rides between/including leave garage and gas indices.
-      dataSub = data[(data["Run"] == Run)]# & (data['ETA'] >= resched_init_time)]
+    # leave garage (beginning of route index), gas (end of route index)
+    # get all rides between/including leave garage and gas indices.
+    dataSub = data[(data["Run"] == Run)]# & (data['ETA'] >= resched_init_time)]
 
-      # if full busRun or partial
-      if URID is None:
-            #subset only the rides that aren't 6, 16, or 3:
-            leaveIndex = dataSub.index.min()
-      else:
-            leave = dataSub[(dataSub['LAT'] == URID.PickUpCoords[0]) 
-                  & (dataSub['LON'] == URID.PickUpCoords[1]) 
-                  & (dataSub['BookingId'] == URID.BookingId)]
-            leaveIndex = leave.index.min()
+    # if full busRun or partial
+    if URID is None:
+        #subset only the rides that aren't 6, 16, or 3:
+        leaveIndex = dataSub.index.min()
+    else:
+        leave = dataSub[(dataSub['LAT'] == URID.PickUpCoords[0]) 
+              & (dataSub['LON'] == URID.PickUpCoords[1]) 
+              & (dataSub['BookingId'] == URID.BookingId)]
+        leaveIndex = leave.index.min()
 
-      baseIndex = dataSub[(dataSub["Activity"]==6)|(dataSub["Activity"]==16)|(dataSub["Activity"]==3)].index.min()
-      busRun = data.iloc[leaveIndex:baseIndex+1]
+    #find index of run's schedule just before heading back to base, i.e. code 6 or 3.
+    baseIndex = dataSub.index[dataSub.Activity==3][0]
+    if dataSub.Activity.loc[baseIndex-1] == 6:
+        baseIndex -= 1
 
-      return busRun
+    busRun = data.iloc[leaveIndex:(baseIndex+1)]
+
+    return busRun
 
 
 def osrm (URID_location, inbound, outbound):
@@ -463,13 +465,14 @@ def osrm (URID_location, inbound, outbound):
         lat_cord_O = outbound[k, 0]; lon_cord_O = outbound[k, 1]
         lat_cord_I = inbound[k, 0]; lon_cord_I = inbound[k, 1]
         
-        route_url = osrm_url+ "loc=" + str(lat_cord_O) + "," + str(lon_cord_O) + "&loc=" + str(urid_LAT) + "," + str(urid_LON) + "&loc=" + str(lat_cord_I) + "," + str(lon_cord_I) +"&instructions=false"
+        route_url = osrm_url+ "loc=" + str(round(lat_cord_O,6)) + "," + str(round(lon_cord_O,6)) + "&loc=" + str(round(urid_LAT,0)) + "," + str(round(urid_LON, 6)) + "&loc=" + str(round(lat_cord_I,6)) + "," + str(round(lon_cord_I,6)) +"&instructions=false"
         route_requests = requests.get(route_url)
         route_results = route_requests.json()
         if not route_results:
-            print("FOUND NO ROUTE FROM INDEX {0}".format((outbound[k,0], outbound[k,1])))
-            quit()
-        total_times += [route_results[u'route_summary'][u'total_time']]
+            print("FOUND NO ROUTE FROM INDEX {0} to URID location".format((outbound[k,0], outbound[k,1])))
+            total_times += [50000000000]
+        else:
+            total_times += [route_results[u'route_summary'][u'total_time']]
 
     a = np.array([total_times])
     
@@ -558,7 +561,12 @@ def insertFeasibility(Run_Schedule, URID):
 
     outbound = Run_Schedule_Lag.loc[dropoff_outbound]
     outbound = np.column_stack((np.array(outbound.LAT), np.array(outbound.LON)))
-    inbound = Run_Schedule_Lag.loc[dropoff_inbound]
+    print (dropoff_outbound, dropoff_inbound)
+    try:
+        inbound = Run_Schedule_Lag.loc[dropoff_inbound]
+    except KeyError:
+        print(Run_Schedule_Lag)
+        quit()
 
     inbound = np.column_stack((np.array(inbound.LAT), np.array(inbound.LON)))
 
@@ -752,7 +760,7 @@ def day_schedule_Update(data, top_Feasibility, URID):
         put on to new bus from old bus'''
 
     tmp = data.copy()
-    my_rows = data[data['BookingId']==URID.BookingId]
+    my_rows = tmp[tmp['BookingId']==URID.BookingId]
     #make sure we change the RunID of the URID when placed on new bus!
     tmp.ix[my_rows.index[:], 'Run'] = top_Feasibility['RunID']
 
@@ -775,6 +783,8 @@ def day_schedule_Update(data, top_Feasibility, URID):
     run_inserted.ix[pickup_new:dropoff_new, 'ETA'] += top_Feasibility['pickup_lag']
     run_inserted.ix[dropoff_new:, 'ETA']  += top_Feasibility['total_lag']
     new_data.ix[run_inserted.index, 'ETA'] =  run_inserted.ix[:, 'ETA']
+
+    new_data.index = range(0, new_data.shape[0])
 
     return new_data
 

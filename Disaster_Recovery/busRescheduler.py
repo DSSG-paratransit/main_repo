@@ -22,12 +22,11 @@ except IOError:
     result = None
     AWS_ACCESS_KEY = raw_input("Please enter AWS access key: ")
     AWS_SECRET_KEY = raw_input("Please enter AWS secret key: ")
-    path_to_data = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/'
-    path_to_fwf_file = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Python_Scripts/read_fwf.py'
+    path_to_data = '/Users/fineiskid/Desktop/DSSG_ffineis/main_repo/Access_Analysis_Rproject/data/output'
     
     try:
-        fullSchedule = af.s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, path_to_fwf_file, qc_file_name = 'qc_streaming.csv')
-    
+        fullSchedule = af.s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name = 'qc_streaming.csv')
+
     except IOError: #is this the right error if s3_data_acquire fails?
         print('Could not access streaming data!')
         quit()
@@ -63,14 +62,22 @@ if not af.os.path.isdir(path_to_outdir):
 sched_obj = af.aTWC.TimeWindowsCapacity(fullSchedule)
 fullSchedule_windows = sched_obj.addtoRun_TimeCapacity(1800.)
 fS_w_copy = fullSchedule_windows.copy()
-if type(fS_w_copy.index[0]) != int:
-    fS_w_copy.index = range(0, fS_w_copy.shape[0])
 
-# this gets us all the URIDs for the broken run given the initial rescheduling time
-# OR it will get us URIDs given specific bookingIds to be rescheduled
+#this gets us all the URIDs for the broken run given the initial rescheduling time
+#OR it will get us URIDs given specific bookingIds to be rescheduled
 if case == 'BROKEN_RUN':
-    URIDs = af.get_URID_Bus(fullSchedule_windows, broken_Run, resched_init_time)
+    if broken_Run not in list(set(fullSchedule_windows.Run.tolist())):
+        print('Run number is not scheduled for today!')
+        quit()
+
+    else:
+        URIDs = af.get_URID_Bus(fullSchedule_windows, broken_Run, resched_init_time) 
+
 else:
+    for i in range(len(individual_requests)):
+        if individual_requests[i] not in list(set(fullSchedule_windows.BookingId.tolist())):
+            print('You have entered BookingIds not present in the schedule!')
+            quit()
     URIDs = af.get_URID_BookingIds(fullSchedule_windows, individual_requests)
 
 # for each URID we find the bus runs to check through a radius elimination.
@@ -167,6 +174,15 @@ for i in range(len(URIDs)):
     if insert_stats:
       #ORDER buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
       ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
+
+      popme = []
+      for k in range(len(ordered_inserts)):
+        if ordered_inserts[k]['RunID']==broken_Run:
+          popme.append(k)
+
+      ordered_inserts.pop(popme)
+
+
       delay_costs.append(ordered_inserts[0]['total_lag'][0]*(48.09/3600)) #total dollars
       best_buses.append(ordered_inserts[0]['RunID'])
 
