@@ -17,12 +17,14 @@ def preferred_options():
   if request.method == 'POST':
     data_rows = read_csv() #move this to the waiting page
     session['data_rows'] = data_rows
-    bookingid = None
-    busid = None
+    session['bookingid'] = None
+    session['busid'] = None
     if request.form.get('bookingid', None) is not None:
       bookingid = request.form['bookingid']
+      session['bookingid'] = bookingid
     elif request.form.get('busid', None) is not None:
       busid = request.form['busid']
+      session['busid'] = busid
 
     #check to make sure we have aws keys or a filename for demo data?
     #if session['accesskey'] and session['file'] is None:
@@ -78,9 +80,9 @@ def link(row):
 def admin():
   # Displays a table
   if request.method == 'POST':
-    accesskey = None
-    secretkey = None
-    filename = None
+    session['accesskey'] = None
+    session['secretkey'] = None
+    session['filename'] = None
     if request.form.get('accesskey', None) is not None:
       accesskey = request.form['accesskey']
       secretkey = request.form['secretkey']
