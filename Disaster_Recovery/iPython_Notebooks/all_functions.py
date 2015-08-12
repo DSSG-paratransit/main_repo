@@ -8,6 +8,7 @@ import requests
 import sys
 import re
 import time
+import datetime
 import read_fwf
 import itertools
 import operator
@@ -113,7 +114,11 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
 @returns: the passed in value converted to seconds
 '''
 def humanToSeconds(hhmm):
+    '''
+    hhmm (str): HH:MM (time of day in 24hr format)
 
+    returns: seconds (int) if no ValueError
+    '''
     # Invalid format
     format = re.compile('\d\d:\d\d')
     if(format.match(hhmm) is None):

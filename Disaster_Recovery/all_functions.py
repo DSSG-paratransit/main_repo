@@ -8,6 +8,7 @@ import requests
 import sys
 import re
 import time
+import datetime
 import read_fwf
 import itertools
 import operator
