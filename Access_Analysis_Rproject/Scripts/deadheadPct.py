@@ -45,9 +45,10 @@ def deadheadVsCost(schedule):
             breakdownDate.append(row[1].ServiceDate)
         elif totalPass > 0:
         # approximates average cost per boarding
-            icost = float(runTime(busRun['ETA'])) / totalPass
-            if icost < 14400: # 4 hours
-                icost = 14400.0
+            time = float(runTime(busRun['ETA']))
+            if time < 14400: # 4 hours
+                time = 14400.0
+            icost = time / totalPass
             cost.append(icost) 
             deadhead.append(deadheadPct(busRun[['ETA', 'TotalPass']]))
             toKeep.append(True)
