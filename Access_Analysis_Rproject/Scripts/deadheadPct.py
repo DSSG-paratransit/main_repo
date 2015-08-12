@@ -45,7 +45,10 @@ def deadheadVsCost(schedule):
             breakdownDate.append(row[1].ServiceDate)
         elif totalPass > 0:
         # approximates average cost per boarding
-            cost.append(float(runTime(busRun['ETA'])) / totalPass) 
+            icost = float(runTime(busRun['ETA'])) / totalPass
+            if icost < 14400: # 4 hours
+                icost = 14400.0
+            cost.append(icost) 
             deadhead.append(deadheadPct(busRun[['ETA', 'TotalPass']]))
             toKeep.append(True)
         else:
@@ -73,8 +76,8 @@ def deadheadVsCost(schedule):
     print('Number dropped: ' + str(uniqueDRLen - len(uniqueDR)))
 
     # write breakdowns to file
-    pd.DataFrame({'ServiceDate' : breakdownDate,
-                 'Run' : breakdownRun}).to_csv('../../data/4mo_broken_buses.csv')
+    #pd.DataFrame({'ServiceDate' : breakdownDate,
+                 #'Run' : breakdownRun}).to_csv('../../data/4mo_broken_buses.csv')
 
     # write results to file
     cost = np.asarray(cost)
@@ -82,7 +85,7 @@ def deadheadVsCost(schedule):
     uniqueDR['CostProxy'] = cost
     uniqueDR['PctDeadhead'] = deadhead
     # IMPORTANT: change file name if not 4mo
-    uniqueDR.to_csv('../../data/4mo_deadhead_results.csv', index=False)
+    uniqueDR.to_csv('../../data/4mo_deadhead_cost_adjusted_results.csv', index=False)
 
     # regressions
     results = smf.ols('cost ~ deadhead', data=uniqueDR).fit()
