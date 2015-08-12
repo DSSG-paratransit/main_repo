@@ -1,0 +1,22 @@
+OPTION 1:
+Put 18027444 onto bus 365 
+Total lag: -2372 
+Number of exceeded time windows: 0.0 
+Average lateness: nan 
+
+
+OPTION 2:
+Put 18027444 onto bus 590TRN 
+Total lag: -1541 
+Number of exceeded time windows: 2.0 
+Average lateness: 1121.5 
+
+
+OPTION 3:
+Put 18027444 onto bus 6046 
+Total lag: -1500 
+Number of exceeded time windows: 0.0 
+Average lateness: nan 
+
+
+Taxi cost: 29.05

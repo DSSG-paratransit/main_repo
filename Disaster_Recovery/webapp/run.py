@@ -1,5 +1,5 @@
-from flask import Flask, request, render_template, session, make_response
-#from wtforms import Form, BooleanField, TextField, validators
+from flask import Flask, request, redirect, url_for
+from flask import render_template, session, make_response
 import csv
 
 app = Flask(__name__)
@@ -19,22 +19,38 @@ def preferred_options():
     session['data_rows'] = data_rows
     bookingid = None
     busid = None
-    if request.form.get('bookingid', None) is not None:
+    if request.form.get('bookingid', None) is not None and request.form.get('beginTime',None) is not None:
       bookingid = request.form['bookingid']
-    elif request.form.get('busid', None) is not None:
+      beginTime = request.form['beginTime']
+      session['bookingid'] = bookingid
+      session['beginTime'] = beginTime
+      
+    elif request.form.get('busid', None) is not None and request.form.get('beginTime',None)is not None:
       busid = request.form['busid']
+      beginTime = request.form['beginTime']
+      session['busid'] = busid
+      session['beginTime'] = beginTime
     row_range = range(len(data_rows))
-    return render_template('preferred_options.html', 
-        bookingid = bookingid,
-        busid = busid,
-        row_range = row_range,
-        data_rows = data_rows, 
-        last_data_row = len(data_rows) - 1,
-        )
+    session['row_range'] = row_range
+    # print(url_for('rescheduling'))
 
-  return render_template('request.html')
+    return redirect(url_for('rescheduling'))
+    
+    # return render_template('rescheduling.html')
+    # return render_template('preferred.html')
+    #    bookingid = bookingid,
+    #    beginTime = beginTime,
+    #    busid = busid,
+    #    row_range = row_range,
+    #    data_rows = data_rows, 
+    #    last_data_row = len(data_rows) - 1,
+    #    )
+
+  return render_template('request.html') 
+  
 
 def read_csv(filename='data/preferred_options.csv'):
+  
   # Reads data from the csv file
   # Return - data_rows: list of rows corresponding to the headers
   with open(filename, 'rb') as csvfile:
@@ -47,6 +63,36 @@ def read_csv(filename='data/preferred_options.csv'):
       else:
         data_rows.append(row)
   return data_rows
+  
+@app.route("/rescheduling",methods = ["GET","POST"])
+def rescheduling():
+
+
+    ### variables to use
+    # session['bookingid']
+    # session['accesskey']
+    # session['secretkey']
+    # session['file']
+    
+    # function input(AWS keys, runID, path,bookingID)
+    # call code in a subprocess
+    # subprocess.call("python_script.py",arguments)
+    # return output
+    # if finished 
+    data_rows = read_csv('data/preferred_options.csv')
+    session['data_rows'] = data_rows
+    row_range = range(len(data_rows))
+    
+    print(session['bookingid'])
+    
+    time.sleep(3)
+    return(render_template("preferred_options.html",    
+        bookingid = session['bookingid'],
+        beginTime = session['beginTime'],
+        busid = session['busid'],
+        row_range = session['row_range'],
+        data_rows = session['data_rows'], 
+        last_data_row = len(session['data_rows']) - 1,))
   
 
 @app.route("/link/<row>", methods=["GET"])
