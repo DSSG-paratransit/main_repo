@@ -1,7 +1,15 @@
 import all_functions as af
 
 
-def busReschedule_run(schedule_filename, accesskey, secretkey, bookingid, broken_run, windows = 1800.,resched_init_time = None, path_to_outdir = af.os.join.path(af.os.getcwd(),'data'), radius = 3.):
+def busReschedule_run(schedule_filename,
+                      accesskey,
+                      secretkey,
+                      bookingid,
+                      broken_run,
+                      windows = 1800.,
+                      resched_init_time = None,
+                      path_to_outdir = af.os.path.join(af.os.getcwd(),'data'),
+                      radius = 3.):
 
   '''
       schedule_filename (str): name of file to be used if you want to test a DEMO file. Must be a single day, QC'ed file.
@@ -18,33 +26,29 @@ def busReschedule_run(schedule_filename, accesskey, secretkey, bookingid, broken
       '''
     flag = 400 #400 is good, 200 is bad.
 
+    if not af.os.path.exists(path_to_outdir):
+        path_to_outdir = af.os.join.path(af.os.getcwd(),'data')
+
     #get data
     if schedule_filename is not None:
         if af.os.path.isfile(schedule_filename):
             fullSchedule = af.pd.DataFrame.from_csv(schedule_filename, header=0, sep=',')
-
-    else:
-        #grab s3 streaming_data/ file if no file specified
-        print "File does not exist."
+        else:
+            print('File not found!')
+            flag = 200
+            return flag
 
     if accesskey and secretkey is not None:
-        AWS_ACCESS_KEY = raw_input("Please enter AWS access key: ")
-        AWS_SECRET_KEY = raw_input("Please enter AWS secret key: ")
-        if not af.os.path.exists(path_to_outdir):
-            path_to_outdir = af.os.join.path(af.os.getcwd(),'data')
-
+        #AWS_ACCESS_KEY = raw_input("Please enter AWS access key: ")
+        #AWS_SECRET_KEY = raw_input("Please enter AWS secret key: ")
         try:
             fullSchedule = af.s3_data_acquire(accesskey, secretkey, path_to_outdir, qc_file_name = 'qc_streaming.csv')
-            if fullSchedule == -1:
+            if type(fullSchedule) == int:
               flag = 200
               return flag
 
         except IOError: #is this the right error if s3_data_acquire fails?
             print('Could not access streaming data!')
-            flag = 200
-            return flag
-        except:
-            print('Other error in acquiring streaming_data.')
             flag = 200
             return flag
             
@@ -69,7 +73,9 @@ def busReschedule_run(schedule_filename, accesskey, secretkey, bookingid, broken
             return flag
 
         if resched_init_time is None:
-            resched_init_time = af.humanToSeconds(raw_input('Enter a 24h time in HH:MM format\nfor initial time when buses can be rescheduled: '))
+            t = af.datetime.datetime.now()
+            t = str(t.hour)+':'+str(t.minute)
+            resched_init_time = af.humanToSeconds(t)
 
         URIDs = af.get_URID_Bus(fullSchedule_windows, broken_run, resched_init_time) 
 
@@ -125,7 +131,7 @@ def busReschedule_run(schedule_filename, accesskey, secretkey, bookingid, broken
         #ASSEMBLE and ORDER transit options.
         if insert_stats:
             #ORDER buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
-            ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('total_lag'))
+            ordered_inserts = sorted(insert_stats, key = af.operator.itemgetter('additional_time'))
         
             popme = []
             for k in range(len(ordered_inserts)):
@@ -135,7 +141,7 @@ def busReschedule_run(schedule_filename, accesskey, secretkey, bookingid, broken
                 ordered_inserts.pop(popme)
 
 
-            delay_costs.append(ordered_inserts[0]['total_lag'][0]*(48.09/3600)) #total dollars
+            delay_costs.append(ordered_inserts[0]['additional_time'][0]*(48.09/3600)) #total dollars
             best_buses.append(ordered_inserts[0]['RunID'])
 
             #CALCULATE taxi cost

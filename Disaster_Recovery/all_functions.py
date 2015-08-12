@@ -113,7 +113,11 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
 @returns: the passed in value converted to seconds
 '''
 def humanToSeconds(hhmm):
+    '''
+    hhmm (str): HH:MM (time of day in 24hr format)
 
+    returns: seconds (int) if no ValueError
+    '''
     # Invalid format
     format = re.compile('\d\d:\d\d')
     if(format.match(hhmm) is None):
@@ -508,7 +512,7 @@ def insertFeasibility(Run_Schedule, URID):
     rt_times = sorted(enumerate(time_matrix_pickup), key=operator.itemgetter(1)) #use itemgetter(1) because (0) is index from enumerator!
 
     #smallest round trip travel time, corresponding rows on bus's schedule:
-    best_rt_time = rt_times[0][1]
+    best_rt_time_1 = rt_times[0][1]
     #row indices on Run_Schedule between which to insert:
     leave1 = pickup_inserts["outbound"][rt_times[0][0]] #leave this scheduled node
     comeback1 = pickup_inserts["inbound"][rt_times[0][0]] #come back to this scheduled node
@@ -516,7 +520,7 @@ def insertFeasibility(Run_Schedule, URID):
     dwell = 500
 
     #get total lag time, see if next time window is broken:
-    newETA = Run_Schedule.ETA.loc[leave1] + dwell + best_rt_time
+    newETA = Run_Schedule.ETA.loc[leave1] + dwell + best_rt_time_1
     bound = max(Run_Schedule.PickupEnd.loc[comeback1], Run_Schedule.DropoffEnd.loc[comeback1])
 
     #is the next time window broken?
@@ -577,16 +581,16 @@ def insertFeasibility(Run_Schedule, URID):
     rt_times = sorted(enumerate(np.sum(time_matrix_dropoff, 1)), key=operator.itemgetter(1)) #use itemgetter(1) because (0) is index from enumerator!
 
     #smallest round trip travel time, corresponding rows on bus's schedule:
-    best_rt_time = rt_times[0][1]
+    best_rt_time_2 = rt_times[0][1]
     #rows on Run_Schedule between which to insert:
     leave2 = dropoff_outbound[rt_times[0][0]] #leave this scheduled node
     comeback2 = dropoff_inbound[rt_times[0][0]] #come back to this scheduled node
 
     #get total lag time, see if next time window is broken:
-    newETA = Run_Schedule_Lag.ETA.loc[leave2] + dwell + best_rt_time
+    newETA = Run_Schedule_Lag.ETA.loc[leave2] + dwell + best_rt_time_2
     bound = max(Run_Schedule_Lag.PickupEnd.loc[comeback2], Run_Schedule_Lag.DropoffEnd.loc[comeback2])
     #total lag: lag from pickup, and then difference between lagged eta and eta for coming back from pickup
-    total_lag = newETA - Run_Schedule_Lag.ETA.loc[comeback2] + lag1
+    total_lag = newETA - Run_Schedule.ETA.loc[comeback2]
 
     #count number of broken time windows from dropping off URID:
     dropoff_score = np.zeros(((Run_Schedule_Lag.index.max() - comeback2 + 1),2)) 
@@ -595,8 +599,8 @@ def insertFeasibility(Run_Schedule, URID):
         if (Run_Schedule.Activity.loc[k] not in [0,1]):
             row_ctr += 1
         else:
-            bound = max(Run_Schedule_Lag.PickupEnd.loc[k], Run_Schedule_Lag.DropoffEnd.loc[k])
-            eta_future = Run_Schedule_Lag.ETA.loc[k] + total_lag
+            bound = max(Run_Schedule.PickupEnd.loc[k], Run_Schedule.DropoffEnd.loc[k])
+            eta_future = Run_Schedule.ETA.loc[k] + total_lag
             #0 indicates TW not broken, 1 otherwise.
             dropoff_score[row_ctr, 0] = int(eta_future > bound)
             #if time window is broken, by how much?
@@ -609,7 +613,8 @@ def insertFeasibility(Run_Schedule, URID):
     dropoff_df = pd.DataFrame({"nodes": range(comeback2,Run_Schedule.index.max()+1), "break_TW": dropoff_score[:,0], "late": dropoff_score[:,1]})
     test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
     ret = {"score": test.append(dropoff_df), "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
-               "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1}
+               "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1,
+               'additional_time':(best_rt_time_1+best_rt_time_2+1000)}
 
     return(ret)
 
