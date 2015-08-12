@@ -638,8 +638,13 @@ def insertFeasibility(Run_Schedule, URID):
     dropoff_df = pd.DataFrame({"nodes": range(comeback2,Run_Schedule.index.max()+1), "break_TW": dropoff_score[:,0], "late": dropoff_score[:,1]})
     test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
     score = test.append(dropoff_df)
+
+    new_broken_TW = np.sum(score['breakTW']) - og_break_TW
+    new_lag = np.sum(score['late']) - og_total_lag
+
     ret = {"score": score, "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
-               "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1,
+               "additional_lag" : newlag, 'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1,
+               'addiontal_broken_windows': new_broken_TW,
                'additional_time':(best_rt_time_1+best_rt_time_2+1000)}
 
     return(ret)
