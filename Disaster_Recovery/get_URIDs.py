@@ -111,7 +111,7 @@ def get_URID_BookingIds(data, BookingId_list):
     for ID in diffIDs:
         my_info = data[data["BookingId"]==ID]
         temp = URID(BookingId = ID,
-                Run = my_info['Run'].ix[0,],
+                Run = my_info['Run'].as_matrix()[0],
                 PickUpCoords = my_info[["LAT", "LON"]].as_matrix()[0,:],
                 DropOffCoords = my_info[["LAT", "LON"]].as_matrix()[1,:],
                 PickupStart = int(my_info[["PickupStart"]].as_matrix()[0,:]),
