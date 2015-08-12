@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, session
+from flask import Flask, request, render_template, session, make_response
 #from wtforms import Form, BooleanField, TextField, validators
 import csv
 
@@ -76,6 +76,17 @@ def admin():
     return msg
 
   return render_template('admin.html')
+
+@app.route("/thumbsucker/", methods=["GET","POST"])
+def thumbsucker():
+  session['thumbsucker_count'] = (
+      session.get('thumbsucker_count', 0) + 1)
+  count = str(session['thumbsucker_count'])
+  response = make_response(
+      render_template('thumbsucker.html', count=count))
+  response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+  response.headers['Pragma'] = 'no-cache'
+  return response
 
 
 if __name__ == "__main__":
