@@ -54,10 +54,12 @@ def read(filename):
         
         Note: ('ETA','DwellTime','Activity' are floats as they contain NaNs
                 and cannot be automatically converted to integers)
-    """    
+    """
+    
+    # Note Space On is repeated so it gets a name 'Space On.1'
     
     # creating the widths of each column
-    widths = [12,21,12,12,12,9,12,12,21,255,255,25,25,12,12,12,12,17,51,51,12]
+    widths = [12,21,12,12,12,9,12,12,21,255,255,25,25,12,12,12,12,17,51,51,12,51,51,12,12,12]
     
     # creating colspecs (containing starting and ending point [) of a column)
     cumsum = [sum(widths[:i+1]) for i in range(len(widths))]
@@ -69,14 +71,14 @@ def read(filename):
     
     # reading the file
     try:
-        data = pd.read_fwf(filename,colspecs = colspecs,skiprows = [1], dtype = {'ProviderId': 'str', 'ETA': 'str'})
+        data = pd.read_fwf(filename,colspecs = colspecs,skiprows = [1])
     except(IOError):
         print('This file does not exist. Please, check the filename or the directory.')
         sys.exit()
     
     # spectifying explicitly the data types
     data = data.astype('object')
-    numeric_list = ['LON','LAT','DwellTime']
+    numeric_list = ['LON','LAT','ETA','DwellTime','ReqLate','SchTime']
     data[numeric_list] = data[numeric_list].astype('float')
     return(data)
 
