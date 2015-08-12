@@ -15,7 +15,7 @@ def register():
 def preferred_options():
   # Displays a table
   if request.method == 'POST':
-    data_rows = read_csv()
+    data_rows = read_csv() #move this to the waiting page
     session['data_rows'] = data_rows
     bookingid = None
     busid = None
@@ -23,8 +23,15 @@ def preferred_options():
       bookingid = request.form['bookingid']
     elif request.form.get('busid', None) is not None:
       busid = request.form['busid']
+
+    #check to make sure we have aws keys or a filename for demo data?
+    #if session['accesskey'] and session['file'] is None:
+    #   return render_template('admin.html')?
+    #start waiting page
+    #busRescheduler_run(filename, accesskey, secretkey, ...)
+
     row_range = range(len(data_rows))
-    return render_template('preferred_options.html', 
+    return render_template('preferred_options.html', #are bookingid, busid, etc found in request.form.get('bookingid'), etc?
         bookingid = bookingid,
         busid = busid,
         row_range = row_range,
@@ -33,6 +40,17 @@ def preferred_options():
         )
 
   return render_template('request.html')
+
+@app.route("/waiting", methods = ['GET', 'POST'])
+def execute():
+  
+
+
+
+
+
+
+
 
 def read_csv(filename='data/preferred_options.csv'):
   # Reads data from the csv file
@@ -70,7 +88,7 @@ def admin():
       filename = request.form['file']
     msg = "accesskey is %s. secret key is %s. file is %s" % (
         accesskey, secretkey, filename)
-    session['accesskey'] = accesskey
+    session['accesskey'] = accesskey #how do I access these when I want them?
     session['secretkey'] = secretkey
     session['file'] = filename
     return msg
