@@ -19,7 +19,11 @@ def get_busRuns(data, Run, URID):
                   & (dataSub['BookingId'] == URID.BookingId)]
             leaveIndex = leave.index.min()
 
-      baseIndex = dataSub[(dataSub["Activity"]==6)|(dataSub["Activity"]==16)|(dataSub["Activity"]==3)].index.min()
+      #find index of run's schedule just before heading back to base, i.e. code 6 or 3.
+      baseIndex = dataSub.index[dataSub.Activity==3][0]
+      if dataSub.Activity.loc[baseIndex-1] == 6:
+            baseIndex -= 1
+
       busRun = data.iloc[leaveIndex:baseIndex]
 
       return busRun
