@@ -1,0 +1,22 @@
+OPTION 1:
+Put 18029586 onto bus 371 
+Total lag: -3288 
+Number of exceeded time windows: 0.0 
+Average lateness: nan 
+
+
+OPTION 2:
+Put 18029586 onto bus 326 
+Total lag: -1874 
+Number of exceeded time windows: 0.0 
+Average lateness: nan 
+
+
+OPTION 3:
+Put 18029586 onto bus 5012 
+Total lag: -1098 
+Number of exceeded time windows: 0.0 
+Average lateness: nan 
+
+
+Taxi cost: 32.4

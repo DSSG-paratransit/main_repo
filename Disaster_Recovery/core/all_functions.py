@@ -11,7 +11,11 @@ import time
 import read_fwf
 import itertools
 import operator
+<<<<<<< HEAD:Disaster_Recovery/all_functions.py
+# import add_TimeWindowsCapacity as aTWC
+=======
 import add_TimeWindowsCapacity as aTWC
+>>>>>>> upstream/webapp:Disaster_Recovery/core/all_functions.py
 import checkCapacityInsertPts as checkCap
 from boto.s3.connection import S3Connection
 
