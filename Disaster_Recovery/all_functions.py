@@ -483,6 +483,26 @@ def osrm (URID_location, inbound, outbound):
     return(a.T)
 
 
+def original_lateness(Run_Schedule, comeback1):
+    '''
+    Run_Schedule (pd.Dataframe) that has pickup and 
+
+    comeback1 (int): row index in Run_Schedule corresponding to the dropoff index at which we
+                     should start counting late rides'''
+
+    bw_ctr = 0
+    lateness_ctr = 0
+    for k in range(comeback1, (Run_Schedule_Lag.index.max()+1)):
+        bound = max(Run_Schedule.PickupEnd.loc[k], Run_Schedule.DropoffEnd.loc[k])
+        eta = Run_Schedule.ETA.loc[k]
+        #0 indicates TW not broken, 1 otherwise.
+        bw_ctr += int(eta > bound)
+        #if time window is broken, by how much?
+        lateness_ctr += max(0, eta - bound)
+
+    return({'late_windows':bw_ctr, 'total_lateness':lateness_ctr})
+
+
 def insertFeasibility(Run_Schedule, URID):
 
     '''
@@ -610,10 +630,15 @@ def insertFeasibility(Run_Schedule, URID):
             row_ctr+=1
 
     #assemble output:
+    original = original_lateness(Run_Schedule, comeback1)
+    og_break_TW = original['late_windows']
+    og_total_lag = original['total_lateness']
+
     pickup_df = pd.DataFrame({"nodes": range(comeback1,Run_Schedule.index.max()+1), "break_TW": pickup_score[:,0], "late": pickup_score[:,1]})
     dropoff_df = pd.DataFrame({"nodes": range(comeback2,Run_Schedule.index.max()+1), "break_TW": dropoff_score[:,0], "late": dropoff_score[:,1]})
     test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
-    ret = {"score": test.append(dropoff_df), "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
+    score = test.append(dropoff_df)
+    ret = {"score": score, "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
                "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1,
                'additional_time':(best_rt_time_1+best_rt_time_2+1000)}
 
