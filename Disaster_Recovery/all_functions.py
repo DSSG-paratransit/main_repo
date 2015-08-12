@@ -44,7 +44,6 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
     if not file_ls:
         print('There are no files from '+ str(time.strftime('%Y/%m/%d'))+ '!')
         return -1
-        quit()
         
     #select relevant streaming_data file: watch out, hopefully the [-1] file isn't zero bytes!
     data_key = bucket.get_key(file_ls[-1])
