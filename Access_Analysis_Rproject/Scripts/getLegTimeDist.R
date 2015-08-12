@@ -3,12 +3,11 @@ getLegTimeDist <- function(data) {
   # fenceposts
   currentDay = data$ServiceDate[1] 
   currentRun = data$Run[1]
-  lat<-data$LAT[i] 
-  lon<-data$LON[i]
+  lat<-data$LAT[1] 
+  lon<-data$LON[1]
   loc = c(lat, lon)
   time_vector = vector(length=nrow(data))
   dist_vector = vector(length=nrow(data))
-  baseRow = 1 #the row number in which the current run left base
   
   for(i in 1:nrow(data)) {
     previousLoc = loc
@@ -20,8 +19,7 @@ getLegTimeDist <- function(data) {
     currentDay = data$ServiceDate[i]
     currentRun = data$Run[i]
     
-    # if row is when bus leaves base the 'previous' segment took 0s
-    # calculates the pct time taken, adds to vector 
+    # hard coding time and distance to 0 if row changes to different day/run
     if (previousDay != currentDay) {
       time = 0
       dist = 0
@@ -31,6 +29,7 @@ getLegTimeDist <- function(data) {
       
     }  
     
+    # calculate distance between previous location and current location with osrm_function.R
     else {
       osrm_output<-osrm(previousLoc, loc)
       time = osrm_output[1] 
@@ -41,9 +40,8 @@ getLegTimeDist <- function(data) {
     
   }
   
-  # adds new vector to dataframe and returns
+  # adds distance and time vectors to dataframe and returns
   data$Dist <- dist_vector
   data$Time <- time_vector
-  data<-data
   return(data)
 }

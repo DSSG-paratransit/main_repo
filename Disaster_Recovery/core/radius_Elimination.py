@@ -15,10 +15,6 @@ def radius_Elimination(data, URID, radius):
 
         RETURN: LIST of runs within radius-miles of URID.'''
 
-    #first, resolve indexing issues if index column is type timedate
-    if type(data.index[0]) != int:
-        data.index = range(0, data.shape[0])
-
     #obviously, broken bus can't be in the list of nearby buses.
     data_copy = data[data.Run != URID.Run]
 
@@ -28,7 +24,7 @@ def radius_Elimination(data, URID, radius):
     overlap_data = time_overlap(data_copy, URID)
 
     #get row index of nodes that may have either inbound/outbound overlap with URID TW.
-    overlap_data = data.loc[overlap_data['all_nodes']]
+    overlap_data = data_copy.loc[overlap_data['all_nodes']]
     overlap_LAT = overlap_data.LAT.tolist()
     overlap_LON = overlap_data.LON.tolist()
 
@@ -40,7 +36,12 @@ def radius_Elimination(data, URID, radius):
         if(dist < radius):
             okBuses.append(overlap_data.Run.iloc[k])
 
-    return list(set(okBuses))
+    ret = list(set(okBuses))
+    if len(ret) > 30:
+        radius -= 1
+        ret = radius_Elimination(data, URID, radius)
+
+    return ret
 
 
 
