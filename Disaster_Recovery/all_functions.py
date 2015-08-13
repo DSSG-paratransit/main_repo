@@ -8,6 +8,7 @@ import requests
 import sys
 import re
 import time
+import datetime
 import read_fwf
 import itertools
 import operator
@@ -18,9 +19,20 @@ from boto.s3.connection import S3Connection
 
 def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name = 'qc_streaming.csv'):
 
-    '''
+    """
     For establishing connection, use access and secret keys sent by Valentina.
-    '''
+
+    Args:
+        AWS_ACCESS_KEY (string): access key for AWS 
+        AWS_SECRET_KEY (string): secret key AWS
+        path_to_data (string): path name to directory where data lies 
+        qc_file_name (string): name of file for cleaned streaming data
+
+    Returns:
+        cleaned and processed dataframe of streaming data 
+
+    
+    """
     if os.path.isfile(os.path.join(path_to_data, qc_file_name)):
         os.remove(os.path.join(path_to_data, qc_file_name))
 
@@ -44,7 +56,6 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
     if not file_ls:
         print('There are no files from '+ str(time.strftime('%Y/%m/%d'))+ '!')
         return -1
-        quit()
         
     #select relevant streaming_data file: watch out, hopefully the [-1] file isn't zero bytes!
     data_key = bucket.get_key(file_ls[-1])
@@ -107,14 +118,21 @@ def s3_data_acquire(AWS_ACCESS_KEY, AWS_SECRET_KEY, path_to_data, qc_file_name =
     
     return ret
     
-    return ret
 
-'''
-@params: takes a string containing 24h time in HH:MM format 
-@returns: the passed in value converted to seconds
-'''
+
 def humanToSeconds(hhmm):
 
+    """
+    Takes in passed value (human readable time) and returns time in seconds (code readable)
+    
+    Args:
+        hhmm (str): HH:MM (time of day in 24hr format)
+
+    Returns: 
+        seconds (int) if no ValueError
+    
+    """
+    
     # Invalid format
     format = re.compile('\d\d:\d\d')
     if(format.match(hhmm) is None):
@@ -133,47 +151,30 @@ def humanToSeconds(hhmm):
     return(hour * 3600 + sec * 60)
 
 
-def add_TimeWindows(data, windowsz):
-    '''calculate time windows (pickup and dropoff)
-        from SchTime and ETA.
-        data is subsetted schedule data from a day.
-        windowsz is size of pickup/dropoff window in seconds'''
-
-    etas = data.ix[:,"ETA"]
-    schtime =data.ix[:,"SchTime"]
-    Activity = data.ix[:, "Activity"]
-    ReqLate = data.ix[:, "ReqLate"]
-
-    schtime_arr = np.array(schtime.tolist())
-    nrow = data.shape[0]
-    PickupStart = np.zeros(nrow); PickupEnd = np.zeros(nrow)
-    DropoffStart = np.zeros(nrow); DropoffEnd = np.zeros(nrow)
-
-    for x in range(0, nrow):
-
-    #make dropoff window when there's no required drop off time
-        if (Activity[x] == 1) & (ReqLate[x] <0):
-            DropoffStart[x] = etas[x]-3600
-            DropoffEnd[x] = etas[x]+3600
-
-        #make dropoff window when there IS a required drop off time: 1hr before ReqLate time
-        if (Activity[x] == 1) & (ReqLate[x] >0):
-            DropoffStart[x] = etas[x]-3600
-            DropoffEnd[x] = ReqLate[x]  
-
-        #schtime is in the middle of the pick up window
-        if Activity[x] == 0:
-            PickupStart[x] = schtime[x]-(windowsz/2)
-            PickupEnd[x] = schtime[x]+(windowsz/2)
-        
-    data.insert(len(data.columns), 'PickupStart',  pd.Series((PickupStart), index=data.index))
-    data.insert(len(data.columns), 'PickupEnd',  pd.Series((PickupEnd), index=data.index))
-    data.insert(len(data.columns), 'DropoffStart',  pd.Series(DropoffStart, index=data.index))
-    data.insert(len(data.columns), 'DropoffEnd',  pd.Series(DropoffEnd, index=data.index))
-
-    return data.copy()
-
 class URID:
+    """
+    Creates URID objects when called in get_URIDs functions. 
+
+    Args: 
+        BookingId (float): ID associated with given URID
+        Run (string): original bus run associated with URID, aka broken bus 
+        PickUpCoords (float): Lat/Lon where URID requires pick up 
+        DropOffCoords (float): Lat/Lon where URID requires drop off 
+        PickupStart (float): beginning of pick up time window 
+        PickupEnd (float): end of pick up time window 
+        DropoffStart (float): beginning of drop off time window
+        DropoffEnd (float): end of drop off time window 
+        SpaceOn (string): space taken up by passenger at pick up 
+        MobAids (string): encodes extra information about passenger restrictions 
+        wcOn (int): number of wheelchairs associated with pick up for URID
+        wcOff (int): number of wheelchairs associated with drop off for URID
+        amOn (int): number of ambulatory spaces associated with pick up for URID
+        amOff (int): number of ambulatory spaces associated with drop off for URID
+        PickupInsert (int): ETA where URID is best slotted in for pick up (new PickupStart)
+        DropoffInsert (int): ETA where URID is best slotted in for drop off (new DropoffEnd)
+    
+    """
+    
     def __init__(self, BookingId, Run, PickUpCoords, DropOffCoords, PickupStart, PickupEnd, DropoffStart, DropoffEnd, SpaceOn, MobAids, wcOn, wcOff, amOn, amOff, PickupInsert, DropoffInsert):
         self.BookingId= BookingId
         self.Run = Run
@@ -194,13 +195,20 @@ class URID:
 
 
 def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREAKDOWN_LOC = None):
-    '''get unscheduled request id's from broken bus,
-        based on when we're allowed to first start rescheduling.
-        resched_init_time is in seconds, marks the point in time we can begin considering reinserting new requests.
-        broken_Run is number of run that breaks
-        data is today's scheduling data
 
-        RETURN: list of URIDs'''
+    """
+    Get URIDs given broken bus. 
+    
+    Args: 
+        data (dataframe): full day's run data 
+        broken_Run (string): broken bus run name (can be alphanumeric)
+        resched_init_time (int): time in seconds after which we can start rescheduling 
+        add_stranded (bool): default False, handles whether to add passengers currently on broken run to list of URIDs
+        BREAKDOWN_LOC (global var): Lat/Lon of bus breakdown 
+
+    Returns: 
+        list of URIDs given broken bus run 
+    """
     
     #all rides that exist past time we're allowed to begin rescheduling
     leftover = data[data["ETA"] >= resched_init_time]
@@ -261,10 +269,18 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
 
 
 def get_URID_BookingIds(data, BookingId_list):
-    '''get unscheduled request id's from broken bus,
-    based on the list of BookingIds provided by dispatcher
+    
+    """
+    Get URIDs if list of BookingIds is entered by dispatchers. 
+    
+    Args: 
+        data (dataframe): full day's run data 
+        BookingId_list (list): comma separated list of BookingIds entered by dispatcher
+    
 
-    RETURN: list of URIDs'''
+    Returns: 
+        list of URIDs given BookingId list 
+    """
 
     diffIDs = BookingId_list
     saveme = []
@@ -295,19 +311,17 @@ def get_URID_BookingIds(data, BookingId_list):
 
 
 def time_overlap(Run_Schedule, URID, pudo = True):
-    '''
+
+    """
     Args:
-
-    Run_Schedule (pd.DataFrame): pd.DataFrame containing any number of bus runs. Must have time window columns.
-
-    URID (class.object): of class URID
-
-    pudo (boolean): 'pickupdropoff', check pickup windows or drop off windows?
+        Run_Schedule (dataframe): contains any number of bus runs, must have time window columns.
+        URID (object): instance of URID class 
+        pudo (bool): default True (pick up), False for drop off 
 
     Returns: 
-
-    retDict (dict): dictionary containing indices of schedule-outbound and -inbound nodes that we need
-        to get distance between w/r/t URID location.'''
+        retDict (dict): dictionary containing indices of schedule-outbound and -inbound nodes that we need
+        to get distance between w/r/t URID location.
+    """
 
     if pudo:
         Start = URID.PickupStart
@@ -364,30 +378,31 @@ def time_overlap(Run_Schedule, URID, pudo = True):
     
     outbound, inbound = map(sorted, [outbound, inbound])
     all_nodes = sorted(np.union1d(outbound, inbound))
-    #print("These indices of Run_Schedule will need to have distances calculated:\n%s" % np.union1d(outbound, inbound))
 
     retDict = {"outbound": outbound, "inbound": inbound, "all_nodes" : all_nodes}
     return retDict
 
 
 def radius_Elimination(data, URID, radius):
-    '''Given a set of the day's bus data and an unhandled requst,
-    eliminate all bus routes that are farther than radius-miles away at all
-        points in the URID's pickup window. Run time_insertions.py on the resultant list.
 
-        NOTE: you need to "> pip install haversine"
-
-        INPUT:  data - pd.Data.Frame returned from add_TimeWindows.py
-                URID - URID object from get_URIDS.py    
-                radius - float, number of miles
-                pickUpDropOff - boolean True/False for PickUp (True) or Dropoff (False)
-
-        RETURN: LIST of runs within radius-miles of URID.'''
+    """
+    Eliminates bus routes that are further than given radius away from URID. 
+    
+    NOTE: you need to "> pip install haversine"
+    
+    Args: 
+        data (dataframe): day's schedule with time windows added 
+        URID (object): instance of URID class from get_URIDs.py 
+        radius (float): distance to check from URID in miles 
+    
+    Returns:
+        list of runs within given radius of URID. Run time_insertions.py on resultant list. 
+    """
 
     #obviously, broken bus can't be in the list of nearby buses.
     data_copy = data[data.Run != URID.Run]
 
-    URID_loc = ([URID.PickUpCoords[0], URID.PickUpCoords[1]])
+    URID_loc = ([round(URID.PickUpCoords[0],6), round(URID.PickUpCoords[1],6)])
         
     #get pd.Data.Frame of nodes that have overlap with URID's pickup or dropoff window
     overlap_data = time_overlap(data_copy, URID)
@@ -400,7 +415,7 @@ def radius_Elimination(data, URID, radius):
     #store list of rides that are sufficiently nearby URID's location
     okBuses = []
     for k in range(len(overlap_LAT)):
-        point = (overlap_LAT[k], overlap_LON[k])
+        point = (round(overlap_LAT[k],6), round(overlap_LON[k],6))
         dist = haversine.haversine(point, URID_loc, miles=True)
         if(dist < radius):
             okBuses.append(overlap_data.Run.iloc[k])
@@ -415,12 +430,18 @@ def radius_Elimination(data, URID, radius):
 
 
 def get_busRuns(data, Run, URID):
-    '''
-    data (pd.DataFrame): output from add_Time_Windows.py
-    Run (str): Run number
-    URID (class.URID): URID class object
-    resched_init_time (int): number of seconds in day we allow first rescheduling
-    RETURN: busRun pandas.dataframe for specified Run.'''
+
+    """
+    Return specific bus run from dataframe of full day's schedule. 
+    
+    Args:
+        data (dataframe): full day's schedule with time windows 
+        Run (str): particular bus run number (can be alphanumeric)
+        URID (object): instance of URID class 
+    
+    Returns: 
+        dataframe for specific bus run from day's schedule 
+    """
 
     # leave garage (beginning of route index), gas (end of route index)
     # get all rides between/including leave garage and gas indices.
@@ -447,10 +468,18 @@ def get_busRuns(data, Run, URID):
 
 
 def osrm (URID_location, inbound, outbound):
-    #URID_location it's a list: [lat, lon]
-    #lists for inbound and outbound matrices
-    # inbound/outbound: 2-column np.arrays storing inbound/outbound node latitude/longitude
-    # and inbound (from scheduled location to urid location) 
+
+    """
+
+    Args:
+        URID_location (list): lat/lon for URID locations both inbound and outbound 
+        inbound (array): stores inbound node lats and lons
+        outbound (array): stores outbound node lats and lons
+
+    Returns: 
+        array of total travel times for URID between nodes 
+    """
+    
     total_times = []
     out_start_points = []
     out_end_points = []
@@ -458,14 +487,14 @@ def osrm (URID_location, inbound, outbound):
     in_start_points = []
     in_end_points = []
     osrm_url = "http://router.project-osrm.org/viaroute?"
-    urid_LAT = URID_location[0]; urid_LON = URID_location[1]
+    urid_LAT = round(URID_location[0],6); urid_LON = round(URID_location[1],6)
 
     # outbound
     for k in range(outbound.shape[0]): 
         lat_cord_O = outbound[k, 0]; lon_cord_O = outbound[k, 1]
         lat_cord_I = inbound[k, 0]; lon_cord_I = inbound[k, 1]
         
-        route_url = osrm_url+ "loc=" + str(round(lat_cord_O,6)) + "," + str(round(lon_cord_O,6)) + "&loc=" + str(round(urid_LAT,0)) + "," + str(round(urid_LON, 6)) + "&loc=" + str(round(lat_cord_I,6)) + "," + str(round(lon_cord_I,6)) +"&instructions=false"
+        route_url = osrm_url+ "loc=" + str(round(lat_cord_O,6)) + "," + str(round(lon_cord_O,6)) + "&loc=" + str(round(urid_LAT,6)) + "," + str(round(urid_LON, 6)) + "&loc=" + str(round(lat_cord_I,6)) + "," + str(round(lon_cord_I,6)) +"&instructions=false"
         route_requests = requests.get(route_url)
         route_results = route_requests.json()
         if not route_results:
@@ -479,24 +508,54 @@ def osrm (URID_location, inbound, outbound):
     return(a.T)
 
 
+def original_lateness(Run_Schedule, comeback1):
+
+    """
+
+    Args: 
+        Run_Schedule (dataframe): schedule for run, contains time windows 
+
+        comeback1 (int): row index in Run_Schedule corresponding to the dropoff index at which we
+                     should start counting late rides
+
+    Returns: 
+        dictionary of late windows and their associated total lateness 
+    """
+
+    bw_ctr = 0
+    lateness_ctr = 0
+    for k in range(comeback1, (Run_Schedule.index.max()+1)):
+        if (Run_Schedule.Activity.loc[k] in [0,1]):
+            bound = max(Run_Schedule.PickupEnd.loc[k], Run_Schedule.DropoffEnd.loc[k])
+            eta = Run_Schedule.ETA.loc[k]
+            #0 indicates TW not broken, 1 otherwise.
+            bw_ctr += int(eta > bound)
+            #if time window is broken, by how much?
+            lateness_ctr += max(0, eta - bound)
+
+    return({'late_windows':bw_ctr, 'total_lateness':lateness_ctr})
+
+
 def insertFeasibility(Run_Schedule, URID):
 
-    '''
-    Run_Schedule: Pandas dataframe containing Trapeze-scheduled bus route and time windows, Run is listed in good_buses
-    URID: of class URID
+    """
+    
+    Args: 
+        Run_Schedule (dataframe): schedule for run, contains time windows 
+        URID (object): instance of URID class 
 
-    return: dictionary. Largest component of dictionary is 'score,' a pd.df with 'break_TW' (binary variable
+    Returns: 
+        dictionary. Largest component of dictionary is 'score,' a pd.df with 'break_TW' (binary variable
         indicating whether future stop will be late), 'late' (integer indicating how late bus will be to stop),
         and 'node' (the index, of the node within the Run_Schedule)
         Also return 'total_lag', the total number of seconds by which the bus is currently late.
         Also return 'pickup_insert' and 'dropoff_insert', i.e. indices of the best insertion point of URID on to Run_Schedule.
-    '''
+    """
 
     # FEASIBILITY OF PICK UP:
 
     #location from where we'll pick up given URID.
-    uridLoc = [URID.PickUpCoords[0], URID.PickUpCoords[1]]
-
+    uridLoc = [round(URID.PickUpCoords[0],6), round(URID.PickUpCoords[1],6)]
     pickup_inserts = time_overlap(Run_Schedule, URID)
     outbound = Run_Schedule.loc[pickup_inserts["outbound"]]
     outbound = np.column_stack((np.array(outbound.LAT), np.array(outbound.LON)))
@@ -507,9 +566,8 @@ def insertFeasibility(Run_Schedule, URID):
 
     #start picking best pickup insertion:
     rt_times = sorted(enumerate(time_matrix_pickup), key=operator.itemgetter(1)) #use itemgetter(1) because (0) is index from enumerator!
-
     #smallest round trip travel time, corresponding rows on bus's schedule:
-    best_rt_time = rt_times[0][1]
+    best_rt_time_1 = rt_times[0][1]
     #row indices on Run_Schedule between which to insert:
     leave1 = pickup_inserts["outbound"][rt_times[0][0]] #leave this scheduled node
     comeback1 = pickup_inserts["inbound"][rt_times[0][0]] #come back to this scheduled node
@@ -517,11 +575,13 @@ def insertFeasibility(Run_Schedule, URID):
     dwell = 500
 
     #get total lag time, see if next time window is broken:
-    newETA = Run_Schedule.ETA.loc[leave1] + dwell + best_rt_time
+    newETA = Run_Schedule.ETA.loc[leave1] + dwell + best_rt_time_1
     bound = max(Run_Schedule.PickupEnd.loc[comeback1], Run_Schedule.DropoffEnd.loc[comeback1])
 
-    #is the next time window broken?
+    #if there's technically speedup, then no penalty for picking URID up.
     lag1 = newETA - Run_Schedule.ETA.loc[comeback1]
+    if lag1 < 0:
+        lag1 = 0
 
     #count number of broken time windows for rest of trip:
     #to be able to count broken windows, amt by which they're broken,
@@ -555,13 +615,14 @@ def insertFeasibility(Run_Schedule, URID):
     if (not dropoff_inbound) | (not dropoff_inbound):
         return {}
 
+    #just a precaution.
     if dropoff_outbound[0] == dropoff_inbound[0]:
         print('First outbound and first inbound for drop off are the same.')
         dropoff_inbound.pop(0)
 
+    #nodes from which we depart original schedule to drop URID off, and then return to og schedule
     outbound = Run_Schedule_Lag.loc[dropoff_outbound]
     outbound = np.column_stack((np.array(outbound.LAT), np.array(outbound.LON)))
-    print (dropoff_outbound, dropoff_inbound)
     try:
         inbound = Run_Schedule_Lag.loc[dropoff_inbound]
     except KeyError:
@@ -570,7 +631,7 @@ def insertFeasibility(Run_Schedule, URID):
 
     inbound = np.column_stack((np.array(inbound.LAT), np.array(inbound.LON)))
 
-    uridLoc = [URID.DropOffCoords[0], URID.DropOffCoords[1]]
+    uridLoc = [round(URID.DropOffCoords[0],6), round(URID.DropOffCoords[1],6)]
     #second iteration of distance matrix, for drop off routing:
     time_matrix_dropoff = osrm(uridLoc, inbound, outbound)
 
@@ -578,16 +639,18 @@ def insertFeasibility(Run_Schedule, URID):
     rt_times = sorted(enumerate(np.sum(time_matrix_dropoff, 1)), key=operator.itemgetter(1)) #use itemgetter(1) because (0) is index from enumerator!
 
     #smallest round trip travel time, corresponding rows on bus's schedule:
-    best_rt_time = rt_times[0][1]
+    best_rt_time_2 = rt_times[0][1]
     #rows on Run_Schedule between which to insert:
     leave2 = dropoff_outbound[rt_times[0][0]] #leave this scheduled node
     comeback2 = dropoff_inbound[rt_times[0][0]] #come back to this scheduled node
 
     #get total lag time, see if next time window is broken:
-    newETA = Run_Schedule_Lag.ETA.loc[leave2] + dwell + best_rt_time
+    newETA = Run_Schedule_Lag.ETA.loc[leave2] + dwell + best_rt_time_2
     bound = max(Run_Schedule_Lag.PickupEnd.loc[comeback2], Run_Schedule_Lag.DropoffEnd.loc[comeback2])
     #total lag: lag from pickup, and then difference between lagged eta and eta for coming back from pickup
-    total_lag = newETA - Run_Schedule_Lag.ETA.loc[comeback2] + lag1
+    total_lag = newETA - Run_Schedule.ETA.loc[comeback2]
+    if total_lag < 0:
+        total_lag = 0
 
     #count number of broken time windows from dropping off URID:
     dropoff_score = np.zeros(((Run_Schedule_Lag.index.max() - comeback2 + 1),2)) 
@@ -596,38 +659,47 @@ def insertFeasibility(Run_Schedule, URID):
         if (Run_Schedule.Activity.loc[k] not in [0,1]):
             row_ctr += 1
         else:
-            bound = max(Run_Schedule_Lag.PickupEnd.loc[k], Run_Schedule_Lag.DropoffEnd.loc[k])
-            eta_future = Run_Schedule_Lag.ETA.loc[k] + total_lag
+            bound = max(Run_Schedule.PickupEnd.loc[k], Run_Schedule.DropoffEnd.loc[k])
+            eta_future = Run_Schedule.ETA.loc[k] + total_lag
             #0 indicates TW not broken, 1 otherwise.
             dropoff_score[row_ctr, 0] = int(eta_future > bound)
             #if time window is broken, by how much?
             dropoff_score[row_ctr, 1] = max(0, eta_future - bound)
-            #print(dropoff_score[row_ctr,:])
             row_ctr+=1
 
     #assemble output:
+    original = original_lateness(Run_Schedule, comeback1)
+    og_break_TW = original['late_windows']
+    og_total_lag = original['total_lateness']
+
     pickup_df = pd.DataFrame({"nodes": range(comeback1,Run_Schedule.index.max()+1), "break_TW": pickup_score[:,0], "late": pickup_score[:,1]})
     dropoff_df = pd.DataFrame({"nodes": range(comeback2,Run_Schedule.index.max()+1), "break_TW": dropoff_score[:,0], "late": dropoff_score[:,1]})
     test = pickup_df[(pickup_df['nodes'] >= comeback1) & (pickup_df['nodes'] < comeback2)]
-    ret = {"score": test.append(dropoff_df), "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
-               "total_lag" : total_lag, 'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1}
+    score = test.append(dropoff_df)
+
+    new_broken_TW = np.sum(score['break_TW']) - og_break_TW
+
+    ret = {"score": score, "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
+               'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1,
+               'additional_broken_windows': new_broken_TW,
+               'additional_time': best_rt_time_1+best_rt_time_2+1000}
 
     return(ret)
 
 
-def wheelchair_present(URID):
-    #check if URID has a wheelchair, returns Boolean True/False:
-
-    mobaids = URID.SpaceOn
-    WC = False
-    if type(mobaids) == str:
-        WC = any(['W' in x for x in mobaids.split(',')])
-    return WC
-
 def mileage (lat1, lon1, lat2, lon2):
-    '''@params: takes two lat/lon pairs (start and end points)
-    @returns: the total street network distance between the pairs
-    '''
+    
+    """
+    Used to find mileage for taxi function.
+
+    Args:
+        lat1/lon1 (float): first lat/lon pair (start point)
+        lat2/lon2 (float): second lat/lon pair (end point) 
+
+    Returns: 
+        total street network distance between pairs 
+    """
+
     route_results = getOSRMOutput(lat1, lon1, lat2, lon2)
     total_dist = route_results[u'route_summary'][u'total_distance']
     #print total_dist
@@ -635,10 +707,17 @@ def mileage (lat1, lon1, lat2, lon2):
 
 
 def travel_time (lat1, lon1, lat2, lon2):
-    '''
-    @params: takes two lat/lon pairs (start and end points)
-    @returns: the total non traffic time it would take to get between the two pairs
-    '''
+
+    """
+    
+    Args: 
+        lat1/lon1 (float): first lat/lon pair (start point)
+        lat2/lon2 (float): second lat/lon pair (end point)
+
+    Returns: 
+        total non traffic time it takes to get between two pairs of lat/lon
+    """
+    
     route_results = getOSRMOutput(lat1, lon1, lat2, lon2)
     total_time = route_results[u'route_summary'][u'total_time']
     # print total_time
@@ -646,10 +725,17 @@ def travel_time (lat1, lon1, lat2, lon2):
 
 
 def getOSRMOutput (lat1, lon1, lat2, lon2):
-    '''
-    @params: takes two lat/lon pairs (start and end points)
-    @returns: a json object containing data about traveling between the two pairs
-    '''
+
+    """
+    
+    Args: 
+        lat1/lon1 (float): first lat/lon pair (start point)
+        lat2/lon2 (float): second lat/lon pair (end point)
+
+    Returns:
+        json object containing data about traveling between two pairs 
+    """
+    
     osrm_url = "http://router.project-osrm.org/viaroute?"
     route_url = osrm_url+ "loc=" + str(lat1) + "," + str(lon1)
     route_url = route_url + "&loc=" + str(lat2) + "," + str(lon2) + "&instructions=false"
@@ -659,21 +745,37 @@ def getOSRMOutput (lat1, lon1, lat2, lon2):
     #print route_results
     return route_results
 
+def taxi(URID):
 
-def taxi(lat1, lon1, lat2, lon2, wheelchair):
+    """
+    Calculates taxi cost for URID if URID can take taxi. 
+
+    Args:
+        URID (object): instance of URID class, contains all relevant info for given URIDs
+
+    Returns: 
+        Taxi cost for URID or NA if they cannot ride taxi 
+    """
+    
     # converts from miles to meters and ceilings to nearest decimal
-    miles = math.ceil(mileage(lat1, lon1, lat2, lon2) / 160.934) / 10
+    miles = math.ceil(mileage(URID.PickUpCoords[0], URID.PickUpCoords[1],
+                URID.DropOffCoords[0], URID.DropOffCoords[1]) / 160.934) / 10
+
+    wheelchair = URID.wcOn > 0
+    notaxi = 'OT' in URID.SpaceOn
 
     cost = sys.maxint # so that taxi use is discouraged if this is broken
 
-    if wheelchair:
+    if wheelchair and not notaxi:
         if miles < 16.67: # Northwest is most expensive
             cost = 21 + miles * 3.5
         elif miles < 61: # Sunshine is most expensive
             cost = 20 + miles * 3.56
         else: # Transpo is most expensive
             cost = 18.78 + miles * 3.58
-    else: 
+    elif notaxi:
+        cost = 'NA'
+    elif not notaxi:
         if miles < 2.14: # Farwest is most expensive
             cost = 3 + miles * 2.6
         else: # Northwest is most expensive
@@ -681,20 +783,21 @@ def taxi(lat1, lon1, lat2, lon2, wheelchair):
     return cost
 
 
+
 def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
-    '''
-        Args:
 
-        list_Feasibility_output (list of dicts): some of the top insertion options from busRescheduler loop that are assembled
-        into a list (like 'ordered_inserts' in busRescheduler)
-
+    """
+    
+    Args:
+        URID (object): instance of URID class 
+        list_Feasibility_output (list of dicts): some of the top insertion options from busRescheduler loop that are assembled into a list (like 'ordered_inserts' in busRescheduler)
+        path_to_output (str): directory path where we want output written 
         taxi_cost (double): cost of sending URID to taxi
 
-        Return:
+    Returns:
         None
-
-        Write:
-        {BookingID}_insert_data.txt containing lag, number of late windows, average lateness'''
+        Writes {BookingID}_insert_data.txt containing lag, number of late windows, average lateness
+    """
 
     if not os.path.isdir(path_to_output):
         os.mkdir(path_to_output)
@@ -703,14 +806,11 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
     text_file = open(file_name, "w")
     ctr = 1;
     for option in list_Feasibility_output:
-        number_late = sum(option['score']['break_TW'].tolist())
-        avg_late = sum(option['score']['late'].tolist())/number_late
 
         text_file.write('OPTION {0}:\n'.format(ctr))
-        text_file.write('Put {0} onto bus {1} \n'.format(int(URID.BookingId), option['RunID']) )
-        text_file.write('Total lag: {0} \n'.format(int(option['total_lag'])))
-        text_file.write('Number of exceeded time windows: {0} \n'.format(number_late))
-        text_file.write('Average lateness: {0} \n\n\n'.format(avg_late))
+        text_file.write('Put booking ID {0} onto bus {1} \n'.format(int(URID.BookingId), option['RunID']) )
+        text_file.write('Additional route time: {0} mins \n'.format(option['additional_time']/(60.0)))
+        text_file.write('Additional exceeded time windows: {0} \n\n'.format(option['additional_broken_windows']))
         ctr+=1
 
     text_file.write('Taxi cost: {0}'.format(taxi_cost))
@@ -719,20 +819,18 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
 
 
 def preferred_options(URID_list, best_bus, delay_costs, taxi_costs, new_run_cost = None):
-    '''
+
+    """
     Args:
+        URID_list (list): list of all URIDs, like as outputted by get_URID_bus
+        best_bus (list): list of buses onto which each URID would be cheapest to insert
+        delay_costs (list): vector of delay costs, each corresponding URID (same index as URID_list)
+        taxi_costs (list): vector of taxi_costs, each corresponding URID (same index as URID_list)
+        new_run_cost (float): cost of sending new bus out to service all URIDs.
 
-    - URID_list ([]): list of all URIDs, like as outputted by get_URID_bus
-
-    - best_bus ([]): list of buses onto which each URID would be cheapest to insert
-
-    - delay_costs ([]]): vector of delay costs, each corresponding URID (same index as URID_list)
-
-    - taxi_costs ([]): vector of taxi_costs, each corresponding URID (same index as URID_list)
-
-    - new_run_cost (float): cost of sending new bus out to service all URIDs.
-
-    WRITES: pd.DataFrame.to_csv(matrix of preferred option, per URID)'''
+    Returns: 
+       writes csv that is matrix of preferred option, per URID
+    """
 
     bId = []; pref = []
     for i in range(len(URID_list)):
@@ -750,14 +848,18 @@ def preferred_options(URID_list, best_bus, delay_costs, taxi_costs, new_run_cost
 
 
 def day_schedule_Update(data, top_Feasibility, URID):
-    '''
-    data (pd.DataFrame): current schedule for all day's operations
 
-    top_Feasibility (dict): insertion of URID on to bus resulting in min. lag.
+    """
+    
+    Args:
+        data (dataframe): current schedule for all day's operations
+        top_Feasibility (dict): insertion of URID on to bus resulting in min. lag.
         should be [0] element of ordered_inserts
 
-    return (pd.DataFrame): updated (re-arranged) schedule URID properly
-        put on to new bus from old bus'''
+    Returns:
+        dataframe that is updated (re-arranged) schedule with URID properly
+        put on to new bus from old bus
+    """
 
     tmp = data.copy()
     my_rows = tmp[tmp['BookingId']==URID.BookingId]
@@ -781,7 +883,7 @@ def day_schedule_Update(data, top_Feasibility, URID):
     #update the inserted bus's ETAs!
     run_inserted = new_data[new_data['Run'] == top_Feasibility['RunID']]
     run_inserted.ix[pickup_new:dropoff_new, 'ETA'] += top_Feasibility['pickup_lag']
-    run_inserted.ix[dropoff_new:, 'ETA']  += top_Feasibility['total_lag']
+    run_inserted.ix[dropoff_new:, 'ETA']  += top_Feasibility['additional_time']
     new_data.ix[run_inserted.index, 'ETA'] =  run_inserted.ix[:, 'ETA']
 
     new_data.index = range(0, new_data.shape[0])
@@ -790,15 +892,17 @@ def day_schedule_Update(data, top_Feasibility, URID):
 
 
 def newBusRun_cost(busRun, provider):
-    '''
-    Args:
-    busRun (pd.DataFrame): pandas df with some bus's whole schedule
 
-    provider (int): provider code of bus contractor (5 or 6)
+    """
+    
+    Args:
+        busRun (dataframe): dataframe with some of  bus's whole schedule
+        provider (int): provider code of bus contractor (5 or 6)
 
     Returns:
-    cost (float): cost of sending a new bus out to service all URIDs
-    '''
+        cost (float): cost of sending a new bus out to service all URIDs
+    """
+    
     baselat, baselon = None, None
     costPH = None
     if provider == 6:
