@@ -1,5 +1,5 @@
 from flask import Flask, request, redirect, url_for
-from flask import render_template, session, make_response
+from flask import render_template, session, make_response, flash
 import csv
 import time
 
@@ -16,24 +16,32 @@ def register():
 def preferred_options():
   # Displays a table
   if request.method == 'POST':
-    data_rows = read_csv()
+    data_rows = read_csv() #we wont have preferred_options.csv available yet...
     session['data_rows'] = data_rows
-    bookingid = None
-    busid = None
-    if request.form.get('bookingid', None) is not None and request.form.get('beginTime',None) is not None:
+    session['bookingid'] = None
+    session['busid'] = None
+    if request.form.get('bookingid', None) is not None:
       bookingid = request.form['bookingid']
       beginTime = request.form['beginTime']
       session['bookingid'] = bookingid
-      session['beginTime'] = beginTime
+      session['beginTime'] = beginTime #keep begin time as None for busRescheduler_run.
       
     elif request.form.get('busid', None) is not None and request.form.get('beginTime',None)is not None:
       busid = request.form['busid']
       beginTime = request.form['beginTime']
       session['busid'] = busid
       session['beginTime'] = beginTime
+
+      if session['busid'] is None:
+        flash
+        return render_template('request.html')
+
+
     row_range = range(len(data_rows))
     session['row_range'] = row_range
     # print(url_for('rescheduling'))
+
+
 
     return redirect(url_for('rescheduling'))
     
@@ -77,7 +85,10 @@ def rescheduling():
     
     # function input(AWS keys, runID, path,bookingID)
     # call code in a subprocess
-    # subprocess.call("python_script.py",arguments)
+    #subprocess.check_call(['python', 'busReschedule_run', '{0}'.format(session['file']), 'session['accesskey']', session['secretkey'],
+    #                 session['bookingid'], session['broken_run'], windows = 1800., session['beginTime'],
+    #                 './data', radius = 3.]) 
+    # ^^ subprocess.call("python_script.py",arguments) ^^
     # return output
     # if finished 
     data_rows = read_csv('data/preferred_options.csv')
