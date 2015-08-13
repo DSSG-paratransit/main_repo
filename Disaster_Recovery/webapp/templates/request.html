@@ -5,11 +5,14 @@
 
     {% if error %}
     <p class=error><strong>Error:</strong> {{ error }}
+    {% endif %}
     
     <h3>Enter</h3>
     <form action="/display" method="POST">
     <p>Booking ID</p>
         <input type="text" name="bookingid">
+        <p></p>
+        <input type="submit" value="Submit" >
     </form>
     
 

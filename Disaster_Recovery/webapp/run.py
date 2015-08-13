@@ -17,17 +17,17 @@ def preferred_options():
   # Displays a table
   if request.method == 'POST':
     error = None
-    #data_rows = read_csv() #we wont have preferred_options.csv available yet...
-    #session['data_rows'] = data_rows
+    data_rows = read_csv() #we wont have preferred_options.csv available yet...
+    session['data_rows'] = data_rows
     session['bookingid'] = None
     session['busid'] = None
-    if request.form.get('bookingid', None) is not None:
+    if request.form.get('bookingid', None) is not None: #booking id is filled
       bookingid = request.form['bookingid']
       beginTime = request.form['beginTime']
       session['bookingid'] = bookingid
       session['beginTime'] = None #keep begin time as None for busRescheduler_run.
       
-    elif request.form.get('busid', None) is not None and request.form.get('beginTime',None)is not None: #both boxes filled
+    elif request.form.get('busid', None) is not None and request.form.get('beginTime',None)is not None: #busid, beginTime boxes are filled
       busid = request.form['busid']
       beginTime = request.form['beginTime']
       session['busid'] = busid
