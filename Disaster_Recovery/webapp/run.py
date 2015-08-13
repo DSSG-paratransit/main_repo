@@ -89,23 +89,19 @@ def rescheduling():
     # session['accesskey']
     # session['secretkey']
     # session['file']
-    
-    # function input(AWS keys, runID, path,bookingID)
-    # call code in a subprocess
-    #subprocess.check_call(['python', 'busReschedule_run', '{0}'.format(session['file']), 'session['accesskey']', session['secretkey'],
-    #                 session['bookingid'], session['broken_run'], windows = 1800., session['beginTime'],
-    #                 './data', radius = 3.]) 
-    # ^^ subprocess.call("python_script.py",arguments) ^^
-    # return output
-    # if finished
-    # f = open('pickled_process','w')
-    
-    
+
+    #define command line arguments
+    demo_file = os.path.join(os.getcwd(), 'data', 'qc_streaming_DEMO.csv')
+    path_to_outdir = os.path.join(os.getcwd(),'data')
+    args = ['python', 'busRescheduler.py', 
+    demo_file, str(session['accesskey']), str(session['secretkey']), str(session['busid']),
+    path_to_outdir, '11:30', str(session['bookingid']), '1800.', '3.']
+
     # removing the flag file
     if os.path.isfile(os.path.join('data','flag.txt')):
         os.remove(os.path.join('data','flag.txt'))
         
-    p = subprocess.Popen('python script.py',shell=True,
+    p = subprocess.Popen(args,shell=True,
             stdout=subprocess.PIPE)
     # pickle.dump(subprocess.Popen('python script.py',shell=True,
     #        stdout=subprocess.PIPE),f)
