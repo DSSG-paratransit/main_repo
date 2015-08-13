@@ -2,6 +2,9 @@ from flask import Flask, request, redirect, url_for
 from flask import render_template, session, make_response, flash
 import csv
 import time
+import subprocess
+import pickle
+import os
 
 app = Flask(__name__)
 
@@ -94,21 +97,24 @@ def rescheduling():
     #                 './data', radius = 3.]) 
     # ^^ subprocess.call("python_script.py",arguments) ^^
     # return output
-    # if finished 
-    data_rows = read_csv('data/preferred_options.csv')
-    session['data_rows'] = data_rows
-    row_range = range(len(data_rows))
+    # if finished
+    # f = open('pickled_process','w')
     
-    print(session['bookingid'])
     
-    time.sleep(3)
-    return(render_template("preferred_options.html",    
-        bookingid = session['bookingid'],
-        beginTime = session['beginTime'],
-        busid = session['busid'],
-        row_range = session['row_range'],
-        data_rows = session['data_rows'], 
-        last_data_row = len(session['data_rows']) - 1,))
+    # removing the flag file
+    if os.path.isfile(os.path.join('data','flag.txt')):
+        os.remove(os.path.join('data','flag.txt'))
+        
+    p = subprocess.Popen('python script.py',shell=True,
+            stdout=subprocess.PIPE)
+    # pickle.dump(subprocess.Popen('python script.py',shell=True,
+    #        stdout=subprocess.PIPE),f)
+    session['pid'] = p.pid
+    print p.pid
+    return(render_template('thumbsucker.html'))
+    
+    
+
   
 
 @app.route("/link/<row>", methods=["GET"])
@@ -139,21 +145,40 @@ def admin():
 
   return render_template('admin.html')
 
-LOOP_MAX = 5
-@app.route("/thumbsucker/<count>", methods=["GET","POST"])
-def thumbsucker(count):
-  if request.method == 'POST':
-    return "Done!"
-  else:
-    response = make_response(
-        render_template('thumbsucker.html', loop_max=LOOP_MAX, count=count))
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    return response
+@app.route("/thumbsucker/", methods=["GET","POST"])
+def thumbsucker():
+  
+  count = session.get('count', 0) + 1
+  session['count'] = count
+  
+  # this will work only on linux I think
+  # exists = os.path.exists("/proc/"+str(session['pid']))
+  
+  def check_pid(pid):        
+    """ Check For the existence of a unix pid. """
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+    
+  
 
-@app.route("/done", methods=["GET","POST"])
-def done():
-  return "Done!"
+  # if check_pid(session['pid']):
+  if not os.path.isfile(os.path.join('data','flag.txt')):
+    display_string = "Looped %d times." % count
+    return render_template('thumbsucker.html', display_string=display_string)
+  else:
+    data_rows = read_csv('data/preferred_options.csv')
+    session['data_rows'] = data_rows
+    row_range = range(len(data_rows))
+    return(render_template("preferred_options.html",    
+        bookingid = session['bookingid'],
+        beginTime = session['beginTime'],
+        busid = session['busid'],
+        row_range = session['row_range'],
+        data_rows = session['data_rows'], 
+        last_data_row = len(session['data_rows']) - 1,))
 
 
 if __name__ == "__main__":

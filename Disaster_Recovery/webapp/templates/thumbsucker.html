@@ -13,26 +13,16 @@
 <!-- Calls the thumbsucker URL ever 1 seconds -->
 <script type="text/javascript">
 
-var count = 0;
-var loop_max = parseInt({{ loop_max }});
-(function poll() {
-    (setTimeout(function () {
-        count = count + 1;
-        var url_string = "/thumbsucker/" + count;
-        $.ajax({
-            type: 'POST',
-            url: url_string,
-        });
-        if ( count < loop_max ) {
-          var element = document.getElementById("display");
-          element.innerHTML = "Looping " + count + " times.";
-          poll();
-        }
-        else {
-          window.location.href = "/done";
-        }
-    }, 1000));
-})();
+setTimeout(
+  (function () {
+    window.location.href = "/thumbsucker/";
+  }),
+      1000);
+
+$(document).ready(function() {
+  var element = document.getElementById("display");
+  element.innerHTML = "{{ display_string }}";
+});
 
 </script>
 
