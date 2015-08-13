@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, url_for
 from flask import render_template, session, make_response
 import csv
+import time
 
 app = Flask(__name__)
 
@@ -123,16 +124,21 @@ def admin():
 
   return render_template('admin.html')
 
-@app.route("/thumbsucker/", methods=["GET","POST"])
-def thumbsucker():
-  session['thumbsucker_count'] = (
-      session.get('thumbsucker_count', 0) + 1)
-  count = str(session['thumbsucker_count'])
-  response = make_response(
-      render_template('thumbsucker.html', count=count))
-  response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-  response.headers['Pragma'] = 'no-cache'
-  return response
+LOOP_MAX = 5
+@app.route("/thumbsucker/<count>", methods=["GET","POST"])
+def thumbsucker(count):
+  if request.method == 'POST':
+    return "Done!"
+  else:
+    response = make_response(
+        render_template('thumbsucker.html', loop_max=LOOP_MAX, count=count))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    return response
+
+@app.route("/done", methods=["GET","POST"])
+def done():
+  return "Done!"
 
 
 if __name__ == "__main__":

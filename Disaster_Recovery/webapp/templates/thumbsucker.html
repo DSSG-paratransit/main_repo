@@ -14,22 +14,30 @@
 <script type="text/javascript">
 
 var count = 0;
+var loop_max = parseInt({{ loop_max }});
 (function poll() {
     (setTimeout(function () {
+        count = count + 1;
+        var url_string = "/thumbsucker/" + count;
         $.ajax({
             type: 'POST',
-            url: '/thumbsucker/',
+            url: url_string,
         });
-        count = count + 1;
-        location.reload();
-        poll();
-    }, 5000));
+        if ( count < loop_max ) {
+          var element = document.getElementById("display");
+          element.innerHTML = "Looping " + count + " times.";
+          poll();
+        }
+        else {
+          window.location.href = "/done";
+        }
+    }, 1000));
 })();
 
-
-
 </script>
-Example of a thumbsucker displayed {{ count }} times.
+
+<h1 id="display">Looping</h1>
+
 
 </body>
 </html>
