@@ -13,9 +13,9 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 -The main file should be calling functions from the other files to run our algorithm
 
 #What our algorithm does:
--Takes real time data 
--Cleans data
--Accepts and formats unscheduled requests
--Finds the best insertion for unscheduled requests onto a previously scheduled bus route
+- Takes real time data 
+- Cleans data
+- Accepts and formats unscheduled requests
+- Finds the best insertion for unscheduled requests onto a previously scheduled bus route
 -Compares the cost for handling unscheduled requests by inserting onto scheduled bus routes, calling a taxi, or creating a new bus run
 
