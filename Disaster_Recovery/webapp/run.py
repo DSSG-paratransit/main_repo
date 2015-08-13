@@ -15,27 +15,30 @@ def register():
 @app.route("/display", methods=["GET","POST"])
 def preferred_options():
   # Displays a table
+  error = None
   if request.method == 'POST':
-    error = None
     data_rows = read_csv() #we wont have preferred_options.csv available yet...
     session['data_rows'] = data_rows
-    session['bookingid'] = None
-    session['busid'] = None
+    
+    #initialize variables
+    session['beginTime'] = None; beginTime = session['beginTime']
+    session['busid'] = None; busid = session['busid']
+    session['bookingid'] = None; bookingid = session['bookingid']
+
     if request.form.get('bookingid', None) is not None: #booking id is filled
       bookingid = request.form['bookingid']
-      beginTime = request.form['beginTime']
       session['bookingid'] = bookingid
-      session['beginTime'] = None #keep begin time as None for busRescheduler_run.
       
-    elif request.form.get('busid', None) is not None and request.form.get('beginTime',None)is not None: #busid, beginTime boxes are filled
+    if request.form.get('busid', None) is not None and request.form.get('beginTime',None) is not None: #busid, beginTime boxes are filled
       busid = request.form['busid']
       beginTime = request.form['beginTime']
       session['busid'] = busid
       session['beginTime'] = beginTime
 
     #if bookingid is empty (so, case is brokenbus), and either busid or beginTime are missing from second block
-    elif (request.form.get('busid', None) is None or request.form.get('beginTime', None) is None) and request.form.get('bookingid', None) is None: 
+    if (busid == '' or beginTime == '') and bookingid is None: 
         error = 'Missing either broken bus ID or an initial rescheduling time.'
+        print('cond block 3')
         return render_template('request.html', error = error)
 
     row_range = range(len(data_rows))
@@ -56,7 +59,7 @@ def preferred_options():
     #    last_data_row = len(data_rows) - 1,
     #    )
 
-  return render_template('request.html') 
+  return render_template('request.html', error = None) 
   
 
 def read_csv(filename='data/preferred_options.csv'):
