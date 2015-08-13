@@ -123,22 +123,16 @@ def admin():
     return msg
 
   return render_template('admin.html')
-
-LOOP_MAX = 5
-@app.route("/thumbsucker/<count>", methods=["GET","POST"])
-def thumbsucker(count):
-  if request.method == 'POST':
-    return "Done!"
+LOOP_MAX = 3
+@app.route("/thumbsucker/", methods=["GET","POST"])
+def thumbsucker():
+  count = session.get('count', 0) + 1
+  session['count'] = count
+  if count < LOOP_MAX:
+    display_string = "Looped %d times." % count
+    return render_template('thumbsucker.html', display_string=display_string)
   else:
-    response = make_response(
-        render_template('thumbsucker.html', loop_max=LOOP_MAX, count=count))
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    return response
-
-@app.route("/done", methods=["GET","POST"])
-def done():
-  return "Done!"
+    return "Done!"
 
 
 if __name__ == "__main__":
