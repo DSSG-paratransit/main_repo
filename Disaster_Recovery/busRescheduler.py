@@ -11,19 +11,19 @@ def busReschedule_run(schedule_filename,
                       path_to_outdir = af.os.path.join(af.os.getcwd(),'data'),
                       radius = 3.):
 
-  '''
-      schedule_filename (str): name of file to be used if you want to test a DEMO file. Must be a single day, QC'ed file.
-      accesskey (str): AWS_ACCESS_KEY
-      secretkey (str): AWS_SECRET_KEY
-      bookingid (?): list of BookingIds to be rescheduled (comma separated?)
-      broken_run (str): name of broken run.
-      windows (float): size of time windows, in seconds
-      resched_init_time (int): seconds in day at which rescheduling can occur.
-      path_to_outdir (str): path to directory where you would like to store all output files.
-      radius (float): number of miles to search for close buses. Will be shrunk by increments of 1 if
-                      number of nearby buses is > 30.
+    '''
+    schedule_filename (str): name of file to be used if you want to test a DEMO file. Must be a single day, QC'ed file.
+    accesskey (str): AWS_ACCESS_KEY
+    secretkey (str): AWS_SECRET_KEY
+    bookingid (?): list of BookingIds to be rescheduled (comma separated?)
+    broken_run (str): name of broken run.
+    windows (float): size of time windows, in seconds
+    resched_init_time (int): seconds in day at which rescheduling can occur.
+    path_to_outdir (str): path to directory where you would like to store all output files.
+    radius (float): number of miles to search for close buses. Will be shrunk by increments of 1 if
+              number of nearby buses is > 30.
 
-      '''
+    '''
     flag = 400 #400 is good, 200 is bad.
 
     if not af.os.path.exists(path_to_outdir):
@@ -44,8 +44,8 @@ def busReschedule_run(schedule_filename,
         try:
             fullSchedule = af.s3_data_acquire(accesskey, secretkey, path_to_outdir, qc_file_name = 'qc_streaming.csv')
             if type(fullSchedule) == int:
-              flag = 200
-              return flag
+                flag = 200
+                return flag
 
         except IOError: #is this the right error if s3_data_acquire fails?
             print('Could not access streaming data!')
@@ -72,9 +72,17 @@ def busReschedule_run(schedule_filename,
             flag = 200
             return flag
 
+        if resched_init_time is not None:
+            resched_init_time = af.humanToSeconds(resched_init_time)
+
         if resched_init_time is None:
             t = af.datetime.datetime.now()
-            t = str(t.hour)+':'+str(t.minute)
+            hr = str(t.hour)
+            if t.minute < 10:
+                m = str(0)+str(t.minute)
+            else:
+                m = str(t.minute)
+            t = hr+':'+m
             resched_init_time = af.humanToSeconds(t)
 
         URIDs = af.get_URID_Bus(fullSchedule_windows, broken_run, resched_init_time) 
@@ -103,6 +111,7 @@ def busReschedule_run(schedule_filename,
     best_buses = []
     for i in range(len(URIDs)):
         print('Rescheduling URID {0}'.format(i))
+        print('URID.PickUpCoords:{0}'.format(URIDs[i].PickUpCoords))
         busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=radius)
         insert_stats = []
 

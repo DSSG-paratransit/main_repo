@@ -36,7 +36,7 @@ def day_schedule_Update(data, top_Feasibility, URID):
     #update the inserted bus's ETAs!
     run_inserted = new_data[new_data['Run'] == top_Feasibility['RunID']]
     run_inserted.ix[pickup_new:dropoff_new, 'ETA'] += top_Feasibility['pickup_lag']
-    run_inserted.ix[dropoff_new:, 'ETA']  += top_Feasibility['total_lag']
+    run_inserted.ix[dropoff_new:, 'ETA']  += top_Feasibility['additional_time']
     new_data.ix[run_inserted.index, 'ETA'] =  run_inserted.ix[:, 'ETA']
 
     new_data.index = range(0, new_data.shape[0])

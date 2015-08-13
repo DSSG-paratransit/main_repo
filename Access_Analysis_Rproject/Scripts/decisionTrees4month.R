@@ -98,7 +98,7 @@ y = treeData$ClientCost
 fit <- rpart(ClientCost ~ ., data = treeData, method = 'anova')
 fitRF <- randomForest(x = X, y = y, ntree = 20, importance = T, keep.forest = T)
 
-colnames(X)[order(fitRF$importance[,1], decreasing = T)]
+rel_importances <- colnames(X)[order(fitRF$importance[,1], decreasing = T)]
 
 # print(fit$cptable[,'rel error'])
 # #No results!!! BOOOOOOOOOOO
