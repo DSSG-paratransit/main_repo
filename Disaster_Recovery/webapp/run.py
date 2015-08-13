@@ -16,26 +16,27 @@ def register():
 def preferred_options():
   # Displays a table
   if request.method == 'POST':
-    data_rows = read_csv() #we wont have preferred_options.csv available yet...
-    session['data_rows'] = data_rows
+    error = None
+    #data_rows = read_csv() #we wont have preferred_options.csv available yet...
+    #session['data_rows'] = data_rows
     session['bookingid'] = None
     session['busid'] = None
     if request.form.get('bookingid', None) is not None:
       bookingid = request.form['bookingid']
       beginTime = request.form['beginTime']
       session['bookingid'] = bookingid
-      session['beginTime'] = beginTime #keep begin time as None for busRescheduler_run.
+      session['beginTime'] = None #keep begin time as None for busRescheduler_run.
       
-    elif request.form.get('busid', None) is not None and request.form.get('beginTime',None)is not None:
+    elif request.form.get('busid', None) is not None and request.form.get('beginTime',None)is not None: #both boxes filled
       busid = request.form['busid']
       beginTime = request.form['beginTime']
       session['busid'] = busid
       session['beginTime'] = beginTime
 
-      if session['busid'] is None:
-        flash
-        return render_template('request.html')
-
+    #if bookingid is empty (so, case is brokenbus), and either busid or beginTime are missing from second block
+    elif (request.form.get('busid', None) is None or request.form.get('beginTime', None) is None) and request.form.get('bookingid', None) is None: 
+        error = 'Missing either broken bus ID or an initial rescheduling time.'
+        return render_template('request.html', error = error)
 
     row_range = range(len(data_rows))
     session['row_range'] = row_range
