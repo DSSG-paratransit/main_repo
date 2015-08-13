@@ -35,7 +35,7 @@ def busReschedule_run(schedule_filename,
         if af.os.path.isfile(schedule_filename):
             fullSchedule = af.pd.DataFrame.from_csv(schedule_filename, header=0, sep=',', index_col = False)
         else:
-            print('File not found!')
+            print('Demo file not found!')
             flag = 200
             return flag
 
@@ -202,11 +202,16 @@ def main():
     if af.sys.argv[7] is not None: bookingid = int(af.sys.argv[7])
     else: bookingid = None
     if af.sys.argv[8] is not None: windows = float(af.sys.argv[8])
-    else: windows = None
+    else: windows = 1800.
     if af.sys.argv[9] is not None: radius = float(af.sys.argv[9])
-    else: radius = None
+    else: radius = 3.
         
     flag = busReschedule_run(demo_filename, accesskey, secretkey, broken_run, path_to_outdir, resched_init_time, bookingid, windows, radius)
+    fout = open(os.path.join(path_to_outdir,'flag.txt'), 'w')
+    fout.write(str(flag))
+    fout.close()
+
+
 
 if __name__ == "__main__":
     main()
