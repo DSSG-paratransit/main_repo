@@ -468,8 +468,7 @@ def osrm (URID_location, inbound, outbound):
         lat_cord_O = outbound[k, 0]; lon_cord_O = outbound[k, 1]
         lat_cord_I = inbound[k, 0]; lon_cord_I = inbound[k, 1]
         
-        route_url = osrm_url+ "loc=" + str(round(lat_cord_O,6)) + "," + str(round(lon_cord_O,6)) + "&loc=" + str(round(urid_LAT,0)) + "," + str(round(urid_LON, 6)) + "&loc=" + str(round(lat_cord_I,6)) + "," + str(round(lon_cord_I,6)) +"&instructions=false"
-        print(route_url)
+        route_url = osrm_url+ "loc=" + str(round(lat_cord_O,6)) + "," + str(round(lon_cord_O,6)) + "&loc=" + str(round(urid_LAT,6)) + "," + str(round(urid_LON, 6)) + "&loc=" + str(round(lat_cord_I,6)) + "," + str(round(lon_cord_I,6)) +"&instructions=false"
         route_requests = requests.get(route_url)
         route_results = route_requests.json()
         if not route_results:
@@ -477,7 +476,6 @@ def osrm (URID_location, inbound, outbound):
             total_times += [50000000000]
         else:
             total_times += [route_results[u'route_summary'][u'total_time']]
-            print(total_times)
 
     a = np.array([total_times])
     
@@ -494,12 +492,13 @@ def original_lateness(Run_Schedule, comeback1):
     bw_ctr = 0
     lateness_ctr = 0
     for k in range(comeback1, (Run_Schedule.index.max()+1)):
-        bound = max(Run_Schedule.PickupEnd.loc[k], Run_Schedule.DropoffEnd.loc[k])
-        eta = Run_Schedule.ETA.loc[k]
-        #0 indicates TW not broken, 1 otherwise.
-        bw_ctr += int(eta > bound)
-        #if time window is broken, by how much?
-        lateness_ctr += max(0, eta - bound)
+        if (Run_Schedule.Activity.loc[k] in [0,1]):
+            bound = max(Run_Schedule.PickupEnd.loc[k], Run_Schedule.DropoffEnd.loc[k])
+            eta = Run_Schedule.ETA.loc[k]
+            #0 indicates TW not broken, 1 otherwise.
+            bw_ctr += int(eta > bound)
+            #if time window is broken, by how much?
+            lateness_ctr += max(0, eta - bound)
 
     return({'late_windows':bw_ctr, 'total_lateness':lateness_ctr})
 
@@ -521,13 +520,11 @@ def insertFeasibility(Run_Schedule, URID):
 
     #location from where we'll pick up given URID.
     uridLoc = [round(URID.PickUpCoords[0],6), round(URID.PickUpCoords[1],6)]
-
     pickup_inserts = time_overlap(Run_Schedule, URID)
     outbound = Run_Schedule.loc[pickup_inserts["outbound"]]
     outbound = np.column_stack((np.array(outbound.LAT), np.array(outbound.LON)))
     inbound = Run_Schedule.loc[pickup_inserts["inbound"]]
     inbound = np.column_stack((np.array(inbound.LAT), np.array(inbound.LON)))
-    print(inbound[0,:], uridLoc)
 
     time_matrix_pickup = osrm(uridLoc, inbound, outbound)
 
@@ -545,8 +542,10 @@ def insertFeasibility(Run_Schedule, URID):
     newETA = Run_Schedule.ETA.loc[leave1] + dwell + best_rt_time_1
     bound = max(Run_Schedule.PickupEnd.loc[comeback1], Run_Schedule.DropoffEnd.loc[comeback1])
 
-    #is the next time window broken?
+    #if there's technically speedup, then no penalty for picking URID up.
     lag1 = newETA - Run_Schedule.ETA.loc[comeback1]
+    if lag1 < 0:
+        lag1 = 0
 
     #count number of broken time windows for rest of trip:
     #to be able to count broken windows, amt by which they're broken,
@@ -580,10 +579,12 @@ def insertFeasibility(Run_Schedule, URID):
     if (not dropoff_inbound) | (not dropoff_inbound):
         return {}
 
+    #just a precaution.
     if dropoff_outbound[0] == dropoff_inbound[0]:
         print('First outbound and first inbound for drop off are the same.')
         dropoff_inbound.pop(0)
 
+    #nodes from which we depart original schedule to drop URID off, and then return to og schedule
     outbound = Run_Schedule_Lag.loc[dropoff_outbound]
     outbound = np.column_stack((np.array(outbound.LAT), np.array(outbound.LON)))
     try:
@@ -594,7 +595,7 @@ def insertFeasibility(Run_Schedule, URID):
 
     inbound = np.column_stack((np.array(inbound.LAT), np.array(inbound.LON)))
 
-    uridLoc = [URID.DropOffCoords[0], URID.DropOffCoords[1]]
+    uridLoc = [round(URID.DropOffCoords[0],6), round(URID.DropOffCoords[1],6)]
     #second iteration of distance matrix, for drop off routing:
     time_matrix_dropoff = osrm(uridLoc, inbound, outbound)
 
@@ -612,6 +613,8 @@ def insertFeasibility(Run_Schedule, URID):
     bound = max(Run_Schedule_Lag.PickupEnd.loc[comeback2], Run_Schedule_Lag.DropoffEnd.loc[comeback2])
     #total lag: lag from pickup, and then difference between lagged eta and eta for coming back from pickup
     total_lag = newETA - Run_Schedule.ETA.loc[comeback2]
+    if total_lag < 0:
+        total_lag = 0
 
     #count number of broken time windows from dropping off URID:
     dropoff_score = np.zeros(((Run_Schedule_Lag.index.max() - comeback2 + 1),2)) 
@@ -639,9 +642,6 @@ def insertFeasibility(Run_Schedule, URID):
     score = test.append(dropoff_df)
 
     new_broken_TW = np.sum(score['break_TW']) - og_break_TW
-    
-    if lag1 < 0:
-        lag1 = 0
 
     ret = {"score": score, "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
                'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1,
@@ -740,11 +740,10 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
     ctr = 1;
     for option in list_Feasibility_output:
 
-        text_file.write('\nOPTION {0}:\n'.format(ctr))
-        text_file.write('Put {0} onto bus {1} \n'.format(int(URID.BookingId), option['RunID']) )
-        text_file.write('Additional route time: {0} mins'.format(option['additional_time']/(60.0)))
-        #text_file.write('Additional lateness: {0} \n'.format(int(option['additional_lag'])))
-        text_file.write('Additional exceeded time windows: {0} \n'.format(option['additional_broken_windows']))
+        text_file.write('OPTION {0}:\n'.format(ctr))
+        text_file.write('Put booking ID {0} onto bus {1} \n'.format(int(URID.BookingId), option['RunID']) )
+        text_file.write('Additional route time: {0} mins \n'.format(option['additional_time']/(60.0)))
+        text_file.write('Additional exceeded time windows: {0} \n\n'.format(option['additional_broken_windows']))
         ctr+=1
 
     text_file.write('Taxi cost: {0}'.format(taxi_cost))

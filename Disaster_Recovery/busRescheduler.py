@@ -32,7 +32,7 @@ def busReschedule_run(schedule_filename,
     #get data
     if schedule_filename is not None:
         if af.os.path.isfile(schedule_filename):
-            fullSchedule = af.pd.DataFrame.from_csv(schedule_filename, header=0, sep=',')
+            fullSchedule = af.pd.DataFrame.from_csv(schedule_filename, header=0, sep=',', index_col = False)
         else:
             print('File not found!')
             flag = 200
@@ -111,7 +111,6 @@ def busReschedule_run(schedule_filename,
     best_buses = []
     for i in range(len(URIDs)):
         print('Rescheduling URID {0}'.format(i))
-        print('URID.PickUpCoords:{0}'.format(URIDs[i].PickUpCoords))
         busRuns_tocheck = af.radius_Elimination(fullSchedule_windows, URIDs[i], radius=radius)
         insert_stats = []
 
@@ -130,6 +129,7 @@ def busReschedule_run(schedule_filename,
                 URIDs[i].DropoffStart = URIDs[i].DropoffInsert
 
                 runSchedule = af.get_busRuns(fullSchedule_windows, run, None)
+
                 print('Testing feasibility for run ' + run)
                 brokenwindows_dict =af.insertFeasibility(runSchedule, URIDs[i])
                 if not brokenwindows_dict:
