@@ -4,11 +4,11 @@ import all_functions as af
 def busReschedule_run(schedule_filename,
                       accesskey,
                       secretkey,
-                      bookingid,
                       broken_run,
-                      windows = 1800.,
-                      resched_init_time = None,
                       path_to_outdir = af.os.path.join(af.os.getcwd(),'data'),
+                      resched_init_time = None,
+                      bookingid = None,
+                      windows = 1800.,
                       radius = 3.):
 
     '''
@@ -24,6 +24,7 @@ def busReschedule_run(schedule_filename,
               number of nearby buses is > 30.
 
     '''
+
     flag = 400 #400 is good, 200 is bad.
 
     if not af.os.path.exists(path_to_outdir):
@@ -184,3 +185,30 @@ def busReschedule_run(schedule_filename,
     pref_opt.to_csv(af.os.path.join(path_to_outdir, 'preferred_options.csv'), index = False)
 
     return flag
+
+
+
+def main():
+
+    for i in range(len(af.sys.argv)):
+        if af.sys.argv[i] == 'None':
+            af.sys.argv[i]= None
+
+    demo_filename = af.sys.argv[1]
+    accesskey = af.sys.argv[2]
+    secretkey = af.sys.argv[3]
+    broken_run = af.sys.argv[4]
+    path_to_outdir = af.sys.argv[5]
+    resched_init_time = af.sys.argv[6]
+    if af.sys.argv[7] is not None: bookingid = int(af.sys.argv[7])
+    else: bookingid = None
+    if af.sys.argv[8] is not None: windows = float(af.sys.argv[8])
+    else: windows = None
+    if af.sys.argv[9] is not None: radius = float(af.sys.argv[9])
+    else: radius = None
+        
+    flag = busReschedule_run(demo_filename, accesskey, secretkey, broken_run, path_to_outdir, resched_init_time, bookingid, windows, radius)
+
+if __name__ == "__main__":
+    main()
+
