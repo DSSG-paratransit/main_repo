@@ -1,0 +1,33 @@
+<html>
+<head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+</head>
+
+<body>
+
+
+<div id="thumbsucker"></div>
+
+<!-- Calls the thumbsucker URL ever 1 seconds -->
+<script type="text/javascript">
+
+setTimeout(
+  (function () {
+    window.location.href = "/thumbsucker/";
+  }),
+      1000);
+
+$(document).ready(function() {
+  var element = document.getElementById("display");
+  element.innerHTML = "{{ display_string }}";
+});
+
+</script>
+
+<h1 id="display">Looping</h1>
+
+
+</body>
+</html>

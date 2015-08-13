@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    <h1>King Country Metro Scheduling Updater</h1>
+
+    {% if error %}
+    <p> <strong>Error:</strong> {{ error }} </p>
+    {% endif %}
+    
+    <h3>Enter</h3>
+    <form action="/display" method="POST">
+    <p>Booking ID</p>
+        <input type="text" name="bookingid">
+        <p></p>
+        <input type="submit" value="Submit" >
+    </form>
+    
+
+    <h3>Or</h3>
+    
+    <form action="/display" method="POST">
+    <p>Bus ID</p>
+        <input type="text" name="busid" >
+         <p>Initial Time (HH:MM format)</p>
+        <input type="text" name="beginTime">
+        <p></p>
+        <input type="submit" value="Submit" >
+    </form>
+</body>
+</html>
