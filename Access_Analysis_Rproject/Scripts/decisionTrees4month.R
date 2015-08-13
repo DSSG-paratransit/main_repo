@@ -74,25 +74,38 @@ dataOnOff <- dataOnOff[1:(cut_ind-1),]
 
 ############################ Decision tree analysis ######################
 library(rpart)
+library(randomForest)
 
 #organize tree data, scale the TimeOnBus variable, make cities categorical vars
-treeData <- dataOnOff[,c("ClientCost", "Ugly", "OnCity", "OffCity","TimeOfDay", "Wday", "Ugly")]
-treeData$ClientCost <- scale(treeData$ClientCost)
-treeData$TimeOfDay <- treeData$TimeOfDay-min(treeData$TimeOfDay)
-treeData$OnCity <- as.factor(treeData$OnCity)
-treeData$OffCity <- as.factor(treeData$OffCity)
-treeData <- treeData[!is.na(treeData$Ugly),]
+treeData <- dataOnOff[,c("OnCity", "OffCity","TimeOfDay", "Wday", "ClientCost")]
+treeData$TimeOfDay <- scale(treeData$TimeOfDay)
+treeData$OnCity <- as.character(treeData$OnCity)
+treeData$OffCity <- as.character(treeData$OffCity)
+treeData <- treeData[!is.na(treeData$ClientCost),]
+for(onc in unique(treeData$OnCity)){
+  treeData[paste("OnCity", onc, sep = "_")] <- ifelse(treeData$OnCity == onc, 1, 0)
+}
+treeData$OnCity <- NULL
+
+for(offc in unique(treeData$OffCity)){
+  treeData[paste("OffCity", offc, sep = "_")] <- ifelse(treeData$OffCity == offc, 1, 0)
+}
+treeData$OffCity <- NULL
+X = treeData[,-which(colnames(treeData)=='ClientCost')]
+y = treeData$ClientCost
 
 # grow tree 
-fit <- rpart(Ugly ~ OnCity + OffCity + TimeOfDay+ Wday,
-             method="class", data = treeData)
+fit <- rpart(ClientCost ~ ., data = treeData, method = 'anova')
+fitRF <- randomForest(x = X, y = y, ntree = 20, importance = T, keep.forest = T)
 
-print(fit$cptable[,'rel error'])
-#No results!!! BOOOOOOOOOOO
+rel_importances <- colnames(X)[order(fitRF$importance[,1], decreasing = T)]
 
-pfit<- prune(fit, cp=   fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"])
-
-plot(pfit, uniform=TRUE, 
-     main="Pruned Classification Tree for Ugly Rides")
-text(pfit, use.n=TRUE, all=TRUE, cex=.8)
+# print(fit$cptable[,'rel error'])
+# #No results!!! BOOOOOOOOOOO
+# 
+# pfit<- prune(fit, cp=   fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"])
+# 
+# plot(pfit, uniform=TRUE, 
+#      main="Pruned Classification Tree for Ugly Rides")
+# text(pfit, use.n=TRUE, all=TRUE, cex=.8)
 
