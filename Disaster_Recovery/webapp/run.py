@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect, url_for
 from flask import render_template, session, make_response, flash
+import re
 import csv
 import time
 import subprocess
@@ -91,19 +92,24 @@ def rescheduling():
     # session['file']
 
     #define command line arguments
-    demo_file = os.path.join(os.getcwd(), 'data', 'qc_streaming_DEMO.csv') #need to get this from admin page later...
+    demo_file = os.path.join(os.getcwd(), 'data', session['file']) #need to get this from admin page later...
     path_to_outdir = os.path.join(os.getcwd(),'data'); print(path_to_outdir)
     path_to_rescheduler = os.path.join('..', 'core', 'busRescheduler.py')
     args = ['python', str(path_to_rescheduler), 
     demo_file, str(session['accesskey']), str(session['secretkey']), str(session['busid']),
     path_to_outdir, str(session['beginTime']), str(session['bookingid']), '1800.', '3.']
-    args.append("2> "+os.path.join(path_to_outdir,'error_output.txt'))
-    args.append("1> "+os.path.join(path_to_outdir, 'cmdline_output.txt'))
+    args.append("2>"+os.path.join(path_to_outdir,'error_output.txt'))
+    args.append("1>"+os.path.join(path_to_outdir, 'cmdline_output.txt'))
 
     print args
     # removing the flag file. Successfully implemented.
     if os.path.isfile(os.path.join('data','flag.txt')):
         os.remove(os.path.join('data','flag.txt'))
+    if os.path.isfile(os.path.join('data','error_output.txt')):
+        os.remove(os.path.join('data','error_output.txt'))
+    if os.path.isfile(os.path.join('data','cmdline_output.txt')):
+        os.remove(os.path.join('data','cmdline_output.txt'))
+
         
     p = subprocess.Popen(args, stdout=subprocess.PIPE)
 
@@ -150,26 +156,38 @@ def thumbsucker():
   
   count = session.get('count', 0) + 1
   session['count'] = count
+
+  #if there's an error_output file, display it
+  if os.path.isfile(os.path.join('error_output.txt')):
+    error_file = open(os.path.join('data', 'error_output.txt'), 'r')
+    error_string = error_file.readlines()[0]
+    return render_template('error_page.html', error_string = error_string)
   
-  # if check_pid(session['pid']):
+  # if process still isnt completed
   if not os.path.isfile(os.path.join('data','flag.txt')):
     display_string = "Still re-routing passengers. Looping %d times." % count
     return render_template('thumbsucker.html', display_string=display_string)
 
-  # if os.path.isfile(os.path.join('error_output.txt')):
-  #   display_string = ""
-
-  else:
-    data_rows = read_csv('data/preferred_options.csv')
-    session['data_rows'] = data_rows
-    row_range = range(len(data_rows))
-    return(render_template("preferred_options.html",    
-        bookingid = session['bookingid'],
-        beginTime = session['beginTime'],
-        busid = session['busid'],
-        row_range = session['row_range'],
-        data_rows = session['data_rows'], 
-        last_data_row = len(session['data_rows']) - 1,))
+  #if process is completed...
+  if os.path.isfile(os.path.join('data', 'flag.txt')):
+    errorfile = open(os.path.join('data', 'flag.txt'), 'r')
+    flg = errorfile.readlines()
+    #process completed but with errors
+    if re.search('200', flg[0]):
+      error_string = 'There Error in your request. Please check to see if your Run number and/or booking IDs are valid and that they were previously scheduled for today. It is also possible that you have entered a time at which a bus has no more remaining passengers. Please go back to the display page.'
+      return render_template('error_page.html', error_string = error_string)
+    #process completed cleanly 
+    elif os.path.isfile(os.path.join('data', 'flag.txt')):
+      data_rows = read_csv('data/preferred_options.csv')
+      session['data_rows'] = data_rows
+      row_range = range(len(data_rows))
+      return(render_template("preferred_options.html",    
+          bookingid = session['bookingid'],
+          beginTime = session['beginTime'],
+          busid = session['busid'],
+          row_range = session['row_range'],
+          data_rows = session['data_rows'], 
+          last_data_row = len(session['data_rows']) - 1,))
 
 
 if __name__ == "__main__":

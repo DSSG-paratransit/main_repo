@@ -192,22 +192,28 @@ def main():
         if af.sys.argv[i] == 'None':
             af.sys.argv[i]= None
 
-    demo_filename = af.sys.argv[1]
-    accesskey = af.sys.argv[2]
-    secretkey = af.sys.argv[3]
-    broken_run = af.sys.argv[4]
-    path_to_outdir = af.sys.argv[5]
-    resched_init_time = af.sys.argv[6]
-    if af.sys.argv[7] is not None: bookingid = int(af.sys.argv[7])
-    else: bookingid = None
-    if af.sys.argv[8] is not None: windows = float(af.sys.argv[8])
-    else: windows = 1800.
-    if af.sys.argv[9] is not None: radius = float(af.sys.argv[9])
-    else: radius = 3.
+    try: 
+        demo_filename = af.sys.argv[1]
+        accesskey = af.sys.argv[2]
+        secretkey = af.sys.argv[3]
+        broken_run = af.sys.argv[4]
+        path_to_outdir = af.sys.argv[5]
+        resched_init_time = af.sys.argv[6]
+        if af.sys.argv[7] is not None: bookingid = int(af.sys.argv[7])
+        else: bookingid = None
+        if af.sys.argv[8] is not None: windows = float(af.sys.argv[8])
+        else: windows = 1800.
+        if af.sys.argv[9] is not None: radius = float(af.sys.argv[9])
+        else: radius = 3.
 
-    for i in range(0, len(af.sys.argv)):
-        print(af.sys.argv[i])
+        for i in range(0, len(af.sys.argv)):
+            print(af.sys.argv[i])
 
+    except ValueError:
+        flag = 200
+        fout = open(os.path.join(path_to_outdir,'flag.txt'), 'w')
+        fout.write(str(flag))
+        fout.close()
         
     flag = busReschedule_run(demo_filename, accesskey, secretkey, broken_run, path_to_outdir, resched_init_time, bookingid, windows, radius)
     fout = open(os.path.join(path_to_outdir,'flag.txt'), 'w')
