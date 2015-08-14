@@ -97,14 +97,16 @@ def rescheduling():
     args = ['python', str(path_to_rescheduler), 
     demo_file, str(session['accesskey']), str(session['secretkey']), str(session['busid']),
     path_to_outdir, str(session['beginTime']), str(session['bookingid']), '1800.', '3.']
-    print(args)
+    args.append("2> "+os.path.join(path_to_outdir,'error_output.txt'))
+    args.append("1> "+os.path.join(path_to_outdir, 'cmdline_output.txt'))
 
-    # removing the flag file
+    print args
+    # removing the flag file. Successfully implemented.
     if os.path.isfile(os.path.join('data','flag.txt')):
         os.remove(os.path.join('data','flag.txt'))
         
-    p = subprocess.Popen(args,shell=True,
-            stdout=subprocess.PIPE)
+    p = subprocess.Popen(args, stdout=subprocess.PIPE)
+
     # pickle.dump(subprocess.Popen('python script.py',shell=True,
     #        stdout=subprocess.PIPE),f)
     session['pid'] = p.pid
@@ -139,7 +141,7 @@ def admin():
     session['accesskey'] = accesskey
     session['secretkey'] = secretkey
     session['file'] = filename
-    return msg
+    return render_template('request.html')
 
   return render_template('admin.html')
 
@@ -149,23 +151,14 @@ def thumbsucker():
   count = session.get('count', 0) + 1
   session['count'] = count
   
-  # this will work only on linux I think
-  # exists = os.path.exists("/proc/"+str(session['pid']))
-  
-  def check_pid(pid):        
-    """ Check For the existence of a unix pid. """
-    try:
-        os.kill(pid, 0)
-        return True
-    except OSError:
-        return False
-    
-  
-
   # if check_pid(session['pid']):
   if not os.path.isfile(os.path.join('data','flag.txt')):
-    display_string = "Looped %d times." % count
+    display_string = "Still re-routing passengers. Looping %d times." % count
     return render_template('thumbsucker.html', display_string=display_string)
+
+  # if os.path.isfile(os.path.join('error_output.txt')):
+  #   display_string = ""
+
   else:
     data_rows = read_csv('data/preferred_options.csv')
     session['data_rows'] = data_rows
