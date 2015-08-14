@@ -86,16 +86,18 @@ def rescheduling():
 
     ### variables to use
     # session['bookingid']
-    # session['accesskey']
-    # session['secretkey']
+    session['accesskey'] = None
+    session['secretkey'] = None
     # session['file']
 
     #define command line arguments
-    demo_file = os.path.join(os.getcwd(), 'data', 'qc_streaming_DEMO.csv')
-    path_to_outdir = os.path.join(os.getcwd(),'data')
-    args = ['python', 'busRescheduler.py', 
+    demo_file = os.path.join(os.getcwd(), 'data', 'qc_streaming_DEMO.csv') #need to get this from admin page later...
+    path_to_outdir = os.path.join(os.getcwd(),'data'); print(path_to_outdir)
+    path_to_rescheduler = os.path.join('..', 'core', 'busRescheduler.py')
+    args = ['python', str(path_to_rescheduler), 
     demo_file, str(session['accesskey']), str(session['secretkey']), str(session['busid']),
-    path_to_outdir, '11:30', str(session['bookingid']), '1800.', '3.']
+    path_to_outdir, str(session['beginTime']), str(session['bookingid']), '1800.', '3.']
+    print(args)
 
     # removing the flag file
     if os.path.isfile(os.path.join('data','flag.txt')):
