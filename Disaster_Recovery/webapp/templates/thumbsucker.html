@@ -13,23 +13,21 @@
 <!-- Calls the thumbsucker URL ever 1 seconds -->
 <script type="text/javascript">
 
-var count = 0;
-(function poll() {
-    (setTimeout(function () {
-        $.ajax({
-            type: 'POST',
-            url: '/thumbsucker/',
-        });
-        count = count + 1;
-        location.reload();
-        poll();
-    }, 5000));
-})();
+setTimeout(
+  (function () {
+    window.location.href = "/thumbsucker/";
+  }),
+      1000);
 
-
+$(document).ready(function() {
+  var element = document.getElementById("display");
+  element.innerHTML = "{{ display_string }}";
+});
 
 </script>
-Example of a thumbsucker displayed {{ count }} times.
+
+<h1 id="display">Looping</h1>
+
 
 </body>
 </html>
