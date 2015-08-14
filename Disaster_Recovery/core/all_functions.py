@@ -808,9 +808,9 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
     for option in list_Feasibility_output:
 
         text_file.write('OPTION {0}:\n'.format(ctr))
-        text_file.write('Put booking ID {0} onto bus {1} \n'.format(int(URID.BookingId), option['RunID']) )
-        text_file.write('Additional route time: {0} mins \n'.format(option['additional_time']/(60.0)))
-        text_file.write('Additional exceeded time windows: {0} \n\n'.format(option['additional_broken_windows']))
+        text_file.write('Put booking ID {0} onto bus {1}. \n'.format(int(URID.BookingId), option['RunID']) )
+        text_file.write('Additional route time: {0} mins \n'.format(round(option['additional_time']/(60.0), 2)))
+        text_file.write('Additional exceeded time windows: {0} \n\n'.format(int(option['additional_broken_windows'])))
         ctr+=1
 
     text_file.write('Taxi cost: {0}'.format(taxi_cost))

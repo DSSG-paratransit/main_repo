@@ -42,7 +42,6 @@ def preferred_options():
     #if bookingid is empty (so, case is brokenbus), and either busid or beginTime are missing from second block
     if (busid == '' or beginTime == '') and bookingid is None: 
         error = 'Missing either broken bus ID or an initial rescheduling time.'
-        print('cond block 3')
         return render_template('request.html', error = error)
 
     row_range = range(len(data_rows))
@@ -50,18 +49,8 @@ def preferred_options():
     # print(url_for('rescheduling'))
 
 
-
     return redirect(url_for('rescheduling'))
     
-    # return render_template('rescheduling.html')
-    # return render_template('preferred.html')
-    #    bookingid = bookingid,
-    #    beginTime = beginTime,
-    #    busid = busid,
-    #    row_range = row_range,
-    #    data_rows = data_rows, 
-    #    last_data_row = len(data_rows) - 1,
-    #    )
 
   return render_template('request.html', error = None) 
   
@@ -80,19 +69,45 @@ def read_csv(filename='data/preferred_options.csv'):
       else:
         data_rows.append(row)
   return data_rows
+
+
+def clean_a_o(lst_strs):
+    new_table_inds = []
+    for k in range(len(lst_strs)):
+      for char in lst_strs[k]:
+        if char in "[]":
+          lst_strs[k] = lst_strs[k].replace(char, '')
+      if re.search("OPTION", lst_strs[k]): #index of list where we should make new option table
+        new_table_inds.append(k)
+    return lst_strs, new_table_inds
+
+
+@app.route("/link/<row>", methods=["GET"])
+def link(row):
+    bookingid = session['data_rows'][int(row)][0]
+    print(bookingid)
+    bid_file = open(os.path.join('data', str(bookingid)+'_insert_data.txt'), 'r')
+    bid_insert_txt, new_table_inds = clean_a_o(bid_file.readlines()) #this list of strings and a list of indices
+    opt1 = bid_insert_txt[new_table_inds[0]:new_table_inds[0]+4]; print(opt1)
+    opt2 = bid_insert_txt[new_table_inds[1]:new_table_inds[1]+4]; print(opt2)
+    opt3 = bid_insert_txt[new_table_inds[2]:new_table_inds[2]+4]; print(opt3)
+
+    return render_template('alternative_options.html', 
+        bookingid = bookingid,
+        opt1 = opt1, opt2 = opt2, opt3 = opt3
+        )
+
+
+
   
 @app.route("/rescheduling",methods = ["GET","POST"])
 def rescheduling():
 
-
-    ### variables to use
-    # session['bookingid']
-    session['accesskey'] = None
-    session['secretkey'] = None
-    # session['file']
-
     #define command line arguments
-    demo_file = os.path.join(os.getcwd(), 'data', session['file']) #need to get this from admin page later...
+    if session['file'] is not None:
+      demo_file = os.path.join(os.getcwd(), 'data', session['file']) #need to get this from admin page later...
+    else:
+      demo_file = 'None'
     path_to_outdir = os.path.join(os.getcwd(),'data'); print(path_to_outdir)
     path_to_rescheduler = os.path.join('..', 'core', 'busRescheduler.py')
     args = ['python', str(path_to_rescheduler), 
@@ -119,16 +134,7 @@ def rescheduling():
     print p.pid
     return(render_template('thumbsucker.html'))
     
-    
-
   
-
-@app.route("/link/<row>", methods=["GET"])
-def link(row):
-    bookingid = session['data_rows'][int(row)][0]
-    return render_template('alternative_options.html', 
-        bookingid = bookingid,
-        )
 
 @app.route("/admin", methods=["GET","POST"])
 def admin():
@@ -142,12 +148,16 @@ def admin():
       secretkey = request.form['secretkey']
     elif request.form.get('file', None) is not None:
       filename = request.form['file']
-    msg = "accesskey is %s. secret key is %s. file is %s" % (
-        accesskey, secretkey, filename)
-    session['accesskey'] = accesskey
-    session['secretkey'] = secretkey
-    session['file'] = filename
-    return render_template('request.html')
+
+    if (accesskey == '' or secretkey == '') and filename is None: 
+      error = 'Missing either an AWS accesskey or a secret key.'
+      return render_template('admin.html', error = error)
+
+
+    session['accesskey'] = accesskey; print(session['accesskey'])
+    session['secretkey'] = secretkey; print(session['secretkey'])
+    session['file'] = filename; print(session['file'])
+    return render_template('request.html', accesskey = accesskey, secretkey = secretkey)
 
   return render_template('admin.html')
 
@@ -174,7 +184,7 @@ def thumbsucker():
     flg = errorfile.readlines()
     #process completed but with errors
     if re.search('200', flg[0]):
-      error_string = 'There Error in your request. Please check to see if your Run number and/or booking IDs are valid and that they were previously scheduled for today. It is also possible that you have entered a time at which a bus has no more remaining passengers. Please go back to the display page.'
+      error_string = 'There Error in your request. Please check to see if your Run number\nand/or booking IDs are valid and that they were previously scheduled for today. It is also possible that you have entered a time at which a bus has no more remaining passengers. Please go back to the display page.'
       return render_template('error_page.html', error_string = error_string)
     #process completed cleanly 
     elif os.path.isfile(os.path.join('data', 'flag.txt')):

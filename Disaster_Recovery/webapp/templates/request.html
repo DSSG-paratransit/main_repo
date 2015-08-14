@@ -6,6 +6,10 @@
     {% if error %}
     <p> <strong>Error:</strong> {{ error }} </p>
     {% endif %}
+
+    {% if accesskey and secretkey %}
+    <p> AWS access key: {{ accesskey }}; secret key: {{ secretkey }}</p>
+    {% endif %}
     
     <h3>Enter</h3>
     <form action="/display" method="POST">

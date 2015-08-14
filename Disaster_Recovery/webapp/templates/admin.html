@@ -2,6 +2,11 @@
 <html lang="en">
 <body>
     <h1>Demo Administration</h1>
+
+    {% if error %}
+    <p> <strong>Error:</strong> {{ error }} </p>
+    {% endif %}
+
     <h3>Enter</h3>
     <form action="/admin" method="POST">
     <p>AWS Key</p>
