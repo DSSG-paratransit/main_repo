@@ -171,8 +171,7 @@ def busReschedule_run(schedule_filename,
 
         else:
             delay_costs.append(400000)
-            taxi_costs.append(af.taxi(URIDs[i].PickUpCoords[0], URIDs[i].PickUpCoords[1],
-                URIDs[i].DropOffCoords[0], URIDs[i].DropOffCoords[1], af.wheelchair_present(URIDs[i])))
+            taxi_costs.append(af.taxi(URIDs[i]))
             best_buses.append('NA')
 
     #WRITE csv of PREFERRED OPTIONS:
