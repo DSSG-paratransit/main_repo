@@ -1,9 +1,12 @@
+from isMonth import isMonth
 from legPct import legPct, runTime
 import numpy as np
+import multiprocessing as mp
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.formula.api as smf
+import re
 
 def deadheadPct(busRun):
     '''
@@ -15,6 +18,23 @@ def deadheadPct(busRun):
     # print 'this should be 1: ' + str(sum(busRun.PctOfRunTime)) # debug
     deadheads = busRun[(busRun.TotalPass == 0)]
     return sum(deadheads.PctOfRunTime)
+
+def getSingleDC(row):
+    output = [] # [tokeep t/f, breakdown T/F, deadhead or date, cost or run]
+    busRun = schedule[(schedule['ServiceDate'] == row[1].ServiceDate) & 
+             (schedule['Run'] == row[1].Run)]
+    totalPass = sum(busRun.NumOn)
+    if 8 in busRun.Activity.unique():
+        output = [False, True, row[1].Run, row[1].ServiceDate]
+    elif totalPass <= 0:
+        output = [False, False, None, None]
+    else: 
+        time = float(runTime(busRun['ETA']))
+        if time < 14400: # 4 hours
+            time = 14400.0
+        cost = time / totalPass
+        deadhead = deadheadPct(busRun[['ETA', 'TotalPass']])
+        output = [True, False, deadhead, cost]
 
 def deadheadVsCost(schedule):
     '''
@@ -86,7 +106,7 @@ def deadheadVsCost(schedule):
     uniqueDR['CostProxy'] = cost
     uniqueDR['PctDeadhead'] = deadhead
     # IMPORTANT: change file name if not 4mo
-    uniqueDR.to_csv('../../data/4mo_deadhead_cost_adjusted_results.csv', index=False)
+    uniqueDR.to_csv('../../data/4mo_deadhead_cost_nptest.csv', index=False)
 
     # regressions
     results = smf.ols('cost ~ deadhead', data=uniqueDR).fit()
@@ -95,14 +115,14 @@ def deadheadVsCost(schedule):
     print results.summary()
 
     # plots
-    plt.hist(deadhead)
-    plt.savefig('../output/deadheadHist.png')
-    plt.close()
-    plt.plot(deadhead, cost, 'ro')
-    plt.xlabel('Percent Deadhead')
-    plt.ylabel('Length of Trip / Number of passengers (seconds)')
-    plt.savefig('../output/figure.png')
-    plt.close()
+    # plt.hist(deadhead)
+    # plt.savefig('../output/deadheadHist.png')
+    # plt.close()
+    # plt.plot(deadhead, cost, 'ro')
+    # plt.xlabel('Percent Deadhead')
+    # plt.ylabel('Length of Trip / Number of passengers (seconds)')
+    # plt.savefig('../output/figure.png')
+    # plt.close()
 
 
 def main():
@@ -110,7 +130,7 @@ def main():
     #data.columns.values[24] = 'TotalPass'
     busRun = data[(data.Run == data.Run[0]) & (data.ServiceDate == data.ServiceDate[0])]    
     print str(deadheadPct(busRun)) + '\n'
-    deadheadVsCost(data[['ServiceDate', 'Run', 'Activity', 'ETA', 'NumOn', 'TotalPass']])
+    deadheadVsCost(data[isMonth(4,15,data.ServiceDate)][['ServiceDate', 'Run', 'Activity', 'ETA', 'NumOn', 'TotalPass']])
     #[data.ServiceDate == '0015-04-13'] ^insert this before the [ for a single day
 
 if __name__ == '__main__':
