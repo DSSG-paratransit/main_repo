@@ -175,7 +175,7 @@ def thumbsucker():
   
   # if process still isnt completed
   if not os.path.isfile(os.path.join('data','flag.txt')):
-    display_string = "Still re-routing passengers. Looping %d times." % count
+    display_string = "Currently rerouting passengers. This could potentially take over 10 minutes. Please wait{0}".format("."*(count%4))
     return render_template('thumbsucker.html', display_string=display_string)
 
   #if process is completed...
@@ -184,7 +184,7 @@ def thumbsucker():
     flg = errorfile.readlines()
     #process completed but with errors
     if re.search('200', flg[0]):
-      error_string = 'There Error in your request. Please check to see if your Run number\nand/or booking IDs are valid and that they were previously scheduled for today. It is also possible that you have entered a time at which a bus has no more remaining passengers. Please go back to the display page.'
+      error_string = 'There Error in your request. Please check to see if your Run number, booking IDs, and AWS keys are valid and that they were previously scheduled for today. It is also possible that you have entered a time at which a bus has no more remaining passengers. Please go back to the display page.'
       return render_template('error_page.html', error_string = error_string)
     #process completed cleanly 
     elif os.path.isfile(os.path.join('data', 'flag.txt')):
