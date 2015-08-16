@@ -88,13 +88,22 @@ def link(row):
     print(bookingid)
     bid_file = open(os.path.join('data', str(bookingid)+'_insert_data.txt'), 'r')
     bid_insert_txt, new_table_inds = clean_a_o(bid_file.readlines()) #this list of strings and a list of indices
-    opt1 = bid_insert_txt[new_table_inds[0]:new_table_inds[0]+4]; print(opt1)
-    opt2 = bid_insert_txt[new_table_inds[1]:new_table_inds[1]+4]; print(opt2)
-    opt3 = bid_insert_txt[new_table_inds[2]:new_table_inds[2]+4]; print(opt3)
+
+    # present 0 - 3 alternative options on the alternative_options.html page.
+    if len(bid_insert_txt) > 0:
+      opt1 = bid_insert_txt[new_table_inds[0]:new_table_inds[0]+4]; print(opt1)
+    else: opt1 = None
+    if len(bid_insert_txt) > 5:
+      opt2 = bid_insert_txt[new_table_inds[1]:new_table_inds[1]+4]; print(opt2)
+    else: opt2 = None
+    if len(bid_insert_txt) > 10:
+      opt3 = bid_insert_txt[new_table_inds[2]:new_table_inds[2]+4]; print(opt3)
+    else: opt3 = None
 
     return render_template('alternative_options.html', 
         bookingid = bookingid,
         opt1 = opt1, opt2 = opt2, opt3 = opt3
+        num_opts = len(bid_insert_txt)/5
         )
 
 
