@@ -1,0 +1,14 @@
+ValueError
+IOError
+KeyError
+StandardError
+ArithmeticError
+OverflowError
+FloatingPointError
+EOFError
+IndexError
+ImportError
+NameError
+EnvironmentError
+TypeError
+RuntimeError

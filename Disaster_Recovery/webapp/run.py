@@ -158,18 +158,31 @@ def admin():
 
   return render_template('admin.html')
 
+
+def check_run_errors():
+  # if os.path.isfile(os.path.join('data', 'stderr.txt')):
+  error_list = open(os.path.join('data', 'list_python_errortypes.txt'), 'r')
+  el = error_list.readlines(); error_list.close()
+  stderr = open(os.path.join('data', 'stderr.txt'), 'r')
+  se = stderr.read(); stderr.close()
+  for err in el:
+    if re.search(err, se):
+      return -1
+  else:
+    return 0
+
 @app.route("/thumbsucker/", methods=["GET","POST"])
 def thumbsucker():
   
   count = session.get('count', 0) + 1
   session['count'] = count
 
-  #if there's an error_output file, display it
-  # if os.path.isfile(os.path.join('error_output.txt')):
-    # error_file = open(os.path.join('data', 'error_output.txt'), 'r')
-    # error_string = error_file.readlines()[0]
-    # return render_template('error_page.html', error_string = error_string)
-  
+  #See if busRescheduler returned errors.
+  status = check_run_errors()
+  if status == -1:
+    error_string = 'Run time error. Please refer to stderr.txt file.'
+    return render_template('error_page.html', error_string = error_string)
+
   # if process still isnt completed
   if not os.path.isfile(os.path.join('data','flag.txt')):
     display_string = "Currently rerouting passengers. This may take a while (Order of 10 minutes). Please wait{0}".format("."*(count%4))
@@ -177,10 +190,9 @@ def thumbsucker():
 
   #if process is completed...
   if os.path.isfile(os.path.join('data', 'flag.txt')):
-    f_out.close()
-    f_err.close()
-    errorfile = open(os.path.join('data', 'flag.txt'), 'r')
-    flg = errorfile.readlines()
+    knownerrorfile = open(os.path.join('data', 'flag.txt'), 'r')
+    flg = knownerrorfile.readlines()
+    knownerrorfile.close()
     #process completed but with KNOWN busRescheduler.py flag code errors.
     if re.search('400', flg[0]):
       error_string = 'Submitted data is either incorrectly formatted, of incorrect type, or misspelled. Please revisit the display page.'
@@ -205,7 +217,7 @@ def thumbsucker():
       return render_template('error_page.html', error_string = error_string)
 
     #process completed cleanly 
-    elif os.path.isfile(os.path.join('data', 'flag.txt')):
+    else:
       data_rows = read_csv('data/preferred_options.csv')
       session['data_rows'] = data_rows
       row_range = range(len(data_rows))
