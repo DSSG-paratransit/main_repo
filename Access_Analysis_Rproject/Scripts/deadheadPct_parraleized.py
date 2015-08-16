@@ -57,12 +57,6 @@ def deadheadVsCost(schedule):
     print(results.values())
     results = pd.DataFrame(results.values())
 
-    # pool = mp.Pool(initializer=getSingleDC, initargs=(uniqueDR.iterrows(), schedule))
-    # # results = pd.DataFrame([pool.apply(getSingleDC, args=(row, schedule,)) for row in uniqueDR.iterrows()])
-
-    # pool.close()
-    # pool.join()
-
     print(results)
 
     # write results to file
