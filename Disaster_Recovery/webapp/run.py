@@ -113,23 +113,21 @@ def rescheduling():
     args = ['python', str(path_to_rescheduler), 
     demo_file, str(session['accesskey']), str(session['secretkey']), str(session['busid']),
     path_to_outdir, str(session['beginTime']), str(session['bookingid']), '1800.', '3.']
-    args.append("2>"+os.path.join(path_to_outdir,'error_output.txt'))
-    args.append("1>"+os.path.join(path_to_outdir, 'cmdline_output.txt'))
 
     print args
-    # removing the flag file. Successfully implemented.
+    # removing the flag, stdout, and stderr files.
     if os.path.isfile(os.path.join('data','flag.txt')):
         os.remove(os.path.join('data','flag.txt'))
-    if os.path.isfile(os.path.join('data','error_output.txt')):
-        os.remove(os.path.join('data','error_output.txt'))
-    if os.path.isfile(os.path.join('data','cmdline_output.txt')):
-        os.remove(os.path.join('data','cmdline_output.txt'))
+    if os.path.isfile(os.path.join('data','stdout.txt')):
+        os.remove(os.path.join('data','stdout.txt'))
+    if os.path.isfile(os.path.join('data','stderr.txt')):
+        os.remove(os.path.join('data','stderr.txt'))
 
-        
-    p = subprocess.Popen(args, stdout=subprocess.PIPE)
+    # begin a subprocess to run busRescheduler:
+    f_out = open(os.path.join('data', 'stdout.txt'), 'w')
+    f_err = open(os.path.join('data', 'stderr.txt'), 'w')
+    p = subprocess.Popen(args, stdout=f_out, stderr = f_err)
 
-    # pickle.dump(subprocess.Popen('python script.py',shell=True,
-    #        stdout=subprocess.PIPE),f)
     session['pid'] = p.pid
     print p.pid
     return(render_template('thumbsucker.html'))
@@ -153,7 +151,6 @@ def admin():
       error = 'Missing either an AWS accesskey or a secret key.'
       return render_template('admin.html', error = error)
 
-
     session['accesskey'] = accesskey; print(session['accesskey'])
     session['secretkey'] = secretkey; print(session['secretkey'])
     session['file'] = filename; print(session['file'])
@@ -168,24 +165,45 @@ def thumbsucker():
   session['count'] = count
 
   #if there's an error_output file, display it
-  if os.path.isfile(os.path.join('error_output.txt')):
-    error_file = open(os.path.join('data', 'error_output.txt'), 'r')
-    error_string = error_file.readlines()[0]
-    return render_template('error_page.html', error_string = error_string)
+  # if os.path.isfile(os.path.join('error_output.txt')):
+    # error_file = open(os.path.join('data', 'error_output.txt'), 'r')
+    # error_string = error_file.readlines()[0]
+    # return render_template('error_page.html', error_string = error_string)
   
   # if process still isnt completed
   if not os.path.isfile(os.path.join('data','flag.txt')):
-    display_string = "Currently rerouting passengers. This could potentially take over 10 minutes. Please wait{0}".format("."*(count%4))
+    display_string = "Currently rerouting passengers. This may take a while (Order of 10 minutes). Please wait{0}".format("."*(count%4))
     return render_template('thumbsucker.html', display_string=display_string)
 
   #if process is completed...
   if os.path.isfile(os.path.join('data', 'flag.txt')):
+    f_out.close()
+    f_err.close()
     errorfile = open(os.path.join('data', 'flag.txt'), 'r')
     flg = errorfile.readlines()
-    #process completed but with errors
-    if re.search('200', flg[0]):
-      error_string = 'There Error in your request. Please check to see if your Run number, booking IDs, and AWS keys are valid and that they were previously scheduled for today. It is also possible that you have entered a time at which a bus has no more remaining passengers. Please go back to the display page.'
+    #process completed but with KNOWN busRescheduler.py flag code errors.
+    if re.search('400', flg[0]):
+      error_string = 'Submitted data is either incorrectly formatted, of incorrect type, or misspelled. Please revisit the display page.'
       return render_template('error_page.html', error_string = error_string)
+    if re.search('401', flg[0]):
+      error_string = 'Demo file not found. Please revisit the admin page.'
+      return render_template('error_page.html', error_string = error_string)
+    if re.search('402', flg[0]):
+      error_string = 'Formatting of streaming data file is incorrect. Please revisit the admin page.'
+      return render_template('error_page.html', error_string = error_string)
+    if re.search('403', flg[0]):
+      error_string = 'Streaming data could not be accessed correctly. Please revisit the admin page and try different AWS keys.'
+      return render_template('error_page.html', error_string = error_string)
+    if re.search('404', flg[0]):
+      error_string = 'Requested Run number is not scheduled for today. Please revisit the display page.'
+      return render_template('error_page.html', error_string = error_string)
+    if re.search('405', flg[0]):
+      error_string = 'You have entered BookingIds not present in the requested schedule. Please revisit the display page.'
+      return render_template('error_page.html', error_string = error_string)
+    if re.search('406', flg[0]):
+      error_string = 'There are no clients left to reschedule after the requested initial time. Please revisit the display page.'
+      return render_template('error_page.html', error_string = error_string)
+
     #process completed cleanly 
     elif os.path.isfile(os.path.join('data', 'flag.txt')):
       data_rows = read_csv('data/preferred_options.csv')
