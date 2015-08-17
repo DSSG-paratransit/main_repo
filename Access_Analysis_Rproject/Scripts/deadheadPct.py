@@ -130,7 +130,9 @@ def main():
     #data.columns.values[24] = 'TotalPass'
     busRun = data[(data.Run == data.Run[0]) & (data.ServiceDate == data.ServiceDate[0])]    
     print str(deadheadPct(busRun)) + '\n'
-    deadheadVsCost(data[isMonth(4,15,data.ServiceDate)][['ServiceDate', 'Run', 'Activity', 'ETA', 'NumOn', 'TotalPass']])
+    subset = data.ServiceDate.apply(lambda x: isMonth(04,15,x))
+    print subset
+    deadheadVsCost(data[subset][['ServiceDate', 'Run', 'Activity', 'ETA', 'NumOn', 'TotalPass']])
     #[data.ServiceDate == '0015-04-13'] ^insert this before the [ for a single day
 
 if __name__ == '__main__':

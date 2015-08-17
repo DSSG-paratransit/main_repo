@@ -19,7 +19,7 @@ def deadheadPct(busRun):
     deadheads = busRun[(busRun.TotalPass == 0)]
     return sum(deadheads.PctOfRunTime)
 
-def getSingleDC(row, schedule,results,pnum):
+def getSingleDC(row, schedule,results,pnum,total):
     output = []
     busRun = schedule[(schedule['ServiceDate'] == row[1].ServiceDate) & 
              (schedule['Run'] == row[1].Run)]
@@ -36,6 +36,7 @@ def getSingleDC(row, schedule,results,pnum):
         deadhead = deadheadPct(busRun[['ETA', 'TotalPass']])
         output = [row[1].ServiceDate, row[1].Run, True, False, deadhead, cost]
     results[pnum] = output
+    print(str(len(results)/float(total)) + '%' + ' done.')
 
 def deadheadVsCost(schedule):
     '''
@@ -43,12 +44,13 @@ def deadheadVsCost(schedule):
     with columns [ServiceDate, Run, Activity, ETA, NumOn, TotalPass,]
     '''
     uniqueDR = schedule[['ServiceDate', 'Run']].drop_duplicates()
+    total = len(uniqueDR)
     manager = mp.Manager()
     results = manager.dict()
     procs = []
     pnum = 0
     for row in uniqueDR.iterrows():
-        p = mp.Process(target=getSingleDC, args=(row,schedule,results,pnum,))
+        p = mp.Process(target=getSingleDC, args=(row,schedule,results,pnum,total,))
         procs.append(p)
         p.start()
         pnum = pnum + 1
@@ -89,7 +91,9 @@ def main():
     #data.columns.values[24] = 'TotalPass'
     busRun = data[(data.Run == data.Run[0]) & (data.ServiceDate == data.ServiceDate[0])]    
     print str(deadheadPct(busRun)) + '\n'
-    deadheadVsCost(data[date.match(data.ServiceDate)][['ServiceDate', 'Run', 'Activity', 'ETA', 'NumOn', 'TotalPass']])
+    subset = data.ServiceDate.apply(lambda x: isMonth(04,15,x))
+    print subset
+    deadheadVsCost(data[subset][['ServiceDate', 'Run', 'Activity', 'ETA', 'NumOn', 'TotalPass']])
     #[data.ServiceDate == '0015-04-13'] ^insert this before the [ for a single day
 
 if __name__ == '__main__':

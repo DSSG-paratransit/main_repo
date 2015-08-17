@@ -13,8 +13,14 @@ def isMonth(month, year, date):
 	if len(month) == 1:
 		month = '0' + month
 
+	# print date
+	# print month
+	# print year
+
 	regex = re.compile(year + '-' + month + '-\d\d') 
 	if regex.match(str(date)) is None:
+		# print 'False + \n'
 		return False
+	# print 'True + \n'
 	return True
 
