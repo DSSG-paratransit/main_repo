@@ -8,7 +8,8 @@ import pickle
 import os
 
 error_list = open(os.path.join('data', 'list_python_errortypes.txt'), 'r')
-EL = error_list.readlines(); error_list.close()
+EL = error_list.read().split(' '); error_list.close()
+print(EL)
 
 app = Flask(__name__)
 
