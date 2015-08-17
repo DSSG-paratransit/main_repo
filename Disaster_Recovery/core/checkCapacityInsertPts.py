@@ -222,43 +222,43 @@ class CapacityInsertPts():
         # likely to be most common case
         if URID.DropoffStart <= URID.PickupEnd:
             print "DropoffStart before PickupEnd"
-             max_wcCapacity_PU = self.busRun['wcCapacity'].iloc[PickupWindow].max()
-             max_amCapacity_PU = self.busRun['amCapacity'].iloc[PickupWindow].max()
-             full_PU = (max_wcCapacity_PU + URID.wcOn > 3) & (max_amCapacity_PU + URID.wcOn > self.amCapacitySwitch(str(max_wcCapacity_PU + URID.wcOn)))
-             max_wcCapacity_DO = self.busRun['wcCapacity'].iloc[DropoffWindow].max()
-             max_amCapacity_DO = self.busRun['amCapacity'].iloc[DropoffWindow].max()
-             full_DO = (max_wcCapacity_DO + URID.wcOn > 3) & (max_amCapacity_DO + URID.wcOn > self.amCapacitySwitch(str(max_wcCapacity_DO + URID.wcOn)))
-             # check pick up window and then all associated cases  
-             if full_PU:
-                  print "full somehere in pick up window "
-                  tmpPU = int(self.checkWindow(URID,PickupWindow,1,-1))
-                  if tmpPU == URID.PickupEnd:
-                      print "not enough time for pick up"
-                      URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
-                  elif (tmpPU < URID.PickupEnd) and (full_DO):
-                      print "pick up okay, full somewhere in drop off window"
-                      tmpDO = int(self.checkWindow(URID, DropoffWindow,-1,0))
-                      if tmpDO == URID.DropoffEnd:
-                          print "not enough time for drop off"
-                          URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
-                      elif tmpDO < URID.DropoffEnd:
-                          print "returning pick up and drop off inserts"
-                          URID.PickupInsert, URID.DropoffInsert = int(self.checkWindow(URID,PickupWindow,1,-1)), int(self.checkWindow(URID, DropoffWindow,-1,0))
-                  elif (tmpPU < URID.PickupEnd) and not (full_DO):
-                      print "returning pick up and drop off inserts, drop off never full"
-                      URID.PickupInsert, URID.DropoffInsert = int(self.checkWindow(URID,PickupWindow,1,-1)), URID.DropoffEnd
-             elif not (full_PU) and (full_DO):
-                 print "pick up never full, drop off full somewhere"
-                 tmpDO = int(self.checkWindow(URID, DropoffWindow,-1,0))
-                 if tmpDO == URID.DropoffEnd:
-                     print "not enough time for drop off"
-                     URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
-                 elif tmpDO < URID.DropoffEnd:
-                     print "returning pick up and drop off inserts, pick up never full "
-                     URID.PickupInsert, URID.DropoffInsert = URID.PickupStart, int(self.checkWindow(URID, DropoffWindow,-1,0))
-             elif not full_PU and not full_DO:
-                     print "entire window available!"
-                     URID.PickupInsert, URID.DropoffInsert = URID.PickupStart, URID.DropoffEnd
+            max_wcCapacity_PU = self.busRun['wcCapacity'].iloc[PickupWindow].max()
+            max_amCapacity_PU = self.busRun['amCapacity'].iloc[PickupWindow].max()
+            full_PU = (max_wcCapacity_PU + URID.wcOn > 3) & (max_amCapacity_PU + URID.wcOn > self.amCapacitySwitch(str(max_wcCapacity_PU + URID.wcOn)))
+            max_wcCapacity_DO = self.busRun['wcCapacity'].iloc[DropoffWindow].max()
+            max_amCapacity_DO = self.busRun['amCapacity'].iloc[DropoffWindow].max()
+            full_DO = (max_wcCapacity_DO + URID.wcOn > 3) & (max_amCapacity_DO + URID.wcOn > self.amCapacitySwitch(str(max_wcCapacity_DO + URID.wcOn)))
+            # check pick up window and then all associated cases  
+            if full_PU:
+                print "full somehere in pick up window "
+                tmpPU = int(self.checkWindow(URID,PickupWindow,1,-1))
+                if tmpPU == URID.PickupEnd:
+                    print "not enough time for pick up"
+                    URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
+                elif (tmpPU < URID.PickupEnd) and (full_DO):
+                    print "pick up okay, full somewhere in drop off window"
+                    tmpDO = int(self.checkWindow(URID, DropoffWindow,-1,0))
+                    if tmpDO == URID.DropoffEnd:
+                        print "not enough time for drop off"
+                        URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
+                    elif tmpDO < URID.DropoffEnd:
+                        print "returning pick up and drop off inserts"
+                        URID.PickupInsert, URID.DropoffInsert = int(self.checkWindow(URID,PickupWindow,1,-1)), int(self.checkWindow(URID, DropoffWindow,-1,0))
+                elif (tmpPU < URID.PickupEnd) and not (full_DO):
+                    print "returning pick up and drop off inserts, drop off never full"
+                    URID.PickupInsert, URID.DropoffInsert = int(self.checkWindow(URID,PickupWindow,1,-1)), URID.DropoffEnd
+            elif not (full_PU) and (full_DO):
+                print "pick up never full, drop off full somewhere"
+                tmpDO = int(self.checkWindow(URID, DropoffWindow,-1,0))
+                if tmpDO == URID.DropoffEnd:
+                    print "not enough time for drop off"
+                    URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
+                elif tmpDO < URID.DropoffEnd:
+                    print "returning pick up and drop off inserts, pick up never full "
+                    URID.PickupInsert, URID.DropoffInsert = URID.PickupStart, int(self.checkWindow(URID, DropoffWindow,-1,0))
+            elif not full_PU and not full_DO:
+                    print "entire window available!"
+                    URID.PickupInsert, URID.DropoffInsert = URID.PickupStart, URID.DropoffEnd
 
         if URID.DropoffStart > URID.PickupEnd:
             print "DropoffStart after PickupEnd"
@@ -267,7 +267,7 @@ class CapacityInsertPts():
                 # URID.PickupInsert, URID.DropoffInsert
                 URID.PickupInsert, URID.DropoffInsert =  np.nan, np.nan 
             elif not full:
-                if np.isnan(int(self.checkWindow(URID.PickupWindow,1,-1))):
+                if np.isnan(int(self.checkWindow(URID, PickupWindow,1,-1))):
                     print "pick up not feasible"
                     URID.PickupInsert, URID.DropoffInsert = np.nan, np.nan
                 else:
