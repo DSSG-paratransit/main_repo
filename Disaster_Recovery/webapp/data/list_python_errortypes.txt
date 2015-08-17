@@ -12,3 +12,4 @@ NameError
 EnvironmentError
 TypeError
 RuntimeError
+UnboundLocalError
