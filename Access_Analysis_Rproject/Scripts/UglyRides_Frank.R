@@ -10,6 +10,9 @@ library(timeDate)
 dataSet <- read.csv("./main_repo/Access_Analysis_Rproject/Data/UW_Trip_Data_QC.csv")
 #Change smalldataSet to dataSet when you want to use the whole 18 month QCed data
 #smalldataSet is just for one day, specifically Jan 3, 2015 b/c it's not a holiday
+
+dataSet <- dataSet[which(dataSet$SchedStatus == 1 | is.na(dataSet$SchedStatus)),]
+
 smalldataSet <- dataSet[which(dataSet$ServiceDate==dataSet$ServiceDate[3000]),]
 smalldataSet$ServiceDate <- as.timeDate(as.character(smalldataSet$ServiceDate))
 smalldataSet$Run <- as.character(smalldataSet$Run) #get list of rides occuring on particular day
@@ -29,7 +32,7 @@ write.table(costDF, file = "./main_repo/Access_Analysis_Rproject/Data/Cost_analy
 
 #clientCost <- numeric(length = nrow(clients))
 for(k in 1:length(ride_days)){
-  today = smalldataSet[which(smalldataSet$ServiceDate==ride_days[k]),]
+  today = smalldataSet[which(dataSet$ServiceDate==ride_days[k]),]
   legTimes <- diff(today$ETA)
   today$legTimes <- c(legTimes, NA)
   today_rides <- unique(today$Run)
@@ -47,6 +50,15 @@ for(k in 1:length(ride_days)){
       if((length(instances) %% 2 == 0) & (length(instances) !=0)){
         for(jj in 1:(length(instances)/2)){
           PersonOnBus <- this_ride[(instances[(jj*2)-1]:instances[(jj*2)]),]
+          
+          onLoc <- c(PersonOnBus[1, c("LAT", "LON")])
+          offLoc <-c(PersonOnBus[nrow(PersonOnBus), c("LAT", "LON")])
+          osrm_out <- osrm(onLoc, offLoc)
+          dist <- osrm_out$dist
+          
+          #haversine distance
+          
+          
           rideCost = 0; avgPass = 0
           for (jjj in 1:(nrow(PersonOnBus)-1)){
             rideCost = rideCost + (PersonOnBus$legTimes[jjj]/PersonOnBus$TotalPass[jjj])*(cost_per_sec)
