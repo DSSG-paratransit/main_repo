@@ -7,6 +7,9 @@ import subprocess
 import pickle
 import os
 
+error_list = open(os.path.join('data', 'list_python_errortypes.txt'), 'r')
+EL = error_list.readlines(); error_list.close()
+
 app = Flask(__name__)
 
 
@@ -103,7 +106,6 @@ def link(row):
     return render_template('alternative_options.html', 
         bookingid = bookingid,
         opt1 = opt1, opt2 = opt2, opt3 = opt3
-        num_opts = len(bid_insert_txt)/5
         )
 
 
@@ -170,11 +172,9 @@ def admin():
 
 def check_run_errors():
   # if os.path.isfile(os.path.join('data', 'stderr.txt')):
-  error_list = open(os.path.join('data', 'list_python_errortypes.txt'), 'r')
-  el = error_list.readlines(); error_list.close()
   stderr = open(os.path.join('data', 'stderr.txt'), 'r')
   se = stderr.read(); stderr.close()
-  for err in el:
+  for err in EL:
     if re.search(err, se):
       return -1
   else:
