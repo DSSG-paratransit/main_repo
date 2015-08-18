@@ -4,12 +4,12 @@ import re
 import csv
 import time
 import subprocess
+import pandas as pd
 import pickle
 import os
 
 error_list = open(os.path.join('data', 'list_python_errortypes.txt'), 'r')
 EL = error_list.read().split(' '); error_list.close()
-print(EL)
 
 app = Flask(__name__)
 
@@ -89,27 +89,37 @@ def clean_a_o(lst_strs):
 @app.route("/link/<row>", methods=["GET"])
 def link(row):
     bookingid = session['data_rows'][int(row)][0]
-    print(bookingid)
     bid_file = open(os.path.join('data', str(bookingid)+'_insert_data.txt'), 'r')
     bid_insert_txt, new_table_inds = clean_a_o(bid_file.readlines()) #this list of strings and a list of indices
 
     # present 0 - 3 alternative options on the alternative_options.html page.
     if len(bid_insert_txt) > 0:
-      opt1 = bid_insert_txt[new_table_inds[0]:new_table_inds[0]+4]; print(opt1)
-    else: opt1 = None
-    if len(bid_insert_txt) > 5:
-      opt2 = bid_insert_txt[new_table_inds[1]:new_table_inds[1]+4]; print(opt2)
-    else: opt2 = None
-    if len(bid_insert_txt) > 10:
-      opt3 = bid_insert_txt[new_table_inds[2]:new_table_inds[2]+4]; print(opt3)
+      opt1 = bid_insert_txt[new_table_inds[0]:new_table_inds[0]+5]; print(opt1)
+      rows1 = re.findall(r'\d+', opt1[2])
+    else:
+      opt1 = None
+    if len(bid_insert_txt) > 6:
+      opt2 = bid_insert_txt[new_table_inds[1]:new_table_inds[1]+5]; print(opt2)
+      #rows2 = re.findall(r'\d+', opt2[8])
+    else:
+      opt2 = None
+    if len(bid_insert_txt) > 12:
+      opt3 = bid_insert_txt[new_table_inds[2]:new_table_inds[2]+5]; print(opt3)
+      #rows3 = re.findall(r'\d+', opt2[14])
     else: opt3 = None
+
+    #read in new schedule, bold the newly inserted booking ids.
+    html = pd.read_csv(os.path.join('data', str(bookingid)+'_schedule.csv')).to_html()
+    new_schedule = re.sub(bookingid, '<strong> {0} <strong>'.format(bookingid), html)
 
     return render_template('alternative_options.html', 
         bookingid = bookingid,
-        opt1 = opt1, opt2 = opt2, opt3 = opt3
+        opt1 = opt1,
+        opt2 = opt2,
+        opt3 = opt3,
+        taxi_cost = bid_insert_txt[-1],
+        new_schedule = new_schedule
         )
-
-
 
   
 @app.route("/rescheduling",methods = ["GET","POST"])

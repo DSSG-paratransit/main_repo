@@ -139,6 +139,7 @@ def busReschedule_run(schedule_filename,
                 else:
                     insert_stats.append(brokenwindows_dict)
 
+
         #ASSEMBLE and ORDER transit options.
         if insert_stats:
             #ORDER buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
@@ -159,8 +160,13 @@ def busReschedule_run(schedule_filename,
             taxi_costs.append(af.taxi(URIDs[i]))
 
             #WRITE information about best insertions to text file
-            af.write_insert_data(URIDs[i], ordered_inserts[0:3],
-                path_to_outdir, taxi_costs[i])
+            if len(ordered_inserts) >= 3:
+                af.write_insert_data(URIDs[i], ordered_inserts[0:3],
+                    path_to_outdir, taxi_costs[i])
+            else:
+                af.write_insert_data(URIDs[i], ordered_inserts[0:],
+                    path_to_outdir, taxi_costs[i])
+
 
             #UPDATE whole day's schedule:
             fullSchedule_windows = af.day_schedule_Update(data = fullSchedule_windows, top_Feasibility = ordered_inserts[0], URID = URIDs[i])

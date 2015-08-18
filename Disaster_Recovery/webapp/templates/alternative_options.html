@@ -6,9 +6,9 @@
 
 
 <table border="1" style="float: left;">
-{% if opt1 is not None %}
+{% if opt1 %}
 	{% for row in opt1 %}
-		{% if row == "OPTION 1:" %}
+		{% if row == "OPTION 1:\n" %}
 		<tr>
 			<th>
 			<strong> {{ row }} <strong>
@@ -26,9 +26,9 @@
 </table>
 
 <table border="1" style="float: left;">
-{% if opt2 is not None %}
+{% if opt2 %}
 	{% for row in opt2 %}
-		{% if row == "OPTION 2:" %}
+		{% if row == "OPTION 2:\n" %}
 		<tr>
 			<th>
 			<strong> {{ row }} <strong>
@@ -46,9 +46,9 @@
 </table>
 
 <table border="1" style="float: left;">
-{% if opt3 is not None %}
+{% if opt3 %}
 	{% for row in opt3 %}
-		{% if row == "OPTION 3:" %}
+		{% if row == "OPTION 3:\n" %}
 		<tr>
 			<th>
 			<strong> {{ row }} <strong>
@@ -65,10 +65,22 @@
 {% endif %}
 </table>
 
+<table border="1">
+	<tr>
+		<th>
+		<strong> ESTIMATED TAXI COST: <strong>
+		</th>
+	</tr>
+			<tr>
+			<td> {{ taxi_cost }} </td>
+	</tr>
+</table>
 
-
-
-
+<p></p>
+<h1> <strong> New schedule associated with OPTION 1: <strong> </h1> 
+{% block content %}
+{{ new_schedule | safe }}
+{% endblock %}
 
 </body>
 </html>

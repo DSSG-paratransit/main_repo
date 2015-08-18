@@ -682,7 +682,8 @@ def insertFeasibility(Run_Schedule, URID):
     ret = {"score": score, "pickup_insert":(leave1, comeback1), "dropoff_insert":(leave2, comeback2),
                'RunID' : Run_Schedule.Run.iloc[0], 'pickup_lag' : lag1,
                'additional_broken_windows': new_broken_TW,
-               'additional_time': best_rt_time_1+best_rt_time_2+1000}
+               'additional_time': best_rt_time_1+best_rt_time_2+1000,
+               'minRunIndex' : Run_Schedule.index[0]}
 
     return(ret)
 
@@ -783,6 +784,20 @@ def taxi(URID):
     return cost
 
 
+def find_stop_numbers(alternative_option_dict):
+    '''
+    Args:
+        alternative_option_dict (dictionary): dictionary corresponding to an alternative routing option for a URID.
+
+    Returns:
+        two integers corresponding to the stop-numbers on the alternative bus route, after which the URID should
+        be picked up and dropped off, respectively. '''
+
+    pickup_stop = alternative_option_dict['pickup_insert'][0] - alternative_option_dict['minRunIndex']
+    dropoff_stop = alternative_option_dict['dropoff_insert'][0] - alternative_option_dict['minRunIndex']
+
+    return {'pickup_stop': pickup_stop, 'dropoff_stop': dropoff_stop}
+
 
 def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
 
@@ -799,21 +814,21 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
         Writes {BookingID}_insert_data.txt containing lag, number of late windows, average lateness
     """
 
-    if not os.path.isdir(path_to_output):
-        os.mkdir(path_to_output)
-
     file_name = os.path.join(path_to_output, str(str(int(URID.BookingId))+'_insert_data.txt'))
     text_file = open(file_name, "w")
     ctr = 1;
     for option in list_Feasibility_output:
 
+        stop_nums = find_stop_numbers(option)
+
         text_file.write('OPTION {0}:\n'.format(ctr))
-        text_file.write('Put booking ID {0} onto bus {1}. \n'.format(int(URID.BookingId), option['RunID']) )
+        text_file.write('Put Booking ID {0} onto bus {1}. \n'.format(int(URID.BookingId), option['RunID']))
+        text_file.write('Pick this client up after stop {0} and drop client off after stop {1}.\n'.format(stop_nums['pickup_stop'], stop_nums['dropoff_stop']))
         text_file.write('Additional route time: {0} mins \n'.format(round(option['additional_time']/(60.0), 2)))
         text_file.write('Additional exceeded time windows: {0} \n\n'.format(int(option['additional_broken_windows'])))
         ctr+=1
 
-    text_file.write('Taxi cost: {0}'.format(taxi_cost))
+    text_file.write('Taxi cost: ${0}'.format(taxi_cost))
     text_file.close()
     return None
 
