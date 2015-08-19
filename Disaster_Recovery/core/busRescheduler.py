@@ -179,6 +179,7 @@ def busReschedule_run(schedule_filename,
         else:
             delay_costs.append(400000)
             taxi_costs.append(af.taxi(URIDs[i]))
+            af.write_insert_data(URIDs[i], None, path_to_outdir, taxi_costs[i])
             best_buses.append('NA')
 
     #WRITE csv of PREFERRED OPTIONS:
@@ -206,7 +207,7 @@ def main():
         broken_run = af.sys.argv[4]
         path_to_outdir = af.sys.argv[5]
         resched_init_time = af.sys.argv[6]
-        if af.sys.argv[7] is not None: bookingid = int(af.sys.argv[7])
+        if af.sys.argv[7] is not None: bookingid = bookingid
         else: bookingid = None
         if af.sys.argv[8] is not None: windows = float(af.sys.argv[8])
         else: windows = 1800.

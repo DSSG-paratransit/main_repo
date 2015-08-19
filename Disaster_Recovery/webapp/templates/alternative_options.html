@@ -81,10 +81,12 @@
 </table>
 
 <p></p>
+{% if new_schedule %}
 <h1> <strong> New schedule associated with OPTION 1: <strong> </h1> 
-{% block content %}
-{{ new_schedule | safe }}
-{% endblock %}
+	{% block content %}
+	{{ new_schedule | safe }}
+	{% endblock %}
+{% endif %}
 
 </body>
 </html>

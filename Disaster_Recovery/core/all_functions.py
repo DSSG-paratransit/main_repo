@@ -264,7 +264,7 @@ def get_URID_Bus(data, broken_Run, resched_init_time, add_stranded = False, BREA
                 DropoffInsert = 0)
             saveme.append(temp)
 
-    print("There are %s rides left to be scheduled on broken run %s" % (len(saveme), broken_Run))
+    print("There are %s URIDs left to be scheduled on broken run %s" % (len(saveme), broken_Run))
     return saveme
 
 
@@ -817,19 +817,29 @@ def write_insert_data(URID, list_Feasibility_output, path_to_output, taxi_cost):
     file_name = os.path.join(path_to_output, str(str(int(URID.BookingId))+'_insert_data.txt'))
     text_file = open(file_name, "w")
     ctr = 1;
-    for option in list_Feasibility_output:
 
-        stop_nums = find_stop_numbers(option)
+    #If there are viable alternative options:
+    if list_Feasibility_output:
+        for option in list_Feasibility_output:
 
-        text_file.write('OPTION {0}:\n'.format(ctr))
-        text_file.write('Put Booking ID {0} onto bus {1}. \n'.format(int(URID.BookingId), option['RunID']))
-        text_file.write('Pick this client up after stop {0} and drop client off after stop {1}.\n'.format(stop_nums['pickup_stop'], stop_nums['dropoff_stop']))
-        text_file.write('Additional route time: {0} mins \n'.format(round(option['additional_time']/(60.0), 2)))
-        text_file.write('Additional exceeded time windows: {0} \n\n'.format(int(option['additional_broken_windows'])))
-        ctr+=1
+            stop_nums = find_stop_numbers(option)
 
-    text_file.write('Taxi cost: ${0}'.format(taxi_cost))
-    text_file.close()
+            text_file.write('OPTION {0}:\n'.format(ctr))
+            text_file.write('Put Booking ID {0} onto bus {1}. \n'.format(int(URID.BookingId), option['RunID']))
+            text_file.write('Pick this client up after stop {0} and drop client off after stop {1}.\n'.format(stop_nums['pickup_stop'], stop_nums['dropoff_stop']))
+            text_file.write('Additional route time: {0} mins \n'.format(round(option['additional_time']/(60.0), 2)))
+            text_file.write('Additional exceeded time windows: {0} \n\n'.format(int(option['additional_broken_windows'])))
+            ctr+=1
+
+        text_file.write('Taxi cost: ${0}'.format(taxi_cost))
+        text_file.close()
+
+    #if not, tell the dispactcher this and output estimated taxi cost.
+    else:
+        text_file.write('Found no good rerouting options for Booking ID {0}.\n'.format(int(URID.BookingId)))
+        text_file.write('Taxi cost: ${0}'.format(taxi_cost))
+        text_file.close()
+
     return None
 
 

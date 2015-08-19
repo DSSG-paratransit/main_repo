@@ -33,8 +33,12 @@ def preferred_options():
     session['busid'] = None; busid = session['busid']
     session['bookingid'] = None; bookingid = session['bookingid']
 
-    if request.form.get('bookingid', None) is not None: #booking id is filled
+    #booking id is filled. Need to format inputs into a list of integers.
+    if request.form.get('bookingid', None) is not None:
       bookingid = request.form['bookingid']
+      bookingid = bookingid.split(',')
+      for i in range(len(bookingid)):
+        bookingid[i] = int(re.sub(' ', '', bookingid[i]))
       session['bookingid'] = bookingid
       
     if request.form.get('busid', None) is not None and request.form.get('beginTime',None) is not None: #busid, beginTime boxes are filled
@@ -93,24 +97,28 @@ def link(row):
     bid_insert_txt, new_table_inds = clean_a_o(bid_file.readlines()) #this list of strings and a list of indices
 
     # present 0 - 3 alternative options on the alternative_options.html page.
-    if len(bid_insert_txt) > 0:
+    if (len(bid_insert_txt) > 0) & (len(bid_insert_txt) > 4):
       opt1 = bid_insert_txt[new_table_inds[0]:new_table_inds[0]+5]; print(opt1)
-      rows1 = re.findall(r'\d+', opt1[2])
     else:
       opt1 = None
     if len(bid_insert_txt) > 6:
       opt2 = bid_insert_txt[new_table_inds[1]:new_table_inds[1]+5]; print(opt2)
-      #rows2 = re.findall(r'\d+', opt2[8])
     else:
       opt2 = None
     if len(bid_insert_txt) > 12:
       opt3 = bid_insert_txt[new_table_inds[2]:new_table_inds[2]+5]; print(opt3)
-      #rows3 = re.findall(r'\d+', opt2[14])
     else: opt3 = None
 
+    if (len(bid_insert_txt) <= 3) & (len(bid_insert_txt) > 0):
+      opt1 = bid_insert_txt; print(opt1)
+
+
     #read in new schedule, bold the newly inserted booking ids.
-    html = pd.read_csv(os.path.join('data', str(bookingid)+'_schedule.csv')).to_html()
-    new_schedule = re.sub(bookingid, '<strong> {0} <strong>'.format(bookingid), html)
+    try:
+      html = pd.read_csv(os.path.join('data', str(bookingid)+'_schedule.csv')).to_html()
+      new_schedule = re.sub(bookingid, '<strong> {0} <strong>'.format(bookingid), html)
+    except IOError:
+      new_schedule = None
 
     return render_template('alternative_options.html', 
         bookingid = bookingid,
@@ -152,7 +160,7 @@ def rescheduling():
 
     session['pid'] = p.pid
     print p.pid
-    return(render_template('thumbsucker.html'))
+    return(render_template('rescheduling_page.html'))
     
   
 
@@ -191,8 +199,8 @@ def check_run_errors():
   else:
     return 0
 
-@app.route("/thumbsucker/", methods=["GET","POST"])
-def thumbsucker():
+@app.route("/rescheduling_page/", methods=["GET","POST"])
+def rescheduling_page():
   
   count = session.get('count', 0) + 1
   session['count'] = count
@@ -206,33 +214,33 @@ def thumbsucker():
   # if process still isnt completed
   if not os.path.isfile(os.path.join('data','flag.txt')):
     display_string = "Currently rerouting passengers. This may take a while (Order of 10 minutes). Please wait{0}".format("."*(count%4))
-    return render_template('thumbsucker.html', display_string=display_string)
+    return render_template('rescheduling_page.html', display_string=display_string)
 
   #if process is completed...
   if os.path.isfile(os.path.join('data', 'flag.txt')):
     knownerrorfile = open(os.path.join('data', 'flag.txt'), 'r')
-    flg = knownerrorfile.readlines()
+    flg = knownerrorfile.readlines();
     knownerrorfile.close()
     #process completed but with KNOWN busRescheduler.py flag code errors.
-    if re.search('400', flg[0]):
+    if flg[0] == '400':
       error_string = 'Submitted data is either incorrectly formatted, of incorrect type, or misspelled. Please revisit the display page.'
       return render_template('error_page.html', error_string = error_string)
-    if re.search('401', flg[0]):
+    if flg[0] == '401':
       error_string = 'Demo file not found. Please revisit the admin page.'
       return render_template('error_page.html', error_string = error_string)
-    if re.search('402', flg[0]):
+    if flg[0] == '402':
       error_string = 'Formatting of streaming data file is incorrect. Please revisit the admin page.'
       return render_template('error_page.html', error_string = error_string)
-    if re.search('403', flg[0]):
+    if flg[0] == '403':
       error_string = 'Streaming data could not be accessed correctly. Please revisit the admin page and try different AWS keys.'
       return render_template('error_page.html', error_string = error_string)
-    if re.search('404', flg[0]):
+    if flg[0] == '404':
       error_string = 'Requested Run number is not scheduled for today. Please revisit the display page.'
       return render_template('error_page.html', error_string = error_string)
-    if re.search('405', flg[0]):
+    if flg[0] == '405':
       error_string = 'You have entered BookingIds not present in the requested schedule. Please revisit the display page.'
       return render_template('error_page.html', error_string = error_string)
-    if re.search('406', flg[0]):
+    if flg[0] == '406':
       error_string = 'There are no clients left to reschedule after the requested initial time. Please revisit the display page.'
       return render_template('error_page.html', error_string = error_string)
 
