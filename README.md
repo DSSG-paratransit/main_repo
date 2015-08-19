@@ -63,7 +63,7 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 
 6. Run the webapp
     ~~~bash
-	cd Disaster_Recovery\webapp
+	cd Disaster_Recovery/webapp
 	python run.py
 	~~~
     
@@ -113,10 +113,12 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 	pip install -r Python_venv/requirements_Windows.txt
 	~~~
 6. Run the webapp
+
     ~~~bash
 	cd Disaster_Recovery\webapp
 	python run.py
-	~~~
+    ~~~~
+
 7. Navigate to [`localhost:5000/admin`](localhost:5000/admin)
     
 8. Exit the virtual environment
