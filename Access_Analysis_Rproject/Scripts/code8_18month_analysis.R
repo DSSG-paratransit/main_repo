@@ -4,24 +4,34 @@ library(lubridate)
 
 Dates <- as.Date(strptime(data18$ServiceDate, format = "%m/%d/%Y %H:%M:%S"))
 data18$ServiceDate <- Dates
+data18$Run <- as.character(data18$Run)
 
 alldays <- seq(from = min(Dates), to = max(Dates), by = 1)
-schstats <- data18[,c('ServiceDate', 'Activity')]
+schstats <- data18[,c('ServiceDate', 'Activity', 'Run')]
 oos_stor <- numeric(length = length(alldays))
+allrun_stor <- numeric(length = length(alldays))
 ctr = 1
-for (day in alldays){
-  today <- schstats[which(schstats$ServiceDate == day),]
-  oos_stor[ctr] <- sum(today$Activity == 8)
+for (k in 1:length(alldays)){
+  today <- schstats[which(schstats$ServiceDate == alldays[k]),]
+  today_runs = unique(today$Run)
+  allrun_stor[ctr] <- length(today_runs)
+  eightCtr <- 0
+  for (run in today_runs){
+    eightCtr <- eightCtr + as.numeric(any(today[which(today$Run == run), 'Activity']==8))
+  }
+  oos_stor[ctr] <- eightCtr
+  
   ctr = ctr +1
-  cat("On date: ",day)
+  cat("On date: ", alldays[k])
 }
 
 dayofweek_vec <- wday(alldays)
-output <- cbind(as.character(alldays), oos_store, dayofweek_vec)
+output <- cbind(as.character(alldays), dayofweek_vec,oos_stor, allrun_stor)
 output <- as.data.frame(output)
-colnames(output) <- c('Date', 'oos_counts', 'dayofweek')
+colnames(output) <- c('Date', 'dayofweek', 'oos_counts', 'total_runs')
 output$oos_counts <- as.numeric(output$oos_counts)
 output$dayofweek <- as.numeric(output$dayofweek)
+output$total_runs <- as.numeric(output$total_runs)
 output$dayofweek[output$dayofweek == 1] <- 'Sunday'
 output$dayofweek[output$dayofweek == 2] <- 'Monday'
 output$dayofweek[output$dayofweek == 3] <- 'Tuesday'
