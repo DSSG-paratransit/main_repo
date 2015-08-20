@@ -4,11 +4,11 @@ import all_functions as af
 def busReschedule_run(schedule_filename,
                       accesskey,
                       secretkey,
-                      bookingid,
                       broken_run,
-                      windows = 1800.,
-                      resched_init_time = None,
                       path_to_outdir = af.os.path.join(af.os.getcwd(),'data'),
+                      resched_init_time = None,
+                      bookingid = None,
+                      windows = 1800.,
                       radius = 3.):
 
     '''
@@ -24,6 +24,7 @@ def busReschedule_run(schedule_filename,
               number of nearby buses is > 30.
 
     '''
+
     flag = 400 #400 is good, 200 is bad.
 
     if not af.os.path.exists(path_to_outdir):
@@ -34,7 +35,7 @@ def busReschedule_run(schedule_filename,
         if af.os.path.isfile(schedule_filename):
             fullSchedule = af.pd.DataFrame.from_csv(schedule_filename, header=0, sep=',', index_col = False)
         else:
-            print('File not found!')
+            print('ERROR: Demo file not found!')
             flag = 200
             return flag
 
@@ -48,7 +49,7 @@ def busReschedule_run(schedule_filename,
                 return flag
 
         except IOError: #is this the right error if s3_data_acquire fails?
-            print('Could not access streaming data!')
+            print('ERROR: Could not access streaming data!')
             flag = 200
             return flag
             
@@ -68,7 +69,7 @@ def busReschedule_run(schedule_filename,
     #OR it will get us URIDs given specific bookingIds to be rescheduled
     if case == 'BROKEN_RUN':
         if broken_run not in list(set(fullSchedule_windows.Run.tolist())):
-            print('Run number is not scheduled for today!')
+            print('ERROR: Run number is not scheduled for today!')
             flag = 200
             return flag
 
@@ -90,14 +91,14 @@ def busReschedule_run(schedule_filename,
     else:
         for i in range(len(individual_requests)):
             if individual_requests[i] not in list(set(fullSchedule_windows.BookingId.tolist())):
-                print('You have entered BookingIds not present in the schedule!')
+                print('ERROR: You have entered BookingIds not present in the schedule!')
                 flag = 200
                 return flag
 
         URIDs = af.get_URID_BookingIds(fullSchedule_windows, individual_requests)
 
     if not URIDs:
-        print('There are no people to reschedule on bus {0} at time {1}'.format(broken_run, resched_init_time))
+        print('ERROR: There are no people to reschedule on bus {0} at time {1}'.format(broken_run, resched_init_time))
         flag = 200
         return flag
 
@@ -154,8 +155,7 @@ def busReschedule_run(schedule_filename,
             best_buses.append(ordered_inserts[0]['RunID'])
 
             #CALCULATE taxi cost
-            taxi_costs.append(af.taxi(URIDs[i].PickUpCoords[0], URIDs[i].PickUpCoords[1],
-                URIDs[i].DropOffCoords[0], URIDs[i].DropOffCoords[1], af.wheelchair_present(URIDs[i])))
+            taxi_costs.append(af.taxi(URIDs[i]))
 
             #WRITE information about best insertions to text file
             af.write_insert_data(URIDs[i], ordered_inserts[0:3],
@@ -183,3 +183,45 @@ def busReschedule_run(schedule_filename,
     pref_opt.to_csv(af.os.path.join(path_to_outdir, 'preferred_options.csv'), index = False)
 
     return flag
+
+
+
+def main():
+    import os
+    for i in range(len(af.sys.argv)):
+        if af.sys.argv[i] == 'None':
+            af.sys.argv[i]= None
+
+    try: 
+        demo_filename = af.sys.argv[1]
+        accesskey = af.sys.argv[2]
+        secretkey = af.sys.argv[3]
+        broken_run = af.sys.argv[4]
+        path_to_outdir = af.sys.argv[5]
+        resched_init_time = af.sys.argv[6]
+        if af.sys.argv[7] is not None: bookingid = int(af.sys.argv[7])
+        else: bookingid = None
+        if af.sys.argv[8] is not None: windows = float(af.sys.argv[8])
+        else: windows = 1800.
+        if af.sys.argv[9] is not None: radius = float(af.sys.argv[9])
+        else: radius = 3.
+
+        for i in range(0, len(af.sys.argv)):
+            print(af.sys.argv[i])
+
+    except ValueError:
+        flag = 200
+        fout = open(os.path.join(path_to_outdir,'flag.txt'), 'w')
+        fout.write(str(flag))
+        fout.close()
+        
+    flag = busReschedule_run(demo_filename, accesskey, secretkey, broken_run, path_to_outdir, resched_init_time, bookingid, windows, radius)
+    fout = open(os.path.join(path_to_outdir,'flag.txt'), 'w')
+    fout.write(str(flag))
+    fout.close()
+
+
+
+if __name__ == "__main__":
+    main()
+

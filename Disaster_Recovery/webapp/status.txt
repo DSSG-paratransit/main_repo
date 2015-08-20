@@ -1,0 +1,7 @@
+5. Look at code to see how to refactor
+   a. Options class: bus/taxi, busid (if bus), cost
+      - has public attributes for busid, taxi, cost
+   b. PreferredOPtions class: 
+      -has a dict of options; returns list with different sorts
+   c. AlternativeOptions class:  
+      - has a dict of options; returns different sorts
