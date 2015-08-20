@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    <h1>Demo Administration</h1>
+
+    {% if error %}
+    <p> <strong>Error:</strong> {{ error }} </p>
+    {% endif %}
+
+    <h3>Enter</h3>
+    <form action="/admin" method="POST">
+    <p>AWS Key</p>
+        <input type="text" name="accesskey">
+    <p>Secret Key</p>
+        <input type="text" name="secretkey">
+<p></p>
+        <input type="submit" value="Submit">
+    </form>
+
+    <h3>Or</h3>
+    <form action="/admin" method="POST">
+    <p>Demo File Input</p>
+        <input type="text" name="file" >
+<p></p>
+        <input type="submit" value="Submit" >
+    </form>
+</body>
+</html>
