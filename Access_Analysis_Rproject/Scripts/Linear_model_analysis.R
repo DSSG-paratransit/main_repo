@@ -1,21 +1,18 @@
 ### Make linear regression, regressors vs. total route run time ####
-library(timeDate)
+# library(timeDate)
 
 ####################################################################################################
 ############################### Model Building #####################################################
 ####################################################################################################
-setwd('~/Dropbox/Current Projects/DSSG/access/main_repo/Access_Analysis_Rproject/data')
-meta_data <- read.csv("ride_meta_data.txt", sep = ",")
-meta_data <- meta_data[which(meta_data$elapsed_time<86400),]
-data <- read.csv("UW_Trip_Data_QC.csv")
+meta_data <- read.csv("./data/ride_meta_data.txt", sep = ",")
+
+data <- read.csv("./data/UW_Trip_Data_QC.csv")
 
 # Make matrix of binary contrasts. Every column represents a city, 0 or 1 
 # indicates whether a route on a certain day hits a city.
 cities <- unique(as.character(data$City))
 cities <- cities[cities!=""]
 city_mat <- matrix(0, nrow = nrow(meta_data), ncol = length(cities))
-colnames(city_mat) <- cities
-rownames(city_mat) <- meta_data$run
 data$ServiceDate <- as.timeDate(as.character(data$ServiceDate))
 data$Run <- as.character(data$Run)
 dates <- unique(data$ServiceDate)
