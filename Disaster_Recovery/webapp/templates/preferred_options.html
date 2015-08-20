@@ -1,0 +1,44 @@
+ <html>
+ <head>
+  <link rel="stylesheet" type="text/css" href={{ url_for('static',filename='styles/style_sheet.css') }}/>
+  </head>
+  
+  <body>
+<h1>Preferred Options for Riders</h1>
+
+{% if busid %}
+<p>Bus identifier is {{ busid }} </p>
+{% endif %}
+{% if bookingid %}
+<p> Booking identifier is {{ bookingid }} </p>
+{% endif %}
+
+{% if beginTime %}
+<p>Initial time for rescheduling is {{beginTime}}</p>
+{% endif %}
+
+
+<table border="1">
+    <th>Booking ID</th>
+    <th>Lowest Cost Option</th>
+  {% for n in row_range %}
+    <tr>
+    {% for fld in data_rows[n] %}
+      <td>
+      {% if n < last_data_row %}
+        <a href="http:/link/{{ n }}"> {{ fld }} </a>
+      {% else %}
+        {{ fld }}
+      {% endif %}
+      </td>
+
+    {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
+
+
+</body>
+</html>
+
+

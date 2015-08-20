@@ -226,7 +226,8 @@ class TimeWindowsCapacity():
 
 
         if busDateCol:
-            zipped = np.unique(zip(self.data['ServiceDate'],self.data['Run']))
+            unique_combos = self.data.drop_duplicates(['ServiceDate', 'Run'])
+            zipped = zip(unique_combos)
             for i in range(len(zipped)):
                 this_run = self.data[(self.data['Run'] == zipped[i][1]) & (self.data['ServiceDate'] == zipped[i][0])]
                 on_wc = np.array(this_run['wcOn'])
