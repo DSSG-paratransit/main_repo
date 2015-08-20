@@ -1,9 +1,0 @@
-## busRescheduler.py error codes
-
-- 400: submitted data is either incorrectly formatted, incorrect type, or misspelled.
-- 401: Demo file not found.
-- 402: Streaming data's pandas.dataframe index column is incorrect. Formatting of streaming data file is wrong.
-- 403: Streaming data could not be accessed correctly.
-- 404: Inputted broken run is not scheduled in the requested schedule data file.
-- 405: Requested bookingids are not scheduled in the requested schedule data file.
-- 406: If resched_init_time is too late and the requested broken run has no more pick-ups, there are no URIDs.
