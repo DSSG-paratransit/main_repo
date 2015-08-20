@@ -23,6 +23,11 @@ osrm <- function(loc1, loc2){
   return(list('time' = time, 'dist' = dist))
 }
 
+#may get rate limited by osrm's website running analysis on entire 4 month data
+#use following subset files
+#data <- read.csv('4mo_CDT_Part1.csv') # first half of 4 month data 
+#data <- read.csv('4mo_CDT_Part2.csv') # second half of 4 month data
+
 data <- read.csv('UW_Trip_Data_4mo_CDT.csv')
 cost_per_sec = 0.805/60
 data<-data[which(data$SchedStatus == 1),]
@@ -31,10 +36,13 @@ data$Run <- as.character(data$Run)
 data$City <- as.character(data$City)
 
 ride_days = unique(data$ServiceDate)
+
 #Creates array of all the different client IDs
 bookingids = unique(data$ClientID)
-#Set up dataframe that I'll use
-#I'll need clientCost, clientID, Run, ServiceDate, LatStart, LonStart, LatEnd, LonEnd
+
+#Set up dataframe
+#Columns are clientCost, clientID, Run, ServiceDate, osrm_ClientDist, osrm_ClientTime, OnCity, OffCity
+
 costDF <- data.frame(1:8)
 costDF <- t(costDF)
 colnames(costDF) <- c("ClientCost", "ClientID", "Run", "ServiceDate", 
@@ -72,12 +80,10 @@ for(k in 1:length(ride_days)){
           OffCity <- PersonOnBus$City[nrow(PersonOnBus)]
           rideCost = 0
           for (jjj in 1:(nrow(PersonOnBus)-1)){
-            #change leg times var
             rideCost = rideCost + 
               (Time_Vec[jjj]/PersonOnBus$TotalPass[jjj])*(cost_per_sec)
           }
           
-          #PersonOnBus$RideCost<-rideCost
           newrow = data.frame(c(rideCost, bookingids[j], this_ride$Run[1],
                                 as.character(this_ride$ServiceDate[1]),
                                 osrmDist, osrmTime, OnCity, OffCity)
@@ -89,6 +95,7 @@ for(k in 1:length(ride_days)){
       }
     }
   }
+  # document progress of analysis by percentage complete
   print(paste(k/length(ride_days)*100, "% complete", sep =""))
   print(sprintf("day %d of %d unique days", k, length(ride_days)))
 }
