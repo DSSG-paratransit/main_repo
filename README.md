@@ -19,13 +19,13 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 - Finds the best insertion for unscheduled requests onto a previously scheduled bus route
 -Compares the cost for handling unscheduled requests by inserting onto scheduled bus routes, calling a taxi, or creating a new bus run
 
-#To install and run algorithm:
+#To install and run webapp:
 ##OSX install instructions:
 1. Installing python
     Go to ['https://www.python.org/downloads/release/python-2710/'](https://www.python.org/downloads/release/python-2710/) and download the Mac installer. Install Python 2.7.10.
 
 2. Obtaining the files
-    Go to ['https://github.com/DSSG-paratransit/main_repo/tree/master'](https://github.com/DSSG-paratransit/main_repo/tree/master) and click on Download Zip in the lower right. Unzip the materials into the folder of your choice and then navigate to *Disaster\_recovery/webapp/* directory.
+    Go to ['https://github.com/DSSG-paratransit/main_repo/tree/master'](https://github.com/DSSG-paratransit/main_repo/tree/master) and click on Download Zip in the lower right. Unzip the materials into the folder of your choice. 
 
 3. Setting up a virtual environment
     (skip steps 3,4,8 if you want to install the packages directly on your computer; using a virtual environment aims to avoid some dependency conflicts)
