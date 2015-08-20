@@ -25,18 +25,18 @@ def busReschedule_run(schedule_filename,
 
     '''
 
-    flag = 400 #400 is good, 200 is bad.
+    flag = 200 #400's are bad, 200 is good.
 
     if not af.os.path.exists(path_to_outdir):
-        path_to_outdir = af.os.join.path(af.os.getcwd(),'data')
+        path_to_outdir = af.os.path.join(af.os.getcwd(),'data')
 
-    #get data
+    #get rescheduling data from the webapp/data directory
     if schedule_filename is not None:
-        if af.os.path.isfile(schedule_filename):
+        if af.os.path.isfile(af.os.path.join(path_to_outdir, schedule_filename)):
             fullSchedule = af.pd.DataFrame.from_csv(schedule_filename, header=0, sep=',', index_col = False)
         else:
-            print('ERROR: Demo file not found!')
-            flag = 200
+            print('ERROR 401: Demo file not found!')
+            flag = 401
             return flag
 
     if accesskey and secretkey is not None:
@@ -45,12 +45,13 @@ def busReschedule_run(schedule_filename,
         try:
             fullSchedule = af.s3_data_acquire(accesskey, secretkey, path_to_outdir, qc_file_name = 'qc_streaming.csv')
             if type(fullSchedule) == int:
-                flag = 200
+                print("ERROR 402: formatting error in streaming data.")
+                flag = 402
                 return flag
 
         except IOError: #is this the right error if s3_data_acquire fails?
-            print('ERROR: Could not access streaming data!')
-            flag = 200
+            print('ERROR 403: Could not access streaming data!')
+            flag = 403
             return flag
             
     #Determine broken run number, or get list of unhandled requests.
@@ -69,8 +70,8 @@ def busReschedule_run(schedule_filename,
     #OR it will get us URIDs given specific bookingIds to be rescheduled
     if case == 'BROKEN_RUN':
         if broken_run not in list(set(fullSchedule_windows.Run.tolist())):
-            print('ERROR: Run number is not scheduled for today!')
-            flag = 200
+            print('ERROR 404: Run number is not scheduled for today!')
+            flag = 404
             return flag
 
         if resched_init_time is not None:
@@ -91,15 +92,15 @@ def busReschedule_run(schedule_filename,
     else:
         for i in range(len(individual_requests)):
             if individual_requests[i] not in list(set(fullSchedule_windows.BookingId.tolist())):
-                print('ERROR: You have entered BookingIds not present in the schedule!')
-                flag = 200
+                print('ERROR 405: You have entered BookingIds not present in the schedule!')
+                flag = 405
                 return flag
 
         URIDs = af.get_URID_BookingIds(fullSchedule_windows, individual_requests)
 
     if not URIDs:
-        print('ERROR: There are no people to reschedule on bus {0} at time {1}'.format(broken_run, resched_init_time))
-        flag = 200
+        print('ERROR 406: There are no people to reschedule on bus {0} at time {1}'.format(broken_run, resched_init_time))
+        flag = 406
         return flag
 
     # for each URID we find the bus runs to check through a radius elimination.
@@ -138,6 +139,7 @@ def busReschedule_run(schedule_filename,
                 else:
                     insert_stats.append(brokenwindows_dict)
 
+
         #ASSEMBLE and ORDER transit options.
         if insert_stats:
             #ORDER buses by lowest additional lag time, i.e. total_lag, and sequentially add total_lag's
@@ -158,8 +160,13 @@ def busReschedule_run(schedule_filename,
             taxi_costs.append(af.taxi(URIDs[i]))
 
             #WRITE information about best insertions to text file
-            af.write_insert_data(URIDs[i], ordered_inserts[0:3],
-                path_to_outdir, taxi_costs[i])
+            if len(ordered_inserts) >= 3:
+                af.write_insert_data(URIDs[i], ordered_inserts[0:3],
+                    path_to_outdir, taxi_costs[i])
+            else:
+                af.write_insert_data(URIDs[i], ordered_inserts[0:],
+                    path_to_outdir, taxi_costs[i])
+
 
             #UPDATE whole day's schedule:
             fullSchedule_windows = af.day_schedule_Update(data = fullSchedule_windows, top_Feasibility = ordered_inserts[0], URID = URIDs[i])
@@ -172,6 +179,7 @@ def busReschedule_run(schedule_filename,
         else:
             delay_costs.append(400000)
             taxi_costs.append(af.taxi(URIDs[i]))
+            af.write_insert_data(URIDs[i], None, path_to_outdir, taxi_costs[i])
             best_buses.append('NA')
 
     #WRITE csv of PREFERRED OPTIONS:
@@ -199,7 +207,7 @@ def main():
         broken_run = af.sys.argv[4]
         path_to_outdir = af.sys.argv[5]
         resched_init_time = af.sys.argv[6]
-        if af.sys.argv[7] is not None: bookingid = int(af.sys.argv[7])
+        if af.sys.argv[7] is not None: bookingid = bookingid
         else: bookingid = None
         if af.sys.argv[8] is not None: windows = float(af.sys.argv[8])
         else: windows = 1800.
@@ -210,7 +218,7 @@ def main():
             print(af.sys.argv[i])
 
     except ValueError:
-        flag = 200
+        flag = 400
         fout = open(os.path.join(path_to_outdir,'flag.txt'), 'w')
         fout.write(str(flag))
         fout.close()
