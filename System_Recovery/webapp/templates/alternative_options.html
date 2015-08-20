@@ -1,0 +1,92 @@
+ <html>
+ <head>
+ 
+  <link rel="stylesheet" type="text/css" href={{ url_for('static',filename='styles/style_sheet.css') }}/>
+  </head>
+  <body>
+<h1>Alternative Options for Booking ID {{ bookingid }}</h1>
+
+
+
+
+<table border="1" style="float: left;">
+{% if opt1 %}
+	{% for row in opt1 %}
+		{% if row == "OPTION 1:\n" %}
+		<tr>
+			<th>
+			<strong> {{ row }} <strong>
+		</th>
+		</tr>
+
+		{% else %}
+		<tr>
+			<td> {{ row }} </td>
+		</tr>
+		{% endif %}
+
+	{% endfor %}
+{% endif %}
+</table>
+
+<table border="1" style="float: left;">
+{% if opt2 %}
+	{% for row in opt2 %}
+		{% if row == "OPTION 2:\n" %}
+		<tr>
+			<th>
+			<strong> {{ row }} <strong>
+		</th>
+		</tr>
+
+		{% else %}
+		<tr>
+			<td> {{ row }} </td>
+		</tr>
+		{% endif %}
+
+	{% endfor %}
+{% endif %}
+</table>
+
+<table border="1" style="float: left;">
+{% if opt3 %}
+	{% for row in opt3 %}
+		{% if row == "OPTION 3:\n" %}
+		<tr>
+			<th>
+			<strong> {{ row }} <strong>
+		</th>
+		</tr>
+
+		{% else %}
+		<tr>
+			<td> {{ row }} </td>
+		</tr>
+		{% endif %}
+
+	{% endfor %}
+{% endif %}
+</table>
+
+<table border="1">
+	<tr>
+		<th>
+		<strong> ESTIMATED TAXI COST: <strong>
+		</th>
+	</tr>
+			<tr>
+			<td> {{ taxi_cost }} </td>
+	</tr>
+</table>
+
+<p></p>
+{% if new_schedule %}
+<h1> <strong> New schedule associated with OPTION 1: <strong> </h1> 
+	{% block content %}
+	{{ new_schedule | safe }}
+	{% endblock %}
+{% endif %}
+
+</body>
+</html>
