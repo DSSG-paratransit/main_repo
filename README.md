@@ -21,37 +21,16 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 
 #To install and run webapp:
 ##OSX install instructions:
-1. Installing python <br>
-    Go to ['https://www.python.org/downloads/release/python-2710/'](https://www.python.org/downloads/release/python-2710/) and download the Mac installer. Install Python 2.7.10.
-
+1. Installing Anaconda
     <br>
-    Install [Anaconda]('http://continuum.io/downloads') by downloading the command-line installer.
+    Install [`Anaconda`](http://continuum.io/downloads) by downloading the command-line installer.
 
 2. Obtaining the files
+	<br>
     Go to ['https://github.com/DSSG-paratransit/main_repo/tree/master'](https://github.com/DSSG-paratransit/main_repo/tree/master) and click on Download Zip in the lower right. Unzip the materials into the folder of your choice. 
 
-3. Setting up a virtual environment
-    (skip steps 3,4,8 if you want to install the packages directly on your computer; using a virtual environment aims to avoid some dependency conflicts)
-    ~~~
-	pip install virtualenv
-	~~~
-    If pip is not installed on your computer (it is included with python versions 2.7.9 and above), you can install it in one of the following ways:
-    ~~~bash
-	sudo easy_install pip
-	~~~
 
-	or 
-
-	~~~bash
-	sudo brew install pip
-	~~~
-
-	If you have neither easy_install nor brew then go 	through these tutorials to install one of them.
-
-	[easy_install] (https://pythonhosted.org/setuptools/easy_install.html#installing-easy-install)
-	[brew](http://brew.sh/)
-
-4. Starting Anaconda virtual environment
+3. Starting Anaconda virtual environment
    ~~~bash
 	conda create -n venv python=2.7
 	~~~
@@ -66,7 +45,7 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 	which python
 	~~~
 	
-	Take whatever output you get from this call, for example,
+	Take whatever **output** you get from this call, for example,
 	~~~bash
 	~/anaconda/envs/venv/bin/python
 	~~~
@@ -76,31 +55,31 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 	~~~
 
 
-5. Installing the required packages
+4. Installing the required packages
     ~~~bash
 	pip install -r Python_venv/requirements.txt
 	~~~
 
-6. Run the webapp
+5. Run the webapp. Navigate to the **main_repo-master** directory, then:
     ~~~bash
-	cd Disaster_Recovery/webapp
+	cd System_Recovery/webapp
 	python run.py
 	~~~
     
-7. Navigate to [`localhost:5000/admin`](localhost:5000/admin)
-    Enter AWS access key and secret key, or demo file.
+6. Navigate in your browser to [`localhost:5000/admin`](localhost:5000/admin)
+    Enter AWS access key and secret key, or the name of a demo file present in the `webapp/data` directory.
 
-8. Exit virtual environment
+7. Exit virtual environment
     ~~~bash
-	deactivate
+	source deactivate
 	~~~
 	
 	In the future you do not need to install the virtual environment again, just need to activate it.
 	
     
 ##Windows install instructions:
-1. Installing Python
-    Go to     [`https://www.python.org/downloads/release/python-2710/`](https://www.python.org/downloads/release/python-2710/) and download the Windows installer. Install Python 2.7.10. If the default path is *C:\Python27*, add *C:\Python27* and *C:\Python27\Scripts* to your path environment variables: go to System Properties->Advanced->Environment Variables and attach to the System Path variable *;C:\Python27;C:\Python27\Scripts*)
+1. Installing Python <br>
+    Go to [`https://www.python.org/downloads/release/python-2710/`](https://www.python.org/downloads/release/python-2710/) and download the Windows installer. Install Python 2.7.10. If the default path is *C:\Python27*, add *C:\Python27* and *C:\Python27\Scripts* to your path environment variables: go to System Properties->Advanced->Environment Variables and attach to the System Path variable *;C:\Python27;C:\Python27\Scripts*)
 
 2. Installing Visual C++ Compiler
     (it is needed to run the Python numerical packages)
