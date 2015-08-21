@@ -36,7 +36,7 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 	~~~
 
 	~~~bash
-	conda activate venv
+	source activate venv
 	~~~
 
 	Now you are in the virtual environment! Next, you need to add Python to your path environment variables:
@@ -57,7 +57,7 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 
 4. Installing the required packages
     ~~~bash
-	pip install -r Python_venv/requirements.txt
+	sudo pip install -r Python_venv/requirements.txt
 	~~~
 
 5. Run the webapp. Navigate to the **main_repo-master** directory, then:
