@@ -21,8 +21,11 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 
 #To install and run webapp:
 ##OSX install instructions:
-1. Installing python
+1. Installing python <br>
     Go to ['https://www.python.org/downloads/release/python-2710/'](https://www.python.org/downloads/release/python-2710/) and download the Mac installer. Install Python 2.7.10.
+
+    <br>
+    Install [Anaconda]('http://continuum.io/downloads') by downloading the command-line installer.
 
 2. Obtaining the files
     Go to ['https://github.com/DSSG-paratransit/main_repo/tree/master'](https://github.com/DSSG-paratransit/main_repo/tree/master) and click on Download Zip in the lower right. Unzip the materials into the folder of your choice. 
@@ -48,13 +51,30 @@ Place all relevant data .csv files in the "data" directory to have easy access t
 	[easy_install] (https://pythonhosted.org/setuptools/easy_install.html#installing-easy-install)
 	[brew](http://brew.sh/)
 
-4. Starting Python virtual environment
+4. Starting Anaconda virtual environment
    ~~~bash
-	virtualenv venv
-	source venv/bin/activate
+	conda create -n venv python=2.7
 	~~~
 
-	Now you are in the virtual environment!
+	~~~bash
+	conda activate venv
+	~~~
+
+	Now you are in the virtual environment! Next, you need to add Python to your path environment variables:
+
+	~~~bash
+	which python
+	~~~
+	
+	Take whatever output you get from this call, for example,
+	~~~bash
+	~/anaconda/envs/venv/bin/python
+	~~~
+
+	~~~bash
+	export PATH=~/anaconda/envs/venv/bin/python:$PATH
+	~~~
+
 
 5. Installing the required packages
     ~~~bash
