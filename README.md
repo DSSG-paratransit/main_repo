@@ -7,7 +7,7 @@ The Rproj has a directory called "Scripts" that contains various scripts in Pyth
 Place all relevant data .csv files in the "data" directory to have easy access to it.
 
 
-#Disaster Recovery Folder:
+#System Recovery Folder:
 
 -Should contain all files related to our disaster recovery algorithm
 -The main file should be calling functions from the other files to run our algorithm
