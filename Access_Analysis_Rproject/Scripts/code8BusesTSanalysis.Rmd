@@ -4,18 +4,19 @@ author: 'UW DSSG Paratransit Group'
 date: 'updated: Monday 31st August 2015'
 output: html_document
 ---
-
 # Time Series Analysis #
 
-In the following analyses, we analyze the daily percentage of out-of-service buses. Buses become out-of-service generally after breaking down or if they are unable to arrive at their destinations. Predicting out-of-service buses is important from an operational perspective because KCM and their contractors can better manage their vehicle fleet by preparing adequate standby vehicles each day.
+In the following analyses, we analyze the daily percentage of out-of-service buses for King County Metro (KCM). Buses become out-of-service generally after breaking down or if they are unable to arrive at their destinations. Predicting out-of-service buses is important from an operational perspective because KCM and their contractors can better manage their vehicle fleet by preparing adequate standby vehicles each day.
 
 Our model uses the daily percentage of out-of-service buses relative to all buses operating that day (instead of raw counts of out-of-service buses). Using time series techniques, we analyzed almost 18 months (January 2014 to May 2015) of KCM transit data and concluded:
- * On average, 7.47% of buses are out-of-service each day
- * No deterministic trend over time
- * Some weekly seasonal variation (more on that later)
- * A snowstorm on February 9th 2014 coincided with the highest daily percentage of out-of 
-   service buses
-
+<ul>
+<li>On average, 7.47% of buses are out-of-service each day</li>
+<li>No deterministic trend over time</li>
+<li>Some weekly seasonal variation</li>
+<li>A snowstorm on February 9th 2014 coincided with the highest daily percentage of out-of service buses</li>
+<li>Out-of-service bus percentages are likely stationary</li>
+<li>Cross validation comparisons between ARMA models indicate an AR(1)MA(2) may be the best model to forecast future daily percentages of out-of-service buses</li>
+</ul>
 ```{r, warning=FALSE, message=FALSE, include =FALSE}
 rm(list=ls())
 library(MASS)             
@@ -25,6 +26,7 @@ library(tseries)
 library(forecast)
 library(RColorBrewer)      
 library(TTR)
+library(xts)
 library(quantmod)  	   
 
 # loading data
@@ -35,7 +37,7 @@ par(mfrow=c(1,1))
 ```
 
 ```{r}
-# creating percentage broken buses variable
+# creating out-of-service buses variable (percentage)
 pctCode8<-(oos_runs/total_runs)*100
 code8Buses$pctCode8<-pctCode8
 meanCode8<-summary(pctCode8)[4]
@@ -45,7 +47,7 @@ meanCode8
 maxpctCode8<-code8Buses[which(code8Buses$pctCode8 ==max(code8Buses$pctCode8)),]
 maxpctCode8
 
-# max day in for percentage broken buses is due to snowstorm
+# max day for percentage out-of-service buses is due to snowstorm
 # http://www.seattleweatherblog.com/snow/winter-wonderland-seattle-sees-biggest-february-snowfall-in-13-years/
 
 # Plot - Percentage of Out-of-Service Buses Plot
@@ -206,7 +208,6 @@ pacf(firstDifcode8Buses,na.action=na.pass)
 #PP.test(firstDifcode8Buses[-1])
 ```
 
-
 ```{r}
 # use auto arima to estimate best arima model 
 auto.arima(ts.pctCode8)
@@ -263,6 +264,11 @@ aic.arima.ar2i0ma2.pctCode8<- arima.ar2i0ma2.pctCode8$aic # standard error of th
 # all standard errors and aic for arima models
 all.arima.se.pctCode8<-c(se.ar1i1ma2.pctCode8, se.ar2i1ma2.pctCode8, se.ar1i1ma1.pctCode8,se.ar2i1ma1.pctCode8, se.arima.ar1i0ma2.pctCode8, se.arima.ar2i0ma1.pctCode8, se.arima.ar2i0ma2.pctCode8)
 all.arima.aic.pctCode8<-c(aic.ar1i1ma2.pctCode8, aic.ar2i1ma2.pctCode8, aic.ar1i1ma1.pctCode8, aic.ar2i1ma1.pctCode8, aic.arima.ar1i0ma2.pctCode8, aic.arima.ar2i0ma1.pctCode8, aic.arima.ar2i0ma2.pctCode8)
+
+
+# all standard errors and aic for ARMA models
+all.arma.se.pctCode8<-c(se.arima.ar1i0ma2.pctCode8, se.arima.ar2i0ma1.pctCode8, se.arima.ar2i0ma2.pctCode8)
+all.arma.aic.pctCode8<-c(aic.arima.ar1i0ma2.pctCode8, aic.arima.ar2i0ma1.pctCode8, aic.arima.ar2i0ma2.pctCode8)
 ```
 
 ```{r, include=FALSE}
@@ -319,27 +325,39 @@ cv.ar2i0ma2.pctCode8 <- arimaCV(pctCode8 , order=c(2,0,2), forward=10, method = 
                               xreg=firstDifcode8Buses, include.mean=TRUE, minper=15)
 
 # Plot cross-validation results
+# ARIMA and ARMA models
 all.cv.pctCode8 <- cbind(cv.ar1i1ma2.pctCode8, cv.ar1i1ma1.pctCode8, cv.ar2i1ma2.pctCode8, cv.ar2i1ma1.pctCode8, cv.ar1i0ma2.pctCode8, cv.ar2i0ma1.pctCode8,cv.ar2i0ma2.pctCode8)
 avg.cv.pctCode8<-apply(all.cv.pctCode8, 2, mean)
 models <- c("AR1I1MA2", "AR2I1MA2","AR1I1MA1", "AR2I1MA1", "AR1MA2", "AR2MA1", "AR2MA2")
 
-# intermodel comparisons
-intermodel.comparison.pctCode8<-as.data.frame(cbind(models,round(all.arima.aic.pctCode8,3),round(all.arima.se.pctCode8,3), round(avg.cv.pctCode8,3))) 
-names(intermodel.comparison.pctCode8)<-c("models","AIC","SE","MAE") 
-intermodel.comparison.pctCode8
+all.arma.cv.pctCode8 <- cbind(cv.ar1i0ma2.pctCode8, cv.ar2i0ma1.pctCode8,cv.ar2i0ma2.pctCode8)
+avg.arma.cv.pctCode8<-apply(all.arma.cv.pctCode8, 2, mean)
+arma.models <- c("AR1MA2", "AR2MA1", "AR2MA2")
 
-col <- c("Red", "Yellow", "Blue", "Green", "Orange", "Black", "Purple")
+# ARMA models only
+arma.model.comparison.pctCode8<-as.data.frame(cbind(arma.models,round(all.arma.aic.pctCode8,3),round(all.arma.se.pctCode8,3), round(avg.arma.cv.pctCode8,3))) 
+names(arma.model.comparison.pctCode8)<-c("models","AIC","SE","MAE") 
+arma.model.comparison.pctCode8
+
+col1 <- c("Red", "Yellow", "Blue", "Green", "Orange", "Black", "Purple")
+col2 <- c("Blue", "Orange", "Black")
 
 # Plot - ARIMA Cross Validation
 #png(filename = "Plot - ARIMA Cross-Validation.png")
-matplot(all.cv.pctCode8, type="l", col=col, lty=1, ylab="Mean Absolute Error", xlab="Periods Forward", main="Cross-validation of ARIMA models", xlim=c(1,13))
+matplot(all.cv.pctCode8, type="l", col=col1, lty=1, ylab="Mean Absolute Error", xlab="Periods Forward", main="Cross-validation of ARIMA models", xlim=c(1,13))
 text(models, x=rep(12,length(models)), y=all.cv.pctCode8[nrow(all.cv.pctCode8),], col=col)
+#dev.off()
+
+# Plot - ARMA Cross Validation
+#png(filename = "Plot - ARMA Cross-Validation.png")
+matplot(all.arma.cv.pctCode8, type="l", col=col2, lty=1, ylab="Mean Absolute Error", xlab="Periods Forward", main="Cross-validation of ARMA models", xlim=c(1,13))
+text(arma.models, x=rep(12,length(arma.models)), y=all.arma.cv.pctCode8[nrow(all.arma.cv.pctCode8),], col=col2)
 #dev.off()
 
 # ar1ma2 is best model
 # best combination of lowest AIC and MAE
 # final model
-arima.final.model.pctCode8 <- arima.ar1i0ma2.pctCode8
+arma.final.model.pctCode8 <- arima.ar1i0ma2.pctCode8
 
 ```
 
