@@ -43,14 +43,14 @@ code8Buses$pctCode8<-pctCode8
 meanCode8<-summary(pctCode8)[4]
 meanCode8
 
-# determining max point in data 
-maxpctCode8<-code8Buses[which(code8Buses$pctCode8 ==max(code8Buses$pctCode8)),]
-maxpctCode8
+# determining peak out-of-service percentage day
+peakpctCode8<-code8Buses[which(code8Buses$pctCode8 ==max(code8Buses$pctCode8)),]
+peakpctCode8
 
-# max day for percentage out-of-service buses is due to snowstorm
+# peak day for percentage out-of-service buses (35%) is due to snowstorm
 # http://www.seattleweatherblog.com/snow/winter-wonderland-seattle-sees-biggest-february-snowfall-in-13-years/
 
-# Plot - Percentage of Out-of-Service Buses Plot
+# Plot - Daily Percentage of Out-of-Service Buses Plot
 #png(filename = "Plot - Out-of-Service Buses.png")
 plot(pctCode8 ,type="l",ylab="Percentage Out-of-Service Buses",xlab="Days", 
      main = "Daily Percentage of Out-of-Service Buses \n January 2014 - May 2015 ", axes = TRUE)
