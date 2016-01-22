@@ -12,6 +12,7 @@
 *.DS_Store
 *.json
 *.RHistory
+.RData
 =======
 *.csv
 *.json
