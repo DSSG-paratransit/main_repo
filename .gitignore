@@ -1,3 +1,9 @@
+# Webapp files
+System_Recovery/webapp/data/*_insert_data.txt
+System_Recovery/webapp/data/flag.txt
+System_Recovery/webapp/data/std*.txt
+System_Recovery/webapp/data/preferred_options.csv
+
 # Data files
 *.csv
 *.xlsx
