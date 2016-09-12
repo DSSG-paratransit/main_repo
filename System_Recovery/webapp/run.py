@@ -4,15 +4,19 @@ import re
 import csv
 import time
 import subprocess
+import webbrowser
 import pandas as pd
 import pickle
 import os
+
+# turn debugger to FALSE to stop two windows from opening
+url = 'http://127.0.0.1:5000/admin'
+webbrowser.open_new_tab(url)
 
 error_list = open(os.path.join('data', 'list_python_errortypes.txt'), 'r')
 EL = error_list.read().split(' '); error_list.close()
 
 app = Flask(__name__)
-
 
 @app.route("/register", methods=["GET","POST"])
 def register():
@@ -27,7 +31,7 @@ def preferred_options():
   if request.method == 'POST':
     data_rows = read_csv() #we wont have preferred_options.csv available yet...
     session['data_rows'] = data_rows
-    
+
     #initialize variables
     session['beginTime'] = None; beginTime = session['beginTime']
     session['busid'] = None; busid = session['busid']
@@ -40,7 +44,7 @@ def preferred_options():
       for i in range(len(bookingid)):
         bookingid[i] = int(re.sub(' ', '', bookingid[i]))
       session['bookingid'] = bookingid
-      
+
     if request.form.get('busid', None) is not None and request.form.get('beginTime',None) is not None: #busid, beginTime boxes are filled
       busid = request.form['busid']
       beginTime = request.form['beginTime']
@@ -48,7 +52,7 @@ def preferred_options():
       session['beginTime'] = beginTime
 
     #if bookingid is empty (so, case is brokenbus), and either busid or beginTime are missing from second block
-    if (busid == '' or beginTime == '') and bookingid is None: 
+    if (busid == '' or beginTime == '') and bookingid is None:
         error = 'Missing either broken bus ID or an initial rescheduling time.'
         return render_template('request.html', error = error)
 
@@ -58,13 +62,13 @@ def preferred_options():
 
 
     return redirect(url_for('rescheduling'))
-    
 
-  return render_template('request.html', error = None) 
-  
+
+  return render_template('request.html', error = None)
+
 
 def read_csv(filename='data/preferred_options.csv'):
-  
+
   # Reads data from the csv file
   # Return - data_rows: list of rows corresponding to the headers
   with open(filename, 'rb') as csvfile:
@@ -120,7 +124,7 @@ def link(row):
     except IOError:
       new_schedule = None
 
-    return render_template('alternative_options.html', 
+    return render_template('alternative_options.html',
         bookingid = bookingid,
         opt1 = opt1,
         opt2 = opt2,
@@ -129,7 +133,7 @@ def link(row):
         new_schedule = new_schedule
         )
 
-  
+
 @app.route("/rescheduling",methods = ["GET","POST"])
 def rescheduling():
 
@@ -140,7 +144,7 @@ def rescheduling():
       demo_file = 'None'
     path_to_outdir = os.path.join(os.getcwd(),'data'); print(path_to_outdir)
     path_to_rescheduler = os.path.join('..', 'core', 'busRescheduler.py')
-    args = ['python', str(path_to_rescheduler), 
+    args = ['python', str(path_to_rescheduler),
     demo_file, str(session['accesskey']), str(session['secretkey']), str(session['busid']),
     path_to_outdir, str(session['beginTime']), str(session['bookingid']), '1800.', '3.']
 
@@ -161,8 +165,8 @@ def rescheduling():
     session['pid'] = p.pid
     print p.pid
     return(render_template('rescheduling_page.html'))
-    
-  
+
+
 
 @app.route("/admin", methods=["GET","POST"])
 def admin():
@@ -177,7 +181,7 @@ def admin():
     elif request.form.get('file', None) is not None:
       filename = request.form['file']
 
-    if (accesskey == '' or secretkey == '') and filename is None: 
+    if (accesskey == '' or secretkey == '') and filename is None:
       error = 'Missing either an AWS accesskey or a secret key.'
       return render_template('admin.html', error = error)
 
@@ -201,7 +205,7 @@ def check_run_errors():
 
 @app.route("/rescheduling_page/", methods=["GET","POST"])
 def rescheduling_page():
-  
+
   count = session.get('count', 0) + 1
   session['count'] = count
 
@@ -244,17 +248,17 @@ def rescheduling_page():
       error_string = 'There are no clients left to reschedule after the requested initial time. Please revisit the display page.'
       return render_template('error_page.html', error_string = error_string)
 
-    #process completed cleanly 
+    #process completed cleanly
     else:
       data_rows = read_csv('data/preferred_options.csv')
       session['data_rows'] = data_rows
       row_range = range(len(data_rows))
-      return(render_template("preferred_options.html",    
+      return(render_template("preferred_options.html",
           bookingid = session['bookingid'],
           beginTime = session['beginTime'],
           busid = session['busid'],
           row_range = session['row_range'],
-          data_rows = session['data_rows'], 
+          data_rows = session['data_rows'],
           last_data_row = len(session['data_rows']) - 1,))
 
 

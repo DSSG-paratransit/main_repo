@@ -1,24 +1,29 @@
+rm(list=ls())
+
 library(httr)
 library(plyr)
 library(timeDate)
 library(MASS)
 options(digits=9)
 
+setwd("/Users/kivan/repos/DSSG-Paratransit/Access_Analysis_Rproject/Scripts/")
 osrm <- function(loc1, loc2){
   'args:
   loc1, loc2: each are 2-tuples of LAT and LON, i.e. c(lat1, lon1), c(lat2, lon2)
   '
   total_times <- numeric(0)
-  osrm_url = 'http://router.project-osrm.org/viaroute?'
-  lat1 = loc1[1]; lon1 = loc1[2]
-  lat2 = loc2[1]; lon2 = loc2[2]
+  osrm_url = "http://router.project-osrm.org/route/v1/driving/"
   
-  route_url = paste(osrm_url,"loc=",lat1,",", lon1,"&loc=", lat2, ",", lon2, "&instructions=false", sep = "")
+  lat1 = loc1[1] 
+  lon1 = loc1[2]
+  lat2 = loc2[1] 
+  lon2 = loc2[2]
   
+  route_url = paste(osrm_url, lon1,",",lat1,";",lon2,",",lat2,"?overview=false",sep="")
   json = content(GET(route_url))
   
-  time <- json$route_summary$total_time
-  dist <- json$route_summary$total_distance
+  time <- json$routes[[1]]$legs[[1]]$duration
+  dist <- json$routes[[1]]$legs[[1]]$distance
   
   return(list('time' = time, 'dist' = dist))
 }
@@ -28,7 +33,7 @@ osrm <- function(loc1, loc2){
 #data <- read.csv('4mo_CDT_Part1.csv') # first half of 4 month data 
 #data <- read.csv('4mo_CDT_Part2.csv') # second half of 4 month data
 
-data <- read.csv('UW_Trip_Data_4mo_CDT.csv')
+data <- read.csv('../data/UW_Trip_Data_4mo_CDT.csv')
 cost_per_sec = 0.805/60
 data<-data[which(data$SchedStatus == 1),]
 data$ServiceDate <- as.character(data$ServiceDate)
@@ -50,7 +55,7 @@ colnames(costDF) <- c("ClientCost", "ClientID", "Run", "ServiceDate",
 )
 costDF<-costDF[-1,]
 
-write.table(costDF, file = "CPBAnalysis.csv", col.names = T, sep = ",", row.names = F)
+write.table(costDF, file = "../data/CPBAnalysis.csv", col.names = T, sep = ",", row.names = F)
 
 for(k in 1:length(ride_days)){
   today = data[which(data$ServiceDate==ride_days[k]),]
@@ -89,7 +94,7 @@ for(k in 1:length(ride_days)){
                                 osrmDist, osrmTime, OnCity, OffCity)
           )
           #Put all the information from this run on this day for this client in the data frame
-          write.table(t(newrow), file = "CPBAnalysis.csv",
+          write.table(t(newrow), file = "../data/CPBAnalysis.csv",
                       col.names = F, append = T, sep = ",", row.names = F)
         }
       }
