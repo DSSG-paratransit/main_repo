@@ -4,6 +4,10 @@ library(stringi)
 
 #' set working directory
 setwd("~/repos/DSSG-Paratransit/Access_Analysis_Rproject/Scripts")
+#' 18 month data
+data <- read.csv("../data/UW_Trip_Data_FullHeaders.csv", stringsAsFactors=FALSE)
+#' 4 month data
+#data <- read.csv("../data/UW_Trip_Data_QC.csv", stringsAsFactors=FALSE)
 comm_df <- read.csv("../data/communities.csv", stringsAsFactors=FALSE)
 comm_df$replace_str <- tolower(paste(comm_df$neighborhoods,comm_df$places,
                                      comm_df$misspellings,sep=";"))
@@ -26,7 +30,7 @@ unrecognizable <- c("s", "city")
 for(ustr in unrecognizable) city_replacements[[ustr]] <- ""
 city_replacements <- unlist(city_replacements)
 
-city1 <- comm_df$name
+city1 <- data$City
 u_city1 <- sort(unique(tolower(stri_trim_both(city1))))
 
 city2 <- tolower(as.character(city1))
@@ -45,4 +49,4 @@ if(!all(u_city2 %in% c("",comm_df$name))) {
   stop("There are still unaccounted for city names")
 }
 
-comm_df$name<-city2
+data$City<-city2
