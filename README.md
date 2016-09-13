@@ -111,7 +111,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 5. Installing the required packages
   ~~~bash
 	cd Python_venv
-	pip install -r Python_venv/requirements_Windows.txt
+	pip install -r Python_venv\requirements_Windows.txt
 	cd ..
   ~~~
 
