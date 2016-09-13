@@ -29,7 +29,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 ## OSX install instructions (Maverick & Yosemite):
 1. Installing python with Anaconda<br>
    	
-Download an install Python 2.7 from [here](http://continuum.io/downloads#all) (keep the default settings).
+  Download an install Python 2.7 from [here](http://continuum.io/downloads#all) (keep the default settings).
 
 2. Obtaining the files<br>
     Go to ['https://github.com/DSSG-paratransit/main_repo/tree/master'](https://github.com/DSSG-paratransit/main_repo/tree/master) and click on Download Zip in the lower right. Unzip the materials into the folder of your choice. 
@@ -83,9 +83,8 @@ Download an install Python 2.7 from [here](http://continuum.io/downloads#all) (k
     
 ## Windows 7 install instructions:
 1. Installing Python with Anaconda
- <br>
-   	
-Download an install Python 2.7 from [here](http://continuum.io/downloads#all) (keep the default settings).
+
+  Download an install Python 2.7 from [here](http://continuum.io/downloads#all) (keep the default settings).
 
 2. Obtaining the files<br>
      Go to ['https://github.com/DSSG-paratransit/main_repo/tree/master'](https://github.com/DSSG-paratransit/main_repo/tree/master) and click on Download Zip in the lower right. Unzip the materials into the folder of your choice. 
