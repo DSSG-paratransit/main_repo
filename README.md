@@ -1,10 +1,12 @@
-# University of Washington
-## Data Science for Social Good (Summer 2015)
-### King County Metro Access Paratransit
+# University of Washington #
+## Data Science for Social Good (Summer 2015) ##
+### King County Metro Access Paratransit ###
 
-DSSG Fellows: Emily Andrulis, Rohan Aras, Frank Fineis, Kristen Garofali, Kivan Polimis
-eScience Data Scientists: Valentina Staneva, Joe Hellerstein
+DSSG Fellows: Emily Andrulis, Rohan Aras, Frank Fineis, Kristen Garofali, Kivan Polimis  
+eScience Data Scientists: Valentina Staneva, Joe Hellerstein  
 Project Lead: Anat Caspi, Taskar Center for Accessible Technology
+
+Follow our [project's blog](http://dssg-paratransit.github.io/blog/)
 
 # Access_Analysis_Project folder:
 
