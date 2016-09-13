@@ -9,7 +9,7 @@ library(timeDate)
 library(caret)
 library(MASS)
 # Make linear regression, regressors vs. total route run time 
-setwd("/Users/kivan/repos/DSSG-Paratransit/Access_Analysis_Rproject/reports")
+setwd("/Users/kivan/repos/DSSG-Paratransit/Access_Analysis_Project/reports")
 meta_data <- read.csv("../data/ride_meta_data.txt", sep = ",", row.names = NULL)
 meta_data <- meta_data[which(meta_data$elapsed_time<86400),]
 data <- read.csv("../data/UW_Trip_Data_QC.csv")

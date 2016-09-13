@@ -30,7 +30,7 @@ library(xts)
 library(quantmod)  	   
 
 # loading data
-setwd("/Users/kivan/repos/DSSG-Paratransit/Access_Analysis_Rproject/reports")
+setwd("/Users/kivan/repos/DSSG-Paratransit/Access_Analysis_Project/reports")
 code8Buses<-read.csv("../data/code8_counts.csv")
 par(mfrow=c(1,1))
 ```
