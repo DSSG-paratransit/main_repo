@@ -14,7 +14,7 @@ The "Scripts" directory contains various scripts in Python and R, which help do 
 
 Place all relevant data .csv files in the "data" directory to have easy access to it.
 
-# System Recovery Folder:
+# System_Recovery folder:
 
 - Contains all files related to our system recovery algorithm
 - The main file calls functions from the other files to run our algorithm
