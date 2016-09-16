@@ -1,7 +1,8 @@
 ![DSSG-heading](/_images/DataScienceForSocialGood.png)
-# Rerouting Solutions and Ride Analysis for King County Metro Paratransit #
+# King County Metro Paratransit #
+# Rerouting Solutions and Ride Analysis #
 
-DREU Fellow: Emily Andrulis
+DREU Fellow: Emily Andrulis  
 DSSG Fellows: Rohan Aras, Frank Fineis, Kristen Garofali, Kivan Polimis  
 eScience Data Scientists: Joseph Hellerstein, Valentina Staneva  
 Project Lead: Dr. Anat Caspi, Director, Taskar Center for Accessible Technology
