@@ -1,5 +1,5 @@
-![DSSG-heading](/_images/DataScienceForSocialGood.png)]
-### Rerouting Solutions and Ride Analysis for King County Metro Paratransit ###
+![DSSG-heading](/_images/DataScienceForSocialGood.png)
+# Rerouting Solutions and Ride Analysis for King County Metro Paratransit #
 
 DREU Fellow: Emily Andrulis
 DSSG Fellows: Rohan Aras, Frank Fineis, Kristen Garofali, Kivan Polimis  
