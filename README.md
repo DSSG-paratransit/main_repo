@@ -1,8 +1,8 @@
-# University of Washington #
-## Data Science for Social Good (Summer 2015) ##
-### King County Metro Access Paratransit ###
+![DSSG-heading](/_images/DataScienceForSocialGood.png)]
+### Rerouting Solutions and Ride Analysis for King County Metro Paratransit ###
 
-DSSG Fellows: Emily Andrulis, Rohan Aras, Frank Fineis, Kristen Garofali, Kivan Polimis  
+DREU Fellow: Emily Andrulis
+DSSG Fellows: Rohan Aras, Frank Fineis, Kristen Garofali, Kivan Polimis  
 eScience Data Scientists: Joseph Hellerstein, Valentina Staneva  
 Project Lead: Dr. Anat Caspi, Director, Taskar Center for Accessible Technology
 
@@ -10,13 +10,13 @@ Follow our [project's blog](http://dssg-paratransit.github.io/blog/)
 
 # Access_Analysis_Project folder:
 
-The `Scripts` directory contains various scripts in Python and R, which help do different analyses of the data. The `notebooks` folder contains Python notebooks of various analyses while the `reports` directory contains the .Rmd code to create reports and reports in .html format.
+The `scripts` directory contains various scripts in Python and R for different analyses of the data such as calculate rider cost per boarding and trip deadhead time. The `notebooks` folder contains Python notebooks of analyses that incorporate functions found in `scripts`. The `reports` directory contains the .Rmd code to create reports and .html output.
 
 Place all relevant data .csv files in the `data` directory to have easy access to it.
 
 # System_Recovery folder:
 - Contains all files related to our system recovery algorithm
-- The main file calls functions from the other files to run our algorithm
+- `run.py` calls the core algorithm functions and starts a web application to re-route buses or individuals
 
 # What our algorithm does:
 - Takes real time data 
