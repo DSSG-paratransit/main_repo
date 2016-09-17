@@ -1,6 +1,6 @@
 ![DSSG-heading](/_images/DataScienceForSocialGood.png)
 # King County Metro Paratransit #
-# Rerouting Solutions and Ride Analysis #
+## Rerouting Solutions and Ride Analysis ##
 
 DREU Fellow: Emily Andrulis  
 DSSG Fellows: Rohan Aras, Frank Fineis, Kristen Garofali, Kivan Polimis  
@@ -17,7 +17,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 
 # System_Recovery folder:
 - Contains all files related to our system recovery algorithm
-- `run.py` calls the core algorithm functions and starts a web application to re-route buses or individuals
+- `run.py` calls the core algorithm functions and starts a web application to reroute buses or individuals
 
 # What our algorithm does:
 - Takes real time data 
@@ -39,7 +39,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 	
 	(cannot be stored on GitHub) <br>
 
-	Copy file *qc\_streaming\_DEMO.csv* from *Google Drive/DSSG Program/Project Folders/Paratransit Group/Data* to *System\_recovery/webapp/data folder*. 
+	Copy file `qc\_streaming\_DEMO.csv` from *Google Drive/DSSG Program/Project Folders/Paratransit Group/Data* to *System\_Recovery/webapp/data folder*. 
 
 4. Starting a Python virtual environment
  <br>
@@ -56,7 +56,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 5. Installing the required packages
   ~~~bash
 	cd Python_venv
-	pip install -r Python_venv/requirements.txt
+	pip install -r requirements.txt
 	cd ..
   ~~~
 
@@ -71,7 +71,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 8. Running the demo
  <br>
 
-	Input qc\_streaming_DEMO.csv as the demo name.
+	Input `qc\_streaming_DEMO.csv` as the demo name.
 	You can test with bus number 6080 and time 13:30.
 
 9. Exit virtual environment
@@ -94,7 +94,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 	
 	(cannot be stored on GitHub) <br>
 
-	Copy file *qc\_streaming\_DEMO.csv* from *Google Drive\DSSG Program\Project Folders\Paratransit Group\Data* to *System\_recovery\webapp\data folder*. 
+	Copy file `qc\_streaming\_DEMO.csv` from *Google Drive\DSSG Program\Project Folders\Paratransit Group\Data* to *System\_Recovery\webapp\data folder*. 
 	
 	
 4. Starting a Python virtual environment
@@ -112,7 +112,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 5. Installing the required packages
   ~~~bash
 	cd Python_venv
-	pip install -r Python_venv\requirements_Windows.txt
+	pip install -r requirements_Windows.txt
 	cd ..
   ~~~
 
@@ -128,7 +128,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 
 8. Running the demo
 <br>
-	Input qc\_streaming_DEMO.csv as the demo name.
+	Input `qc\_streaming_DEMO.csv` as the demo name.
 	You can test with bus number 6080 and time 13:30.
     
 9. Exit the virtual environment
