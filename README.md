@@ -1,6 +1,6 @@
 ![DSSG-heading](/_images/DataScienceForSocialGood.png)
 # King County Metro Paratransit #
-## Rerouting Solutions and Ride Analysis ##
+# Rerouting Solutions and Ride Analysis #
 
 DREU Fellow: Emily Andrulis  
 DSSG Fellows: Rohan Aras, Frank Fineis, Kristen Garofali, Kivan Polimis  
@@ -39,7 +39,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 	
 	(cannot be stored on GitHub) <br>
 
-	Copy file `qc\_streaming\_DEMO.csv` from *Google Drive/DSSG Program/Project Folders/Paratransit Group/Data* to *System\_Recovery/webapp/data folder*. 
+	Copy file qc\_streaming\_DEMO.csv from *Google Drive/DSSG Program/Project Folders/Paratransit Group/Data* to *System\_Recovery/webapp/data folder*. 
 
 4. Starting a Python virtual environment
  <br>
@@ -94,7 +94,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 	
 	(cannot be stored on GitHub) <br>
 
-	Copy file `qc\_streaming\_DEMO.csv` from *Google Drive\DSSG Program\Project Folders\Paratransit Group\Data* to *System\_Recovery\webapp\data folder*. 
+	Copy file qc\_streaming\_DEMO.csv from *Google Drive\DSSG Program\Project Folders\Paratransit Group\Data* to *System\_Recovery\webapp\data folder*. 
 	
 	
 4. Starting a Python virtual environment
