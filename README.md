@@ -39,7 +39,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 	
 	(cannot be stored on GitHub) <br>
 
-	Copy file qc\_streaming\_DEMO.csv from *Google Drive/DSSG Program/Project Folders/Paratransit Group/Data* to *System\_Recovery/webapp/data folder*. 
+	Copy file `qc_streaming_DEMO.csv` from *Google Drive/DSSG Program/Project Folders/Paratransit Group/Data* to *System\_Recovery/webapp/data folder*. 
 
 4. Starting a Python virtual environment
  <br>
@@ -71,7 +71,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 8. Running the demo
  <br>
 
-	Input `qc\_streaming_DEMO.csv` as the demo name.
+	Input `qc_streaming_DEMO.csv` as the demo name.
 	You can test with bus number 6080 and time 13:30.
 
 9. Exit virtual environment
@@ -94,7 +94,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 	
 	(cannot be stored on GitHub) <br>
 
-	Copy file qc\_streaming\_DEMO.csv from *Google Drive\DSSG Program\Project Folders\Paratransit Group\Data* to *System\_Recovery\webapp\data folder*. 
+	Copy file `qc_streaming_DEMO.csv` from *Google Drive\DSSG Program\Project Folders\Paratransit Group\Data* to *System\_Recovery\webapp\data folder*. 
 	
 	
 4. Starting a Python virtual environment
@@ -128,7 +128,7 @@ Place all relevant data .csv files in the `data` directory to have easy access t
 
 8. Running the demo
 <br>
-	Input `qc\_streaming_DEMO.csv` as the demo name.
+	Input `qc_streaming_DEMO.csv` as the demo name.
 	You can test with bus number 6080 and time 13:30.
     
 9. Exit the virtual environment
