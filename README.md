@@ -1,30 +1,36 @@
-# dssg_paratransit
+![DSSG-heading](/_images/DataScienceForSocialGood.png)
+# King County Metro Paratransit #
+# Rerouting Solutions and Ride Analysis #
 
-#Access_Analysis_Rproject folder:
+DREU Fellow: Emily Andrulis  
+DSSG Fellows: Rohan Aras, Frank Fineis, Kristen Garofali, Kivan Polimis  
+eScience Data Scientists: Joseph Hellerstein, Valentina Staneva  
+Project Lead: Dr. Anat Caspi, Director, Taskar Center for Accessible Technology
 
-The Rproj has a directory called "Scripts" that contains various scripts in Python and R, which help do different analyses of the data.
+Follow our [project's blog](http://dssg-paratransit.github.io/blog/)
 
-Place all relevant data .csv files in the "data" directory to have easy access to it.
+# Access_Analysis_Project folder:
 
+The `scripts` directory contains various scripts in Python and R for different analyses of the data such as calculate rider cost per boarding and trip deadhead time. The `notebooks` folder contains Python notebooks of analyses that incorporate functions found in `scripts`. The `reports` directory contains the .Rmd code to create reports and .html output.
 
-#System Recovery Folder:
+Place all relevant data .csv files in the `data` directory to have easy access to it.
 
--Should contain all files related to our system recovery algorithm
--The main file should be calling functions from the other files to run our algorithm
+# System_Recovery folder:
+- Contains all files related to our system recovery algorithm
+- `run.py` calls the core algorithm functions and starts a web application to reroute buses or individuals
 
-#What our algorithm does:
+# What our algorithm does:
 - Takes real time data 
 - Cleans data
 - Accepts and formats unscheduled requests
 - Finds the best insertion for unscheduled requests onto a previously scheduled bus route
--Compares the cost for handling unscheduled requests by inserting onto scheduled bus routes, calling a taxi, or creating a new bus run
+- Compares the cost for handling unscheduled requests by inserting onto scheduled bus routes, calling a taxi, or creating a new bus run
 
-#To install and run webapp:
-##OSX install instructions (Maverick & Yosemite):
+# To install and run webapp:
+## OSX install instructions (Maverick & Yosemite):
 1. Installing python with Anaconda<br>
    	
-Download an install Python 2.7 from [`here`] (http://continuum.io/downloads#all) (keep the default settings).
-
+  Download an install Python 2.7 from [here](http://continuum.io/downloads#all) (keep the default settings).
 
 2. Obtaining the files<br>
     Go to ['https://github.com/DSSG-paratransit/main_repo/tree/master'](https://github.com/DSSG-paratransit/main_repo/tree/master) and click on Download Zip in the lower right. Unzip the materials into the folder of your choice. 
@@ -33,101 +39,99 @@ Download an install Python 2.7 from [`here`] (http://continuum.io/downloads#all)
 	
 	(cannot be stored on GitHub) <br>
 
-	Copy file *qc\_streaming\_DEMO.csv* from *Google Drive/DSSG Program/Project Folders/Paratransit Group/Data* to *System\_recovery/webapp/data folder*. 
+	Copy file `qc_streaming_DEMO.csv` from *Google Drive/DSSG Program/Project Folders/Paratransit Group/Data* to *System\_Recovery/webapp/data folder*. 
 
 4. Starting a Python virtual environment
  <br>
- (skip steps 4,9 if you want to install the packages directly on your computer; using a virtual environment aims to avoid some dependency conflicts)
+ (skip steps 4 and 9 if you want to install the packages directly on your computer; using a virtual environment aims to avoid some dependency conflicts)
 
    ~~~bash
-   cd Python_venv
    conda create -n venv python=2.7
    source activate venv
-   cd..
    ~~~
 
    Now you are in the virtual environment! 
 
 
 5. Installing the required packages
-    ~~~bash
-	pip install -r Python_venv/requirements.txt
-	~~~
+  ~~~bash
+	cd Python_venv
+	pip install -r requirements.txt
+	cd ..
+  ~~~
 
 6. Run the webapp
-    ~~~bash
+  ~~~bash
 	cd System_Recovery/webapp
 	python run.py
 	~~~
     
-7. Navigate to [`localhost:5000/admin`](localhost:5000/admin)
+7. Launching the webapp automatically opens [http://127.0.0.1:5000/admin](http://127.0.0.1:5000/admin)
 
-7. Running the demo
+8. Running the demo
  <br>
 
-	Input qc\_streaming_DEMO.csv as the demo name.
+	Input `qc_streaming_DEMO.csv` as the demo name.
 	You can test with bus number 6080 and time 13:30.
 
-8. Exit virtual environment
-    ~~~bash
+9. Exit virtual environment
+  ~~~bash
 	source deactivate
 	~~~
 	
 	In the future you do not need to install the virtual environment again, just need to activate it (skip step 5).
 	
     
-##Windows 7 install instructions:
+## Windows 7 install instructions:
 1. Installing Python with Anaconda
- <br>
-   	
- Download an install Python 2.7 from [`here`] (http://continuum.io/downloads#all) (keep the default settings).
 
-3. Obtaining the files<br>
+  Download an install Python 2.7 from [here](http://continuum.io/downloads#all) (keep the default settings).
+
+2. Obtaining the files<br>
      Go to ['https://github.com/DSSG-paratransit/main_repo/tree/master'](https://github.com/DSSG-paratransit/main_repo/tree/master) and click on Download Zip in the lower right. Unzip the materials into the folder of your choice. 
-
 
 3. Obtaining the demo file<br>
 	
 	(cannot be stored on GitHub) <br>
 
-	Copy file *qc\_streaming\_DEMO.csv* from *Google Drive\DSSG Program\Project Folders\Paratransit Group\Data* to *System\_recovery\webapp\data folder*. 
+	Copy file `qc_streaming_DEMO.csv` from *Google Drive\DSSG Program\Project Folders\Paratransit Group\Data* to *System\_Recovery\webapp\data folder*. 
 	
 	
-3. Setting up a Python virtual environment
-   <br>
-    (skip steps 3,8 if you want to install the packages directly on your computer; using a virtual environment aims to avoid some dependency conflicts)
+4. Starting a Python virtual environment
+ <br>
+ (skip steps 4 and 9 if you want to install the packages directly on your computer; using a virtual environment aims to avoid some dependency conflicts)
 
-   <br>
-	~~~bash
-	cd Python_venv
-	conda create -n venv python
-	activate venv
-	cd ..
-	~~~
+   ~~~bash
+   conda create -n venv python=2.7
+   source activate venv
+   ~~~
 
-    Now you are in the virtual environment!
+   Now you are in the virtual environment! 
+
 
 5. Installing the required packages
-   <br>
-    ~~~bash
-	pip install -r Python_venv\requirements_Windows.txt
-	~~~
+  ~~~bash
+	cd Python_venv
+	pip install -r requirements_Windows.txt
+	cd ..
+  ~~~
+
 6. Run the webapp
    <br>
 
-    ~~~bash
+  ~~~bash
 	cd System_Recovery\webapp
 	python run.py
     ~~~~
 
-7. Navigate to [`localhost:5000/admin`](localhost:5000/admin)
+7. Launching the webapp automatically opens [http://127.0.0.1:5000/admin](http://127.0.0.1:5000/admin)
 
-7. Running the demo
+8. Running the demo
 <br>
-	Input qc\_streaming_DEMO.csv as the demo name.
+	Input `qc_streaming_DEMO.csv` as the demo name.
 	You can test with bus number 6080 and time 13:30.
     
-8. Exit the virtual environment
+9. Exit the virtual environment
  <br>
 
 	~~~bash
