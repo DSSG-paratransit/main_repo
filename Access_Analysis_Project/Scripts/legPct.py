@@ -19,10 +19,9 @@ def legPct(busRun, legTime=True, PctTime=True,
     # creates a vector with first index 0, other indexes
     # equal to the current ETA - the last ETA
     second = busRun.ETA.ix[1:]
-    first = busRun.ETA.ix[:busRun.shape[0] - 1]
+    first = busRun.ETA.ix[:busRun.shape[0] - 2]
     second.index = range(0, len(second))
     timeVector = (second - first).tolist()
-    timeVector.pop()
     timeVector = [0] + timeVector
 
     # the percent of the run that the individual leg took
